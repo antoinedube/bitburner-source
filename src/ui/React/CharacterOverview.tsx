@@ -5,9 +5,14 @@ import { Theme, useTheme } from "@mui/material/styles";
 import makeStyles from "@mui/styles/makeStyles";
 import createStyles from "@mui/styles/createStyles";
 import {
-  formatHp, formatMoney, formatSkill,
-  formatRam, formatHashes, formatWanted,
-  formatRespect, formatReputation
+  formatHp,
+  formatMoney,
+  formatSkill,
+  formatRam,
+  formatHashes,
+  formatWanted,
+  formatRespect,
+  formatReputation,
 } from "../formatNumber";
 import { Reputation } from "./Reputation";
 import { KillScriptsModal } from "./KillScriptsModal";
@@ -350,26 +355,37 @@ function CustomDisplayHackedServers(): React.ReactElement {
     return clearSubscription;
   }, [rerender]);
 
-  const serversToAvoid = ['home', 'run4theh111z', 'I.I.I.I', 'avmnite-02h', '.', 'CSEC', 'The-Cave', 'w0r1d_d43m0n', 'darkweb'];
+  const serversToAvoid = [
+    "home",
+    "run4theh111z",
+    "I.I.I.I",
+    "avmnite-02h",
+    ".",
+    "CSEC",
+    "The-Cave",
+    "w0r1d_d43m0n",
+    "darkweb",
+  ];
 
   const classes = useStyles();
 
   const allServers = GetAllServers();
-  const servers = allServers.filter((server) => !serversToAvoid.includes(server.hostname))
-                            .filter((server) => !server.hostname.startsWith('hacknet-server'))
-                            .filter((server) => !server.hostname.startsWith('neighbor'))
-                            .map((server) => ({
-                              'hostname': server.hostname,
-                              'has-admin-rights': server.hasAdminRights,
-                              'backdoor-installed': server.backdoorInstalled
-                            }));
+  const servers = allServers
+    .filter((server) => !serversToAvoid.includes(server.hostname))
+    .filter((server) => !server.hostname.startsWith("hacknet-server"))
+    .filter((server) => !server.hostname.startsWith("neighbor"))
+    .map((server) => ({
+      hostname: server.hostname,
+      "has-admin-rights": server.hasAdminRights,
+      "backdoor-installed": server.backdoorInstalled,
+    }));
 
   const numServers = servers.length;
-  const numServersWithAdminRights = servers.filter((item) => item['has-admin-rights']).length;
-  const numServersWithBackdoorInstalled = servers.filter((item) => item['backdoor-installed']).length;
+  const numServersWithAdminRights = servers.filter((item) => item["has-admin-rights"]).length;
+  const numServersWithBackdoorInstalled = servers.filter((item) => item["backdoor-installed"]).length;
 
-  let hackedServersHeader: ReactNode = <>Hacked servers</>;
-  let hackedServersInnerText: ReactNode = (
+  const hackedServersHeader: ReactNode = <>Hacked servers</>;
+  const hackedServersInnerText: ReactNode = (
     <>
       hacked: {numServersWithAdminRights} / {numServers} <br />
       backdoored: {numServersWithBackdoorInstalled} / {numServers}
@@ -380,16 +396,12 @@ function CustomDisplayHackedServers(): React.ReactElement {
     <>
       <TableRow>
         <TableCell component="th" scope="row" colSpan={2} classes={{ root: classes.customDisplayCell }}>
-          <Typography className={classes.customDisplayHeader}>
-            {hackedServersHeader}
-          </Typography>
+          <Typography className={classes.customDisplayHeader}>{hackedServersHeader}</Typography>
         </TableCell>
       </TableRow>
       <TableRow>
         <TableCell component="th" scope="row" colSpan={2} classes={{ root: classes.customDisplayCell }}>
-          <Typography className={classes.customDisplayText}>
-            {hackedServersInnerText}
-          </Typography>
+          <Typography className={classes.customDisplayText}>{hackedServersInnerText}</Typography>
         </TableCell>
       </TableRow>
     </>
@@ -407,7 +419,7 @@ function CustomDisplayHackingServers(): React.ReactElement {
 
   const numberPurchasedServers = Player.purchasedServers.length;
   const purchasedServerLimit = getPurchaseServerLimit();
-  const currentPurchasedHostname = Player.purchasedServers.length>0 ? Player.purchasedServers[0] : null;
+  const currentPurchasedHostname = Player.purchasedServers.length > 0 ? Player.purchasedServers[0] : null;
 
   let hackingServersHeader: ReactNode = "";
   hackingServersHeader = <>Hacking servers</>;
@@ -417,36 +429,27 @@ function CustomDisplayHackingServers(): React.ReactElement {
     // GetServer returns:
     // object with keys {contracts, cpuCores, ftpPortOpen, hasAdminRights, hostname, httpPortOpen, ip, isConnectedTo, maxRam, messages, organizationName, programs, ramUsed, runningScriptMap, savedScripts, scripts, serversOnNetwork, smtpPortOpen, sqlPortOpen, sshPortOpen, textFiles, purchasedByPlayer, backdoorInstalled, baseDifficulty, hackDifficulty, minDifficulty, moneyAvailable, moneyMax, numOpenPortsRequired, openPortCount, requiredHackingSkill, serverGrowth}
     if (currentPurchasedServer) {
-      const numCoresSuffix = currentPurchasedServer.cpuCores > 1 ? "cores" : "core";
       hackingServersInnerText = (
         <>
-          Number: {numberPurchasedServers} / {purchasedServerLimit} <br />
-          Stats: {currentPurchasedServer.cpuCores} {numCoresSuffix}, {formatRam(currentPurchasedServer.maxRam)}
+          number: {numberPurchasedServers} / {purchasedServerLimit} <br />
+          stats: {formatRam(currentPurchasedServer.maxRam)}
         </>
       );
     }
   } else {
-    hackingServersInnerText = (
-      <>
-        No hacking servers yet!
-      </>
-    );
+    hackingServersInnerText = <>no hacking servers yet!</>;
   }
 
   return (
     <>
       <TableRow>
         <TableCell component="th" scope="row" colSpan={2} classes={{ root: classes.customDisplayCell }}>
-          <Typography className={classes.customDisplayHeader}>
-            {hackingServersHeader}
-          </Typography>
+          <Typography className={classes.customDisplayHeader}>{hackingServersHeader}</Typography>
         </TableCell>
       </TableRow>
       <TableRow>
         <TableCell component="th" scope="row" colSpan={2} classes={{ root: classes.customDisplayCell }}>
-          <Typography className={classes.customDisplayText}>
-            {hackingServersInnerText}
-          </Typography>
+          <Typography className={classes.customDisplayText}>{hackingServersInnerText}</Typography>
         </TableCell>
       </TableRow>
     </>
@@ -465,7 +468,8 @@ function CustomDisplayHacknetServers(): React.ReactElement {
   let hacknetServersHeader: ReactNode;
   let hackingServersInnerText: ReactNode;
 
-  if (Player.sourceFileLvl(9) >= 3 || Player.bitNodeN === 9) {  // Hacknet servers
+  if (Player.sourceFileLvl(9) >= 3 || Player.bitNodeN === 9) {
+    // Hacknet servers
     hacknetServersHeader = <>Hacknet servers</>;
     const numberHacknetServers = Player.hacknetNodes.length;
     const hacknetServerLimit = HacknetServerConstants.MaxServers;
@@ -481,11 +485,12 @@ function CustomDisplayHacknetServers(): React.ReactElement {
     }
     hackingServersInnerText = (
       <>
-      Number: {numberHacknetServers} / {hacknetServerLimit} <br />
-      Production: {formatHashes(totalProduction)}/s
+        Number: {numberHacknetServers} / {hacknetServerLimit} <br />
+        Production: {formatHashes(totalProduction)}/s
       </>
     );
-  } else {  // Hacknet nodes
+  } else {
+    // Hacknet nodes
     hacknetServersHeader = <>Hacknet nodes</>;
     const numberHacknetNodes = Player.hacknetNodes.length;
     let totalProduction = 0;
@@ -496,8 +501,8 @@ function CustomDisplayHacknetServers(): React.ReactElement {
     }
     hackingServersInnerText = (
       <>
-      Number: {numberHacknetNodes} <br />
-      Production: {formatMoney(totalProduction)}/s
+        number: {numberHacknetNodes} <br />
+        production: {formatMoney(totalProduction)}/s
       </>
     );
   }
@@ -506,16 +511,12 @@ function CustomDisplayHacknetServers(): React.ReactElement {
     <>
       <TableRow>
         <TableCell component="th" scope="row" colSpan={2} classes={{ root: classes.customDisplayCell }}>
-          <Typography className={classes.customDisplayHeader}>
-            {hacknetServersHeader}
-          </Typography>
+          <Typography className={classes.customDisplayHeader}>{hacknetServersHeader}</Typography>
         </TableCell>
       </TableRow>
       <TableRow>
         <TableCell component="th" scope="row" colSpan={2} classes={{ root: classes.customDisplayCell }}>
-          <Typography className={classes.customDisplayText}>
-            {hackingServersInnerText}
-          </Typography>
+          <Typography className={classes.customDisplayText}>{hackingServersInnerText}</Typography>
         </TableCell>
       </TableRow>
     </>
@@ -538,21 +539,21 @@ function CustomDisplayGang(): React.ReactElement {
   if (gang) {
     const reputation = Factions[gang.facName].playerReputation;
     const numMembers = gang.members.length;
-    let tasks = [];
-    for (let i=0; i<numMembers; i++) {
+    const tasks = [];
+    for (let i = 0; i < numMembers; i++) {
       const member = gang.members[i];
       tasks.push(member.task);
     }
     gangHeader = <>Gang</>;
     gangInnerText = (
       <>
-      Name: {gang.facName} <br />
-      Members: {numMembers} / {GangConstants.MaximumGangMembers} <br />
-      Tasks: {new Set(tasks)} <br />
-      Respect: {formatRespect(gang.respect)} <br />
-      Wanted level: {formatWanted(gang.wanted)} <br />
-      Money gain: {formatMoney(gang.moneyGainRate)}/s <br />
-      Reputation: {formatReputation(reputation)}
+        Name: {gang.facName} <br />
+        Members: {numMembers} / {GangConstants.MaximumGangMembers} <br />
+        Tasks: {new Set(tasks)} <br />
+        Respect: {formatRespect(gang.respect)} <br />
+        Wanted level: {formatWanted(gang.wanted)} <br />
+        Money gain: {formatMoney(5 * gang.moneyGainRate)}/s <br />
+        Reputation: {formatReputation(reputation)}
       </>
     );
   }
@@ -561,16 +562,12 @@ function CustomDisplayGang(): React.ReactElement {
     <>
       <TableRow>
         <TableCell component="th" scope="row" colSpan={2} classes={{ root: classes.customDisplayCell }}>
-          <Typography className={classes.customDisplayHeader}>
-            {gangHeader}
-          </Typography>
+          <Typography className={classes.customDisplayHeader}>{gangHeader}</Typography>
         </TableCell>
       </TableRow>
       <TableRow>
         <TableCell component="th" scope="row" colSpan={2} classes={{ root: classes.customDisplayCell }}>
-          <Typography className={classes.customDisplayText}>
-            {gangInnerText}
-          </Typography>
+          <Typography className={classes.customDisplayText}>{gangInnerText}</Typography>
         </TableCell>
       </TableRow>
     </>
