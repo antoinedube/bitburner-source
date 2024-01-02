@@ -549,9 +549,9 @@ function CustomDisplayGang(): React.ReactElement {
       Name: {gang.facName} <br />
       Members: {numMembers} / {GangConstants.MaximumGangMembers} <br />
       Tasks: {new Set(tasks)} <br />
-      Money gain: {formatMoney(gang.moneyGainRate)}.s <br />
-      Wanted level: {formatWanted(gang.wanted)} <br />
       Respect: {formatRespect(gang.respect)} <br />
+      Wanted level: {formatWanted(gang.wanted)} <br />
+      Money gain: {formatMoney(gang.moneyGainRate)}/s <br />
       Reputation: {formatReputation(reputation)}
       </>
     );
