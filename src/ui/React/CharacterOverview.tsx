@@ -485,8 +485,8 @@ function CustomDisplayHacknetServers(): React.ReactElement {
     }
     hackingServersInnerText = (
       <>
-        Number: {numberHacknetServers} / {hacknetServerLimit} <br />
-        Production: {formatHashes(totalProduction)}/s
+        number: {numberHacknetServers} / {hacknetServerLimit} <br />
+        production: {formatHashes(totalProduction)}/s
       </>
     );
   } else {
