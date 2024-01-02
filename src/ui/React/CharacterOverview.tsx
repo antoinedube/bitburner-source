@@ -547,13 +547,13 @@ function CustomDisplayGang(): React.ReactElement {
     gangHeader = <>Gang</>;
     gangInnerText = (
       <>
-        Name: {gang.facName} <br />
-        Members: {numMembers} / {GangConstants.MaximumGangMembers} <br />
-        Tasks: {new Set(tasks)} <br />
-        Respect: {formatRespect(gang.respect)} <br />
-        Wanted level: {formatWanted(gang.wanted)} <br />
-        Money gain: {formatMoney(5 * gang.moneyGainRate)}/s <br />
-        Reputation: {formatReputation(reputation)}
+        name: {gang.facName} <br />
+        members: {numMembers} / {GangConstants.MaximumGangMembers} <br />
+        tasks: {new Set(tasks)} <br />
+        respect: {formatRespect(gang.respect)} <br />
+        wanted level: {formatWanted(gang.wanted)} <br />
+        money gain: {formatMoney(5 * gang.moneyGainRate)}/s <br />
+        reputation: {formatReputation(reputation)}
       </>
     );
   }
@@ -695,7 +695,8 @@ const useStyles = makeStyles((theme: Theme) =>
     },
 
     customDisplayHeader: {
-      fontZie: "0.9rem",
+      fontSize: "0.9rem",
+      textDecoration: "underline"
     },
 
     customDisplayText: {
