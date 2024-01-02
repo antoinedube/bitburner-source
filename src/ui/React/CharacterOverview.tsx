@@ -4,7 +4,11 @@ import React, { useMemo, useState, useEffect, ReactNode } from "react";
 import { Theme, useTheme } from "@mui/material/styles";
 import makeStyles from "@mui/styles/makeStyles";
 import createStyles from "@mui/styles/createStyles";
-import { formatHp, formatMoney, formatSkill, formatRam, formatHashes, formatWanted, formatRespect } from "../formatNumber";
+import {
+  formatHp, formatMoney, formatSkill,
+  formatRam, formatHashes, formatWanted,
+  formatRespect, formatReputation
+} from "../formatNumber";
 import { Reputation } from "./Reputation";
 import { KillScriptsModal } from "./KillScriptsModal";
 import { convertTimeMsToTimeElapsedString } from "../../utils/StringHelperFunctions";
@@ -548,7 +552,7 @@ function CustomDisplayGang(): React.ReactElement {
       Money gain: {formatMoney(gang.moneyGainRate)}.s <br />
       Wanted level: {formatWanted(gang.wanted)} <br />
       Respect: {formatRespect(gang.respect)} <br />
-      Reputation: {reputation}
+      Reputation: {formatReputation(reputation)}
       </>
     );
   }
