@@ -84,9 +84,9 @@ export const CONSTANTS: {
   Donations: number; // number of blood/plasma/palette donation the dev have verified., boosts NFG
   LatestUpdate: string;
 } = {
-  VersionString: "2.5.2dev",
+  VersionString: "2.6.0dev",
   isDevBranch: true,
-  VersionNumber: 36,
+  VersionNumber: 37,
 
   /** Max level for any skill, assuming no multipliers. Determined by max numerical value in javascript for experience
    * and the skill level formula in Player.js. Note that all this means it that when experience hits MAX_INT, then
@@ -223,47 +223,15 @@ export const CONSTANTS: {
 
   // Also update doc/source/changelog.rst
   LatestUpdate: `
-## v2.5.2dev changelog - Last updated 9 December 2023
+## v2.6.0 dev - Changelog last updated 26 December 2023
 
-### NOTES
+### MAJOR ADDITIONS
 
-See the 2.5.1 changelog at https://github.com/bitburner-official/bitburner-src/blob/v2.5.1/src/Documentation/doc/changelog.md
+- A new minigame IPvGO, based on the game Go. See the "IPvGO Subnet" option from the sidebar. Documentation is also available under "How to Play" from that screen (@ficocelliguy)
+- A new BitNode has been added which focuses on the IPvGO mechanic (@ficocelliguy)
 
 ### API
 
-- Added limit of 1e9 for additionalMsec property of HGWOptions (@d0sboots)
-- ns.share effect is now boosted by host server core count (@TheAimMan)
-- (Stanek) ns.stanek.chargeFragment is now boosted by host server core count (@TheAimMan)
-
-### BUGFIX
-
-- (Corporation) Fixed an issue with Warehouse size being out of sync following prduct sale (@Kelenius)
-- (Factions) Fixed some display order issues, and possible multiple entries for a faction (@jjclark1982)
-- (Factions) Fixed an issue with certain factions not becoming "known" when joining them (@jjclark1982)
-- (Grafting) Entropy now has the correct negative effect on hacknet multipliers (@TheAimMan)
-- (Hashnet) Fixed an issue where the SF9.3 reward server had an incorrect number of cores (@cigarmemr)
-- (Terminal) Fixed a bug with script autocompletion when the script is inside a subdirectory (@draughtnyan)
-
-### MISC
-
-- (Bitverse) Changed listed difficulty for BN3 to "hard"
-- (CodingContract) Reduce incidence of $0 coding contract rewards in circumstances where the reward would be $0 (@trambelus)
-- (Corporation) Added better accounting of funds transactions (@jjclark1982)
-- (Corporation) Remove cooldown on starting over corporation, but maintain remaining cooldown for selling shares (@jjclark1982)
-- (Corporation) Removed some legacy code that was not doing anything (@catloversg)
-- (DevMenu) Added the ability to add/remove sleeves from the dev menu (@Sphyxis, @Snarling)
-- (Factions) Added a documentation page for faction join requirements (@jjclark1982)
-- (Formulas) Added clarification for the unit of time returned by hackTime, growTime, and weakenTime functions (@d0sboots)
-- (Ports) Promises from port.nextWrite resolve in the same order they were created, instead of reverse order (@LJNeon)
-- (Sleeve) Add task counters for Crime and Bladeburner tasks (@TheAimMan)
-- (Stock) Add some randomization to timing for stockmarket forecast change events (@Caldwell-74)
-- (Terminal) Added the --all option for unalias, to allow removing all aliases (@Sphyxis)
-- Nerf noodle bar (various contributors)
-
-### UI
-
-- Message for buying TOR router no longer implies the need to connect to darkweb (@Kelenius)
-- (Factions) Only show warning about enemy factions for factions with enemies (@jjclark1982)
-- (Stanek) Improved the display of the Stanek grid (@Kelenius)
+- Added the ns.go API, which allows interaction with the new IPvGO mechanic. While this is in development, the API may undergo changes. (@ficocelliguy)
 `,
 };

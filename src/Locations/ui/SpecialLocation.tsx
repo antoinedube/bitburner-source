@@ -303,7 +303,7 @@ export function SpecialLocation(props: SpecialLocationProps): React.ReactElement
     return (
       <>
         <Typography>
-          <CorruptableText content={"An eerie aura surrounds this area. You feel you should leave."} />
+          <CorruptableText content={"An eerie aura surrounds this area. You feel you should leave."} spoiler={false} />
         </Typography>
       </>
     );
@@ -330,6 +330,17 @@ export function SpecialLocation(props: SpecialLocationProps): React.ReactElement
     }
     case LocationName.NewTokyoArcade: {
       return <ArcadeRoot />;
+    }
+    case LocationName.Sector12CIA:
+    case LocationName.NewTokyoDefComm: {
+      return (
+        <>
+          <br />
+          <br />
+          <br />
+          <Button onClick={() => Router.toPage(Page.Go)}>IPvGO Subnet Takeover</Button>
+        </>
+      );
     }
     default:
       console.error(`Location ${props.loc.name} doesn't have any special properties`);
