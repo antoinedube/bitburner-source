@@ -4,7 +4,7 @@ import React, { useMemo, useState, useEffect, ReactNode } from "react";
 import { Theme, useTheme } from "@mui/material/styles";
 import makeStyles from "@mui/styles/makeStyles";
 import createStyles from "@mui/styles/createStyles";
-import { formatHp, formatMoney, formatSkill, formatRam, formatHashes } from "../formatNumber";
+import { formatHp, formatMoney, formatSkill, formatRam, formatHashes, formatWanted, formatRespect } from "../formatNumber";
 import { Reputation } from "./Reputation";
 import { KillScriptsModal } from "./KillScriptsModal";
 import { convertTimeMsToTimeElapsedString } from "../../utils/StringHelperFunctions";
@@ -31,6 +31,7 @@ import { HacknetServerConstants } from "../../Hacknet/data/Constants";
 import { HacknetNode } from "../../Hacknet/HacknetNode";
 import { HacknetServer } from "../../Hacknet/HacknetServer";
 import { GangConstants } from "../../Gang/data/Constants";
+import { Factions } from "../../Faction/Factions";
 
 import { Box, Tooltip } from "@mui/material";
 
@@ -531,6 +532,7 @@ function CustomDisplayGang(): React.ReactElement {
 
   const gang = Player.gang;
   if (gang) {
+    const reputation = Factions[gang.facName].playerReputation;
     const numMembers = gang.members.length;
     let tasks = [];
     for (let i=0; i<numMembers; i++) {
@@ -543,9 +545,10 @@ function CustomDisplayGang(): React.ReactElement {
       Name: {gang.facName} <br />
       Members: {numMembers} / {GangConstants.MaximumGangMembers} <br />
       Tasks: {new Set(tasks)} <br />
-      Money gain: {gang.moneyGainRate} <br />
-      Wanted level: {gang.wanted} <br />
-      Respect: {gang.respect} <br />
+      Money gain: {formatMoney(gang.moneyGainRate)}.s <br />
+      Wanted level: {formatWanted(gang.wanted)} <br />
+      Respect: {formatRespect(gang.respect)} <br />
+      Reputation: {reputation}
       </>
     );
   }
