@@ -34,7 +34,7 @@ import { Page } from "../Router";
 import { Player } from "@player";
 import { StatsProgressOverviewCell } from "./StatsProgressBar";
 import { currentNodeMults } from "../../BitNode/BitNodeMultipliers";
-import { getPurchaseServerLimit } from "../../Server/ServerPurchases";
+import { getPurchaseServerLimit, getPurchaseServerMaxRam } from "../../Server/ServerPurchases";
 import { GetServer, GetAllServers } from "../../Server/AllServers";
 import { HacknetServerConstants } from "../../Hacknet/data/Constants";
 import { HacknetNode } from "../../Hacknet/HacknetNode";
@@ -432,7 +432,7 @@ function CustomDisplayHackingServers(): React.ReactElement {
       hackingServersInnerText = (
         <>
           number: {numberPurchasedServers} / {purchasedServerLimit} <br />
-          stats: {formatRam(currentPurchasedServer.maxRam)}
+          stats: {formatRam(currentPurchasedServer.maxRam)} / {formatRam(getPurchaseServerMaxRam())}
         </>
       );
     }
@@ -486,7 +486,9 @@ function CustomDisplayHacknetServers(): React.ReactElement {
     hackingServersInnerText = (
       <>
         number: {numberHacknetServers} / {hacknetServerLimit} <br />
-        production: {formatHashes(totalProduction)}/s
+        production: {formatHashes(totalProduction)}/s <br />
+        hashes: {formatHashes(Player.hashManager.hashes)} <br />
+        capacity: {formatHashes(Player.hashManager.capacity)}
       </>
     );
   } else {
@@ -545,13 +547,12 @@ function CustomDisplayGang(): React.ReactElement {
       tasks.push(member.task);
     }
     gangHeader = <>Gang</>;
+    const currentTasks = new Set(tasks);
     gangInnerText = (
       <>
         name: {gang.facName} <br />
         members: {numMembers} / {GangConstants.MaximumGangMembers} <br />
-        tasks: {new Set(tasks)} <br />
-        respect: {formatRespect(gang.respect)} <br />
-        wanted level: {formatWanted(gang.wanted)} <br />
+        tasks: {Array.from(currentTasks)} <br />
         money gain: {formatMoney(5 * gang.moneyGainRate)}/s <br />
         reputation: {formatReputation(reputation)}
       </>
