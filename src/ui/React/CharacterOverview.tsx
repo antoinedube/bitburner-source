@@ -5,14 +5,13 @@ import { Theme, useTheme } from "@mui/material/styles";
 import makeStyles from "@mui/styles/makeStyles";
 import createStyles from "@mui/styles/createStyles";
 import {
+  formatHashes,
   formatHp,
   formatMoney,
-  formatSkill,
+  formatNumberNoSuffix,
   formatRam,
-  formatHashes,
-  formatWanted,
-  formatRespect,
   formatReputation,
+  formatSkill
 } from "../formatNumber";
 import { Reputation } from "./Reputation";
 import { KillScriptsModal } from "./KillScriptsModal";
@@ -553,6 +552,7 @@ function CustomDisplayGang(): React.ReactElement {
         name: {gang.facName} <br />
         members: {numMembers} / {GangConstants.MaximumGangMembers} <br />
         tasks: {Array.from(currentTasks)} <br />
+        wanted level penalty: {formatNumberNoSuffix((1 - gang.getWantedPenalty()) * 100, 2)} <br />
         money gain: {formatMoney(5 * gang.moneyGainRate)}/s <br />
         reputation: {formatReputation(reputation)}
       </>
