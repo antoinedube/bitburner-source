@@ -546,12 +546,12 @@ function CustomDisplayGang(): React.ReactElement {
       tasks.push(member.task);
     }
     gangHeader = <>Gang</>;
-    const currentTasks = new Set(tasks);
+    const currentTasks = Array.from(new Set(tasks)).join(', ');
     gangInnerText = (
       <>
         name: {gang.facName} <br />
         members: {numMembers} / {GangConstants.MaximumGangMembers} <br />
-        tasks: {Array.from(currentTasks)} <br />
+        tasks: {currentTasks} <br />
         wanted level penalty: {formatNumberNoSuffix((1 - gang.getWantedPenalty()) * 100, 2)}% <br />
         money gain: {formatMoney(5 * gang.moneyGainRate)}/s <br />
         reputation: {formatReputation(reputation)}
