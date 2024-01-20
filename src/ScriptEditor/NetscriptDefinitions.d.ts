@@ -4138,7 +4138,7 @@ export interface Go {
       x1: number,
       y1: number,
       x2: number,
-      x2: number,
+      y2: number,
     ): Promise<{
       type: "invalid" | "move" | "pass" | "gameOver";
       x: number;
@@ -6643,6 +6643,17 @@ export interface NS {
    * @returns True if the data is successfully written to the port, and false otherwise.
    */
   tryWritePort(portNumber: number, data: string | number): boolean;
+
+  /**
+   * Listen for a port write.
+   * @remarks
+   * RAM cost: 0 GB
+   *
+   * Sleeps until the port is written to.
+   *
+   * @param port - Port to listen for a write on. Must be a positive integer.
+   */
+  nextPortWrite(port: number): Promise<void>;
 
   /**
    * Read content of a file.
