@@ -97,7 +97,7 @@ import { getBitNodeMultipliers } from "./BitNode/BitNode";
 import { assert, arrayAssert, stringAssert, objectAssert } from "./utils/helpers/typeAssertion";
 import { cloneDeep, escapeRegExp } from "lodash";
 import numeral from "numeral";
-import { clearPort, peekPort, portHandle, readPort, tryWritePort, writePort } from "./NetscriptPort";
+import { clearPort, peekPort, portHandle, readPort, tryWritePort, writePort, nextPortWrite } from "./NetscriptPort";
 import { FilePath, resolveFilePath } from "./Paths/FilePath";
 import { hasScriptExtension } from "./Paths/ScriptFilePath";
 import { hasTextExtension } from "./Paths/TextFilePath";
@@ -1116,7 +1116,8 @@ export const ns: InternalAPI<NSFull> = {
   },
   serverExists: (ctx) => (_hostname) => {
     const hostname = helpers.string(ctx, "hostname", _hostname);
-    return GetServer(hostname) !== null;
+    const server = GetServer(hostname);
+    return server !== null && (server.serversOnNetwork.length > 0 || server.hostname === "home");
   },
   fileExists: (ctx) => (_filename, _hostname) => {
     const filename = helpers.string(ctx, "filename", _filename);
@@ -1371,6 +1372,10 @@ export const ns: InternalAPI<NSFull> = {
       );
     }
     return tryWritePort(portNumber, data);
+  },
+  nextPortWrite: (ctx) => (_portNumber) => {
+    const portNumber = helpers.portNumber(ctx, _portNumber);
+    return nextPortWrite(portNumber);
   },
   readPort: (ctx) => (_portNumber) => {
     const portNumber = helpers.portNumber(ctx, _portNumber);
