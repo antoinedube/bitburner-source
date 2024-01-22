@@ -51,6 +51,9 @@ export function prestigeAugmentation(): void {
   prestigeWorkerScripts();
 
   const homeComp = Player.getHomeComputer();
+  homeComp.cpuCores = 8;
+  homeComp.maxRam = CONSTANTS.HomeComputerMaxRam;
+
   // Delete all servers except home computer
   prestigeAllServers();
 
@@ -181,6 +184,8 @@ export function prestigeSourceFile(isFlume: boolean): void {
   prestigeWorkerScripts(); // Delete all Worker Scripts objects
 
   const homeComp = Player.getHomeComputer();
+  homeComp.cpuCores = 8;
+  homeComp.maxRam = CONSTANTS.HomeComputerMaxRam;
 
   // Stop a Terminal action if there is one.
   if (Terminal.action !== null) {
@@ -201,14 +206,14 @@ export function prestigeSourceFile(isFlume: boolean): void {
   // Re-create foreign servers
   initForeignServers(Player.getHomeComputer());
 
-  if (Player.sourceFileLvl(9) >= 2) {
-    homeComp.setMaxRam(128);
-  } else if (Player.sourceFileLvl(1) > 0) {
-    homeComp.setMaxRam(32);
-  } else {
-    homeComp.setMaxRam(8);
-  }
-  homeComp.cpuCores = 1;
+  // if (Player.sourceFileLvl(9) >= 2) {
+  //   homeComp.setMaxRam(128);
+  // } else if (Player.sourceFileLvl(1) > 0) {
+  //   homeComp.setMaxRam(32);
+  // } else {
+  //   homeComp.setMaxRam(8);
+  // }
+  // homeComp.cpuCores = 1;
 
   // Reset favor for Companies and Factions
   for (const company of Object.values(Companies)) company.prestigeSourceFile();
