@@ -1,3 +1,4 @@
+import type { PromisePair } from "../Types/Promises";
 import { Player } from "@player";
 import { CorpStateName, InvestmentOffer } from "@nsdefs";
 import { CorpUnlockName, CorpUpgradeName, LiteratureName } from "@enums";
@@ -18,8 +19,9 @@ import { JSONMap, JSONSet } from "../Types/Jsonable";
 import { formatMoney } from "../ui/formatNumber";
 import { isPositiveInteger } from "../types";
 import { createEnumKeyedRecord, getRecordValues } from "../Types/Record";
+import { getKeyList } from "../utils/helpers/getKeyList";
 
-export const CorporationResolvers: ((prevState: CorpStateName) => void)[] = [];
+export const CorporationPromise: PromisePair<CorpStateName> = { promise: null, resolve: null };
 
 interface ICorporationParams {
   name?: string;
@@ -70,6 +72,9 @@ export class Corporation {
   seedFunded: boolean;
 
   state = new CorporationState();
+
+  // This is used for calculating cycle valuation.
+  numberOfOfficesAndWarehouses = 0;
 
   constructor(params: ICorporationParams = {}) {
     this.name = params.name || "The Corporation";
@@ -175,9 +180,11 @@ export class Corporation {
 
       this.state.incrementState();
 
-      // Handle "nextUpdate" resolvers after this update
-      for (const resolve of CorporationResolvers.splice(0)) {
-        resolve(state);
+      // Handle "nextUpdate" resolver after this update
+      if (CorporationPromise.resolve) {
+        CorporationPromise.resolve(state);
+        CorporationPromise.resolve = null;
+        CorporationPromise.promise = null;
       }
     }
   }
@@ -203,14 +210,16 @@ export class Corporation {
       }
 
       val = this.funds + assetDelta * 85e3;
-      val *= Math.pow(1.1, this.divisions.size);
+      // Math.pow(1.1, 1 / 12) = 1.0079741404289038
+      val *= Math.pow(1.0079741404289038, this.numberOfOfficesAndWarehouses);
       val = Math.max(val, 0);
     } else {
       val = 10e9 + this.funds / 3;
       if (assetDelta > 0) {
         val += assetDelta * 315e3;
       }
-      val *= Math.pow(1.1, this.divisions.size);
+      // Math.pow(1.1, 1 / 12) = 1.0079741404289038
+      val *= Math.pow(1.0079741404289038, this.numberOfOfficesAndWarehouses);
       val -= val % 1e6; //Round down to nearest million
     }
     if (val < 10e9) val = 10e9; // Base valuation
@@ -452,14 +461,23 @@ export class Corporation {
     return;
   }
 
+  // Exclude numberOfOfficesAndWarehouses
+  static includedProperties = getKeyList(Corporation, { removedKeys: ["numberOfOfficesAndWarehouses"] });
+
   /** Serialize the current object to a JSON save state. */
   toJSON(): IReviverValue {
-    return Generic_toJSON("Corporation", this);
+    return Generic_toJSON("Corporation", this, Corporation.includedProperties);
   }
 
   /** Initializes a Corporation object from a JSON save state. */
   static fromJSON(value: IReviverValue): Corporation {
-    return Generic_fromJSON(Corporation, value.data);
+    const corporation = Generic_fromJSON(Corporation, value.data, Corporation.includedProperties);
+    // numberOfOfficesAndWarehouses is not in the included properties and must be calculated
+    for (const division of corporation.divisions.values()) {
+      corporation.numberOfOfficesAndWarehouses += getRecordValues(division.offices).length;
+      corporation.numberOfOfficesAndWarehouses += getRecordValues(division.warehouses).length;
+    }
+    return corporation;
   }
 }
 

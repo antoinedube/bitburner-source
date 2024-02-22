@@ -2,8 +2,8 @@ import { GetServer, createUniqueRandomIp, ipExists } from "./AllServers";
 import { Server, IConstructorParams } from "./Server";
 import { BaseServer } from "./BaseServer";
 import { calculateServerGrowth, calculateServerGrowthLog } from "./formulas/grow";
-
-import { CONSTANTS } from "../Constants";
+import { currentNodeMults } from "../BitNode/BitNodeMultipliers";
+import { ServerConstants } from "./data/Constants";
 import { Player } from "@player";
 import { CompletedProgramName, LiteratureName } from "@enums";
 import { Person as IPerson } from "@nsdefs";
@@ -202,7 +202,7 @@ export function processSingleServerGrowth(server: Server, threads: number, cores
     let usedCycles = numCycleForGrowthCorrected(server, server.moneyAvailable, oldMoneyAvailable, cores);
     // Growing increases server security twice as much as hacking
     usedCycles = Math.min(Math.max(0, Math.ceil(usedCycles)), threads);
-    server.fortify(2 * CONSTANTS.ServerFortifyAmount * usedCycles);
+    server.fortify(2 * ServerConstants.ServerFortifyAmount * usedCycles);
   }
   return server.moneyAvailable / oldMoneyAvailable;
 }
@@ -257,4 +257,9 @@ export function isBackdoorInstalled(server: BaseServer): boolean {
 export function getCoreBonus(cores = 1): number {
   const coreBonus = 1 + (cores - 1) / 16;
   return coreBonus;
+}
+
+export function getWeakenEffect(threads: number, cores: number): number {
+  const coreBonus = getCoreBonus(cores);
+  return ServerConstants.ServerWeakenAmount * threads * coreBonus * currentNodeMults.ServerWeakenRate;
 }

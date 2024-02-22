@@ -51,7 +51,6 @@ import { StaneksGiftRoot } from "../CotMG/ui/StaneksGiftRoot";
 import { staneksGift } from "../CotMG/Helper";
 import { CharacterOverview } from "./React/CharacterOverview";
 import { BladeburnerCinematic } from "../Bladeburner/ui/BladeburnerCinematic";
-import { workerScripts } from "../Netscript/WorkerScripts";
 import { Unclickable } from "../Exploits/Unclickable";
 import { Snackbar, SnackbarProvider } from "./React/Snackbar";
 import { LogBoxManager } from "./React/LogBoxManager";
@@ -247,14 +246,14 @@ export function GameRoot(): React.ReactElement {
       mainPage = (
         <ScriptEditorRoot
           files={pageWithContext.files ?? new Map()}
-          hostname={Player.getCurrentServer().hostname}
+          hostname={pageWithContext.options?.hostname ?? Player.getCurrentServer().hostname}
           vim={!!pageWithContext.options?.vim}
         />
       );
       break;
     }
     case Page.ActiveScripts: {
-      mainPage = <ActiveScriptsRoot workerScripts={workerScripts} />;
+      mainPage = <ActiveScriptsRoot />;
       break;
     }
     case Page.Hacknet: {
