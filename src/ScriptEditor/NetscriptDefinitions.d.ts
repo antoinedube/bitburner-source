@@ -48,6 +48,7 @@ interface Player extends Person {
   factions: string[];
   totalPlaytime: number;
   location: string;
+  karma: number;
 }
 
 /** @public */
@@ -959,6 +960,22 @@ interface GangMemberInfo {
   wantedLevelGain: number;
   /** Per Cycle Income for this gang member */
   moneyGain: number;
+}
+
+/** @public */
+interface GangMemberInstall {
+  /** Factor by which the hacking ascension multiplier was decreased (newMult / oldMult) */
+  hack: number;
+  /** Factor by which the strength ascension multiplier was decreased (newMult / oldMult) */
+  str: number;
+  /** Factor by which the defense ascension multiplier was decreased (newMult / oldMult) */
+  def: number;
+  /** Factor by which the dexterity ascension multiplier was decreased (newMult / oldMult) */
+  dex: number;
+  /** Factor by which the agility ascension multiplier was decreased (newMult / oldMult) */
+  agi: number;
+  /** Factor by which the charisma ascension multiplier was decreased (newMult / oldMult) */
+  cha: number;
 }
 
 /** @public */
@@ -3561,8 +3578,9 @@ export interface CodingContract {
    * Generate a dummy contract on the home computer with no reward. Used to test various algorithms.
    *
    * @param type - Type of contract to generate
+   * @returns Filename of the contract.
    */
-  createDummyContract(type: string): void;
+  createDummyContract(type: string): string;
 
   /**
    * List all contract types.
@@ -3831,6 +3849,18 @@ export interface Gang {
    * @returns Object with info about the ascension results, or undefined if ascension is not possible.
    */
   getAscensionResult(memberName: string): GangMemberAscension | undefined;
+
+  /**
+   * Get the effect of an install on ascension multipliers without installing.
+   * @remarks
+   * RAM cost: 2 GB
+   *
+   * Get {@link GangMemberInstall} effects on ascension multipliers for a gang member after installing without performing the install.
+   *
+   * @param memberName - Name of member.
+   * @returns Object with info about the install results on ascension multipliers, or undefined if ascension is not possible.
+   */
+  getInstallResult(memberName: string): GangMemberInstall | undefined;
 
   /**
    * Enable/Disable territory clashes.
@@ -5484,6 +5514,15 @@ export interface NS {
    */
   growthAnalyzeSecurity(threads: number, hostname?: string, cores?: number): number;
 
+  readonly heart: {
+    /**
+     * Get your current karma.
+     * @remarks
+     * RAM cost: 0 GB
+     */
+    break(): number;
+  };
+
   /**
    * Suspends the script for n milliseconds.
    * @remarks
@@ -5649,6 +5688,8 @@ export interface NS {
    * RAM cost: 0 GB
    *
    * Logging can be disabled for all functions by passing `ALL` as the argument.
+   *
+   * For specific interfaces, use the form "namespace.functionName". (e.g. "ui.setTheme")
    *
    * @param fn - Name of function for which to disable logging.
    */
@@ -7207,7 +7248,7 @@ export interface NS {
    *
    * Add callback to be executed when the script dies.
    */
-  atExit(f: () => void): void;
+  atExit(f: () => void, id?: string): void;
 
   /**
    * Move a file on the target server.
