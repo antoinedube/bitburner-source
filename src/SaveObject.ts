@@ -1,9 +1,9 @@
 import { Skills } from "@nsdefs";
 
 import { loadAliases, loadGlobalAliases, Aliases, GlobalAliases } from "./Alias";
-import { Companies, loadCompanies } from "./Company/Companies";
+import { getCompaniesSave, loadCompanies } from "./Company/Companies";
 import { CONSTANTS } from "./Constants";
-import { Factions, loadFactions } from "./Faction/Factions";
+import { getFactionsSave, loadFactions } from "./Faction/Factions";
 import { loadAllGangs, AllGangs } from "./Gang/AllGangs";
 import { Player, setPlayer, loadPlayer } from "./Player";
 import {
@@ -26,11 +26,10 @@ import { dialogBoxCreate } from "./ui/React/DialogBox";
 import { Reviver, constructorsForReviver, Generic_toJSON, Generic_fromJSON, IReviverValue } from "./utils/JSONReviver";
 import { save } from "./db";
 import { AwardNFG, v1APIBreak } from "./utils/v1APIBreak";
-import { AugmentationName, FactionName, LocationName, ToastVariant } from "@enums";
+import { AugmentationName, LocationName, ToastVariant } from "@enums";
 import { PlayerOwnedAugmentation } from "./Augmentation/PlayerOwnedAugmentation";
 import { pushGameSaved } from "./Electron";
 import { defaultMonacoTheme } from "./ScriptEditor/ui/themes";
-import { Faction } from "./Faction/Faction";
 import { safelyCreateUniqueServer } from "./Server/ServerHelpers";
 import { SpecialServers } from "./Server/data/SpecialServers";
 import { v2APIBreak } from "./utils/v2APIBreak";
@@ -38,6 +37,7 @@ import { Corporation } from "./Corporation/Corporation";
 import { Terminal } from "./Terminal";
 import { getRecordValues } from "./Types/Record";
 import { ExportMaterial } from "./Corporation/Actions";
+import { getGoSave, loadGo } from "./Go/SaveLoad";
 
 /* SaveObject.js
  *  Defines the object used to save/load games
@@ -86,6 +86,7 @@ class BitburnerSaveObject {
   AllGangsSave = "";
   LastExportBonus = "0";
   StaneksGiftSave = "";
+  GoSave = "";
 
   getSaveString(forceExcludeRunningScripts = false): string {
     this.PlayerSave = JSON.stringify(Player);
@@ -96,8 +97,8 @@ class BitburnerSaveObject {
     this.AllServersSave = saveAllServers();
     Settings.ExcludeRunningScriptsFromSave = originalExcludeSetting;
 
-    this.CompaniesSave = JSON.stringify(Companies);
-    this.FactionsSave = JSON.stringify(Factions);
+    this.CompaniesSave = JSON.stringify(getCompaniesSave());
+    this.FactionsSave = JSON.stringify(getFactionsSave());
     this.AliasesSave = JSON.stringify(Object.fromEntries(Aliases.entries()));
     this.GlobalAliasesSave = JSON.stringify(Object.fromEntries(GlobalAliases.entries()));
     this.StockMarketSave = JSON.stringify(StockMarket);
@@ -105,6 +106,7 @@ class BitburnerSaveObject {
     this.VersionSave = JSON.stringify(CONSTANTS.VersionNumber);
     this.LastExportBonus = JSON.stringify(ExportBonus.LastExportBonus);
     this.StaneksGiftSave = JSON.stringify(staneksGift);
+    this.GoSave = JSON.stringify(getGoSave());
 
     if (Player.gang) this.AllGangsSave = JSON.stringify(AllGangs);
 
@@ -379,7 +381,6 @@ function evaluateVersionCompatibility(ver: string | number): void {
   }
   //Fix contract names
   if (ver < 16) {
-    Factions[FactionName.ShadowsOfAnarchy] = new Faction(FactionName.ShadowsOfAnarchy);
     //Iterate over all contracts on all servers
     for (const server of GetAllServers()) {
       for (const contract of server.contracts) {
@@ -704,6 +705,18 @@ Error: ${e}`);
       }
     }
   }
+  v2_60: if (ver < 38 && "go" in Player) {
+    const goData = Player.go;
+    // Remove outdated savedata
+    delete Player.go;
+    // Attempt to load back in at least the stats object. The current game will not be loaded.
+    if (!goData || typeof goData !== "object") break v2_60;
+    const stats = "status" in goData ? goData.status : "stats" in goData ? goData.stats : null;
+    if (!stats || typeof stats !== "object") break v2_60;
+    const freshSaveData = getGoSave();
+    Object.assign(freshSaveData.stats, stats);
+    loadGo(JSON.stringify(freshSaveData));
+  }
 }
 
 function loadGame(saveString: string): boolean {
@@ -717,6 +730,7 @@ function loadGame(saveString: string): boolean {
   loadAllServers(saveObj.AllServersSave);
   loadCompanies(saveObj.CompaniesSave);
   loadFactions(saveObj.FactionsSave, Player);
+  loadGo(saveObj.GoSave);
 
   if (Object.hasOwn(saveObj, "StaneksGiftSave")) {
     loadStaneksGift(saveObj.StaneksGiftSave);
