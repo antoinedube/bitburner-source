@@ -95,7 +95,8 @@ export function getPurchaseServerLimit(): number {
 }
 
 export function getPurchaseServerMaxRam(): number {
-  const ram = Math.round(ServerConstants.PurchasedServerMaxRam * currentNodeMults.PurchasedServerMaxRam);
+  // const ram = Math.round(ServerConstants.PurchasedServerMaxRam * currentNodeMults.PurchasedServerMaxRam);
+  const ram = Math.round(ServerConstants.PurchasedServerMaxRam);
 
   // Round this to the nearest power of 2
   return 1 << (31 - Math.clz32(ram));
