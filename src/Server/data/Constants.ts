@@ -19,6 +19,6 @@ export const ServerConstants: {
   ServerFortifyAmount: 0.002, // Amount by which server's security increases when its hacked/grown
   ServerWeakenAmount: 0.05, // Amount by which server's security decreases when weakened
 
-  PurchasedServerLimit: 25,
+  PurchasedServerLimit: 50,
   PurchasedServerMaxRam: 1048576, // 2^20
 };

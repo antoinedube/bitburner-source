@@ -90,7 +90,8 @@ export const renamePurchasedServer = (hostname: string, newName: string): void =
 };
 
 export function getPurchaseServerLimit(): number {
-  return Math.round(ServerConstants.PurchasedServerLimit * currentNodeMults.PurchasedServerLimit);
+  // return Math.round(ServerConstants.PurchasedServerLimit * currentNodeMults.PurchasedServerLimit);
+  return Math.round(ServerConstants.PurchasedServerLimit);
 }
 
 export function getPurchaseServerMaxRam(): number {
