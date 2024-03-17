@@ -90,7 +90,7 @@ export const renameCloudServer = (hostname: string, newName: string): void => {
 };
 
 export function getCloudServerLimit(): number {
-  return Math.round(ServerConstants.CloudServerLimit * currentNodeMults.CloudServerLimit);
+  return Math.round(ServerConstants.CloudServerLimit);
 }
 
 export function getCloudServerMaxRam(): number {
@@ -117,10 +117,10 @@ export function purchaseServer(hostname: string, ram: number): void {
   if (Player.purchasedServers.length >= getCloudServerLimit()) {
     dialogBoxCreate(
       "You have reached the maximum limit of " +
-        getCloudServerLimit() +
-        " cloud servers. " +
-        "You cannot purchase any more. You can " +
-        "delete some of your cloud servers using the cloud.deleteServer() Netscript function in a script",
+      getCloudServerLimit() +
+      " cloud servers. " +
+      "You cannot purchase any more. You can " +
+      "delete some of your cloud servers using the cloud.deleteServer() Netscript function in a script",
     );
     return;
   }

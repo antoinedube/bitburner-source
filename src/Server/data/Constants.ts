@@ -9,6 +9,6 @@ export const ServerConstants = {
   ServerFortifyAmount: 0.002, // Amount by which server's security increases when its hacked/grown
   ServerWeakenAmount: 0.05, // Amount by which server's security decreases when weakened
 
-  CloudServerLimit: 25,
+  CloudServerLimit: 100,
   CloudServerMaxRam: 1048576, // 2^20
 } as const;
