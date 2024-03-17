@@ -6,10 +6,10 @@ export const HacknetNodeConstants = {
   RamBaseCost: 30e3,
   CoreBaseCost: 500e3,
 
-  PurchaseNextMult: 1.085,
-  UpgradeLevelMult: 1.004,
-  UpgradeRamMult: 1.028,
-  UpgradeCoreMult: 1.048,
+  PurchaseNextMult: 1.42,
+  UpgradeLevelMult: 1.02,
+  UpgradeRamMult: 1.14,
+  UpgradeCoreMult: 1.24,
 
   MaxLevel: 200,
   MaxRam: 64,
@@ -37,13 +37,13 @@ export const HacknetServerConstants = {
   CoreBaseCost: 1e6,
   CacheBaseCost: 10e6,
 
-  PurchaseMult: 1.22,
-  UpgradeLevelMult: 1.01,
-  UpgradeRamMult: 1.04,
-  UpgradeCoreMult: 1.055,
-  UpgradeCacheMult: 1.085,
+  PurchaseMult: 2.1,
+  UpgradeLevelMult: 1.05,
+  UpgradeRamMult: 1.2,
+  UpgradeCoreMult: 1.27,
+  UpgradeCacheMult: 1.43,
 
-  MaxServers: 24,
+  MaxServers: 30,
 
   MaxLevel: 300,
   MaxRam: 8192,
