@@ -94,7 +94,6 @@ export function getCloudServerLimit(): number {
 }
 
 export function getCloudServerMaxRam(): number {
-  // const ram = Math.round(ServerConstants.CloudServerMaxRam * currentNodeMults.CloudServerMaxRam);
   const ram = Math.round(ServerConstants.CloudServerMaxRam);
 
   // Round this to the nearest power of 2
