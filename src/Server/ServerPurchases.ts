@@ -90,7 +90,6 @@ export const renameCloudServer = (hostname: string, newName: string): void => {
 };
 
 export function getCloudServerLimit(): number {
-  // return Math.round(ServerConstants.CloudServerLimit * currentNodeMults.CloudServerLimit);
   return Math.round(ServerConstants.CloudServerLimit);
 }
 
