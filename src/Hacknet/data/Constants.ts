@@ -40,7 +40,7 @@ export const HacknetServerConstants = {
   PurchaseMult: 2.1,
   UpgradeLevelMult: 1.05,
   UpgradeRamMult: 1.2,
-  UpgradeCoreMult: 1.27,
+  UpgradeCoreMult: 1.13,
   UpgradeCacheMult: 1.43,
 
   MaxServers: 30,
