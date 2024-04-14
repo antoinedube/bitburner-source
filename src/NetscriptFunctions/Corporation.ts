@@ -63,7 +63,7 @@ import { InternalAPI, NetscriptContext, setRemovedFunctions } from "../Netscript
 import { helpers } from "../Netscript/NetscriptHelpers";
 import { getEnumHelper } from "../utils/EnumHelper";
 import { MaterialInfo } from "../Corporation/MaterialInfo";
-import { calculateUpgradeCost } from "../Corporation/helpers";
+import { calculateOfficeSizeUpgradeCost, calculateUpgradeCost } from "../Corporation/helpers";
 import { PositiveInteger } from "../types";
 import { getRecordKeys } from "../Types/Record";
 
@@ -411,6 +411,9 @@ export function NetscriptCorporation(): InternalAPI<NSCorporation> {
       (ctx) =>
       (_sourceDivision, _sourceCity, _targetDivision, _targetCity, _materialName, _amt): void => {
         checkAccess(ctx, CorpUnlockName.WarehouseAPI);
+        if (!hasUnlock(CorpUnlockName.Export)) {
+          throw helpers.errorMessage(ctx, `You have not unlocked the Export feature!`);
+        }
         const sourceDivision = helpers.string(ctx, "sourceDivision", _sourceDivision);
         const sourceCity = getEnumHelper("CityName").nsGetMember(ctx, _sourceCity, "sourceCity");
         const targetDivision = getDivision(helpers.string(ctx, "targetDivision", _targetDivision));
@@ -424,6 +427,9 @@ export function NetscriptCorporation(): InternalAPI<NSCorporation> {
       (ctx) =>
       (_sourceDivision, _sourceCity, _targetDivision, _targetCity, _materialName): void => {
         checkAccess(ctx, CorpUnlockName.WarehouseAPI);
+        if (!hasUnlock(CorpUnlockName.Export)) {
+          throw helpers.errorMessage(ctx, `You have not unlocked the Export feature!`);
+        }
         const sourceDivision = helpers.string(ctx, "sourceDivision", _sourceDivision);
         const sourceCity = getEnumHelper("CityName").nsGetMember(ctx, _sourceCity, "sourceCity");
         const targetDivision = helpers.string(ctx, "targetDivision", _targetDivision);
@@ -504,20 +510,13 @@ export function NetscriptCorporation(): InternalAPI<NSCorporation> {
       const researchName = getEnumHelper("CorpResearchName").nsGetMember(ctx, _researchName, "researchName");
       return hasResearched(getDivision(divisionName), researchName);
     },
-    getOfficeSizeUpgradeCost: (ctx) => (_divisionName, _cityName, _size) => {
+    getOfficeSizeUpgradeCost: (ctx) => (_divisionName, _cityName, _increase) => {
       checkAccess(ctx, CorpUnlockName.OfficeAPI);
       const divisionName = helpers.string(ctx, "divisionName", _divisionName);
       const cityName = getEnumHelper("CityName").nsGetMember(ctx, _cityName);
-      const size = helpers.number(ctx, "size", _size);
-      if (size < 0) throw new Error("Invalid value for size field! Must be numeric and greater than 0");
+      const increase = helpers.positiveInteger(ctx, "increase", _increase);
       const office = getOffice(divisionName, cityName);
-      const initialPriceMult = Math.round(office.size / corpConstants.officeInitialSize);
-      const costMultiplier = 1.09;
-      let mult = 0;
-      for (let i = 0; i < size / corpConstants.officeInitialSize; ++i) {
-        mult += Math.pow(costMultiplier, initialPriceMult + i);
-      }
-      return corpConstants.officeInitialCost * mult;
+      return calculateOfficeSizeUpgradeCost(office.size, increase);
     },
     setAutoJobAssignment: (ctx) => (_divisionName, _cityName, _job, _amount) => {
       checkAccess(ctx, CorpUnlockName.OfficeAPI);
@@ -558,8 +557,8 @@ export function NetscriptCorporation(): InternalAPI<NSCorporation> {
       checkAccess(ctx, CorpUnlockName.OfficeAPI);
       const divisionName = helpers.string(ctx, "divisionName", _divisionName);
       const cityName = getEnumHelper("CityName").nsGetMember(ctx, _cityName);
-      const size = helpers.number(ctx, "size", _size);
-      if (size < 0) throw new Error("Invalid value for size field! Must be numeric and greater than 0");
+      const size = helpers.positiveInteger(ctx, "size", _size);
+
       const office = getOffice(divisionName, cityName);
       const corporation = getCorporation();
       UpgradeOfficeSize(corporation, office, size);
