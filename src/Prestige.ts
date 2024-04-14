@@ -134,7 +134,7 @@ export function prestigeAugmentation(): void {
 
   // Cancel Bladeburner action
   if (Player.bladeburner) {
-    Player.bladeburner.prestige();
+    Player.bladeburner.prestigeAugmentation();
   }
 
   // BitNode 8: Ghost of Wall Street
