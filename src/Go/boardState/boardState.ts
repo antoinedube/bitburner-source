@@ -23,10 +23,12 @@ export function getNewBoardState(
 ): BoardState {
   if (ai === GoOpponent.w0r1d_d43m0n) {
     boardToCopy = resetCoordinates(rotate90Degrees(boardFromSimpleBoard(bitverseBoardShape)));
+    boardSize = 19;
+    applyObstacles = false;
   }
 
   const newBoardState: BoardState = {
-    previousBoard: null,
+    previousBoards: [],
     previousPlayer: GoColor.white,
     ai: ai,
     passCount: 0,
@@ -63,7 +65,13 @@ export function getNewBoardState(
 export function getHandicap(boardSize: number, opponent: GoOpponent) {
   // Illuminati and WD get a few starting routers
   if (opponent === GoOpponent.Illuminati || opponent === GoOpponent.w0r1d_d43m0n) {
-    return ceil(boardSize * 0.35);
+    return {
+      [5]: 1,
+      [7]: 3,
+      [9]: 4,
+      [13]: 5,
+      [19]: 7,
+    }[boardSize];
   }
   return 0;
 }
@@ -81,7 +89,12 @@ export function makeMove(boardState: BoardState, x: number, y: number, player: G
     return false;
   }
 
-  boardState.previousBoard = simpleBoardFromBoard(boardState.board);
+  // Only maintain last 7 moves
+  boardState.previousBoards.unshift(simpleBoardFromBoard(boardState.board));
+  if (boardState.previousBoards.length > 7) {
+    boardState.previousBoards.pop();
+  }
+
   const point = boardState.board[x][y];
   if (!point) return false;
 
@@ -117,6 +130,13 @@ export function applyHandicap(board: Board, handicap: number): void {
   const availableMoves = getEmptySpaces(board);
   const handicapMoveOptions = getExpansionMoveArray(board, availableMoves);
   const handicapMoves: Move[] = [];
+
+  // Special handling for 5x5: extra weight on handicap piece in the center of the board
+  if (availableMoves.length < 26 && board[2][2] && Math.random() < 0.2) {
+    board[2][2].color = GoColor.white;
+    updateChains(board);
+    return;
+  }
 
   // select random distinct moves from the move options list up to the specified handicap amount
   for (let i = 0; i < handicap && i < handicapMoveOptions.length; i++) {
@@ -166,12 +186,12 @@ export function updateChains(board: Board, resetChains = true): void {
  * Modifies the board in place.
  */
 export function updateCaptures(board: Board, playerWhoMoved: GoColor, resetChains = true): void {
-  const boardState = updateChains(board, resetChains);
+  updateChains(board, resetChains);
   const chains = getAllChains(board);
 
   const chainsToCapture = findAllCapturedChains(chains, playerWhoMoved);
   if (!chainsToCapture?.length) {
-    return boardState;
+    return;
   }
 
   chainsToCapture?.forEach((chain) => captureChain(chain));
@@ -265,7 +285,7 @@ export function getEmptySpaces(board: Board): PointState[] {
 export function getStateCopy(initialState: BoardState) {
   const boardState = structuredClone(initialState);
 
-  boardState.previousBoard = initialState.previousBoard ? [...initialState.previousBoard] : null;
+  boardState.previousBoards = initialState.previousBoards ?? [];
   boardState.previousPlayer = initialState.previousPlayer;
   boardState.ai = initialState.ai;
   boardState.passCount = initialState.passCount;

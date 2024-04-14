@@ -7,7 +7,6 @@ import { GoColor, GoOpponent, GoPlayType, GoValidity, ToastVariant } from "@enum
 import { Go, GoEvents } from "../Go";
 import { SnackbarEvents } from "../../ui/React/Snackbar";
 import { getNewBoardState, getStateCopy, makeMove, passTurn, updateCaptures } from "../boardState/boardState";
-import { getMove } from "../boardAnalysis/goAI";
 import { bitverseArt, weiArt } from "../boardState/asciiArt";
 import { getScore, resetWinstreak } from "../boardAnalysis/scoring";
 import { boardFromSimpleBoard, evaluateIfMoveIsValid, getAllValidMoves } from "../boardAnalysis/boardAnalysis";
@@ -19,6 +18,7 @@ import { GoScoreModal } from "./GoScoreModal";
 import { GoGameboard } from "./GoGameboard";
 import { GoSubnetSearch } from "./GoSubnetSearch";
 import { CorruptableText } from "../../ui/React/CorruptableText";
+import { getAIMove } from "../effects/netscriptGoImplementation";
 
 interface GoGameboardWrapperProps {
   showInstructions: () => void;
@@ -119,10 +119,7 @@ export function GoGameboardWrapper({ showInstructions }: GoGameboardWrapperProps
 
   async function takeAiTurn(boardState: BoardState) {
     setWaitingOnAI(true);
-    const move = await getMove(boardState, GoColor.white, opponent);
-
-    // If a new game has started while this async code ran, just drop it
-    if (boardState !== Go.currentGame) return;
+    const move = await getAIMove(boardState);
 
     if (move.type === GoPlayType.pass) {
       SnackbarEvents.emit(`The opponent passes their turn; It is now your turn to move.`, ToastVariant.WARNING, 4000);
@@ -134,10 +131,7 @@ export function GoGameboardWrapper({ showInstructions }: GoGameboardWrapperProps
       setScoreOpen(true);
       return;
     }
-
-    const didUpdateBoard = makeMove(boardState, move.x, move.y, GoColor.white);
-
-    if (didUpdateBoard) setWaitingOnAI(false);
+    setWaitingOnAI(false);
   }
 
   function newSubnet() {
@@ -149,7 +143,7 @@ export function GoGameboardWrapper({ showInstructions }: GoGameboardWrapperProps
     setScoreOpen(false);
     setSearchOpen(false);
     setOpponent(newOpponent);
-    if (boardState.previousPlayer !== null && boardState.previousBoard) {
+    if (boardState.previousPlayer !== null && boardState.previousBoards.length) {
       resetWinstreak(boardState.ai, false);
     }
 
@@ -158,16 +152,16 @@ export function GoGameboardWrapper({ showInstructions }: GoGameboardWrapperProps
   }
 
   function getPriorMove() {
-    if (!boardState.previousBoard) return boardState;
+    if (!boardState.previousBoards.length) return boardState;
     const priorState = getStateCopy(boardState);
     priorState.previousPlayer = boardState.previousPlayer === GoColor.black ? GoColor.white : GoColor.black;
-    priorState.board = boardFromSimpleBoard(boardState.previousBoard);
+    priorState.board = boardFromSimpleBoard(boardState.previousBoards[0]);
     updateCaptures(priorState.board, priorState.previousPlayer);
     return priorState;
   }
 
   function showPreviousMove(newValue: boolean) {
-    if (boardState.previousBoard) {
+    if (boardState.previousBoards.length) {
       setShowPriorMove(newValue);
     }
   }
@@ -181,7 +175,7 @@ export function GoGameboardWrapper({ showInstructions }: GoGameboardWrapperProps
     boardState.previousPlayer === GoColor.white && !getAllValidMoves(boardState, GoColor.black).length;
   const disablePassButton = opponent !== GoOpponent.none && boardState.previousPlayer === GoColor.black && waitingOnAI;
 
-  const scoreBoxText = boardState.previousBoard
+  const scoreBoxText = boardState.previousBoards.length
     ? `Score: Black: ${score[GoColor.black].sum} White: ${score[GoColor.white].sum}`
     : "Place a router to begin!";
 
@@ -262,7 +256,7 @@ export function GoGameboardWrapper({ showInstructions }: GoGameboardWrapperProps
             />
             <OptionSwitch
               checked={showPriorMove}
-              disabled={!boardState.previousBoard}
+              disabled={!boardState.previousBoards.length}
               onChange={(newValue) => showPreviousMove(newValue)}
               text="Show previous move"
               tooltip={<>Show the board as it was before the last move</>}
