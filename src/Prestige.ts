@@ -54,7 +54,7 @@ export function prestigeAugmentation(): void {
 
   const homeComp = Player.getHomeComputer();
   homeComp.cpuCores = 8;
-  homeComp.maxRam = 2**16;
+  homeComp.maxRam = 2**24;
 
   // Delete all servers except home computer
   prestigeAllServers();
@@ -189,7 +189,7 @@ export function prestigeSourceFile(isFlume: boolean): void {
 
   const homeComp = Player.getHomeComputer();
   homeComp.cpuCores = 8;
-  homeComp.maxRam = 2**16;
+  homeComp.maxRam = 2**24;
 
   // Stop a Terminal action if there is one.
   if (Terminal.action !== null) {
