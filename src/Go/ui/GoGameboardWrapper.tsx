@@ -141,7 +141,7 @@ export function GoGameboardWrapper({ showInstructions }: GoGameboardWrapperProps
   function resetState(newBoardSize = boardSize, newOpponent = Go.currentGame.ai) {
     setScoreOpen(false);
     setSearchOpen(false);
-
+    
     if (boardState.previousPlayer !== null && boardState.previousBoards.length) {
       resetWinstreak(boardState.ai, false);
     }
