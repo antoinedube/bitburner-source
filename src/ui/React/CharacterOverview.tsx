@@ -367,7 +367,7 @@ function CustomDisplayHackedServers(): React.ReactElement {
     "darkweb",
   ];
 
-  const classes = useStyles();
+  const { classes } = useStyles();
 
   const allServers = GetAllServers();
   const servers = allServers
@@ -415,7 +415,7 @@ function CustomDisplayHackingServers(): React.ReactElement {
     return clearSubscription;
   }, [rerender]);
 
-  const classes = useStyles();
+  const { classes } = useStyles();
 
   const numberPurchasedServers = Player.purchasedServers.length;
   const purchasedServerLimit = getPurchaseServerLimit();
@@ -463,7 +463,7 @@ function CustomDisplayHacknetServers(): React.ReactElement {
     return clearSubscription;
   }, [rerender]);
 
-  const classes = useStyles();
+  const { classes } = useStyles();
 
   let hacknetServersHeader: ReactNode;
   let hackingServersInnerText: ReactNode;
@@ -532,7 +532,7 @@ function CustomDisplayGang(): React.ReactElement {
     return clearSubscription;
   }, [rerender]);
 
-  const classes = useStyles();
+  const { classes } = useStyles();
 
   let gangHeader: ReactNode;
   let gangInnerText: ReactNode;
@@ -709,7 +709,7 @@ const useStyles = makeStyles()((theme: Theme) => ({
     padding: 0,
     margin: 0,
   },
-  
+
   cell: {
     padding: 0,
     margin: 0,
