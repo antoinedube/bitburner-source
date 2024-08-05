@@ -1,5 +1,4 @@
-import { getRandomInt } from "../utils/helpers/getRandomInt";
-import { MinHeap } from "../utils/Heap";
+import { getRandomIntInclusive } from "../utils/helpers/getRandomIntInclusive";
 
 import { comprGenChar, comprLZGenerate, comprLZEncode, comprLZDecode } from "../utils/CompressionContracts";
 import { HammingEncode, HammingDecode, HammingEncodeProperly } from "../utils/HammingCodeTools";
@@ -69,7 +68,7 @@ export const codingContractTypesMetadata: ICodingContractTypeMetadata[] = [
     },
     difficulty: 1,
     gen: (): number => {
-      return getRandomInt(500, 1e9);
+      return getRandomIntInclusive(500, 1e9);
     },
     name: "Find Largest Prime Factor",
     numTries: 10,
@@ -99,11 +98,11 @@ export const codingContractTypesMetadata: ICodingContractTypeMetadata[] = [
     },
     difficulty: 1,
     gen: (): number[] => {
-      const len: number = getRandomInt(5, 40);
+      const len: number = getRandomIntInclusive(5, 40);
       const arr: number[] = [];
       arr.length = len;
       for (let i = 0; i < len; ++i) {
-        arr[i] = getRandomInt(-10, 10);
+        arr[i] = getRandomIntInclusive(-10, 10);
       }
 
       return arr;
@@ -135,7 +134,7 @@ export const codingContractTypesMetadata: ICodingContractTypeMetadata[] = [
     },
     difficulty: 1.5,
     gen: (): number => {
-      return getRandomInt(8, 100);
+      return getRandomIntInclusive(8, 100);
     },
     name: "Total Ways to Sum",
     numTries: 10,
@@ -167,8 +166,8 @@ export const codingContractTypesMetadata: ICodingContractTypeMetadata[] = [
     },
     difficulty: 2,
     gen: (): [number, number[]] => {
-      const n: number = getRandomInt(12, 200);
-      const maxLen: number = getRandomInt(8, 12);
+      const n: number = getRandomIntInclusive(12, 200);
+      const maxLen: number = getRandomIntInclusive(8, 12);
       const s: number[] = [];
       // Bias towards small numbers is intentional to have much bigger answers in general
       // to force people better optimize their solutions
@@ -241,8 +240,8 @@ export const codingContractTypesMetadata: ICodingContractTypeMetadata[] = [
     },
     difficulty: 2,
     gen: (): number[][] => {
-      const m: number = getRandomInt(1, 15);
-      const n: number = getRandomInt(1, 15);
+      const m: number = getRandomIntInclusive(1, 15);
+      const n: number = getRandomIntInclusive(1, 15);
       const matrix: number[][] = [];
       matrix.length = m;
       for (let i = 0; i < m; ++i) {
@@ -252,7 +251,7 @@ export const codingContractTypesMetadata: ICodingContractTypeMetadata[] = [
 
       for (let i = 0; i < m; ++i) {
         for (let j = 0; j < n; ++j) {
-          matrix[i][j] = getRandomInt(1, 50);
+          matrix[i][j] = getRandomIntInclusive(1, 50);
         }
       }
 
@@ -340,19 +339,19 @@ export const codingContractTypesMetadata: ICodingContractTypeMetadata[] = [
         "\n\nAssuming you are initially positioned",
         "at the start of the array, determine whether you are",
         "able to reach the last index.\n\n",
-        "Your answer should be submitted as 1 or 0, representing true and false respectively",
+        "Your answer should be submitted as 1 or 0, representing true and false respectively.",
       ].join(" ");
     },
     difficulty: 2.5,
     gen: (): number[] => {
-      const len: number = getRandomInt(3, 25);
+      const len: number = getRandomIntInclusive(3, 25);
       const arr: number[] = [];
       arr.length = len;
       for (let i = 0; i < arr.length; ++i) {
         if (Math.random() < 0.2) {
           arr[i] = 0; // 20% chance of being 0
         } else {
-          arr[i] = getRandomInt(0, 10);
+          arr[i] = getRandomIntInclusive(0, 10);
         }
       }
 
@@ -389,7 +388,7 @@ export const codingContractTypesMetadata: ICodingContractTypeMetadata[] = [
     },
     difficulty: 3,
     gen: (): number[] => {
-      const len: number = getRandomInt(3, 25);
+      const len: number = getRandomIntInclusive(3, 25);
       const arr: number[] = [];
       arr.length = len;
       for (let i = 0; i < arr.length; i++) {
@@ -447,10 +446,10 @@ export const codingContractTypesMetadata: ICodingContractTypeMetadata[] = [
     difficulty: 3,
     gen: (): number[][] => {
       const intervals: number[][] = [];
-      const numIntervals: number = getRandomInt(3, 20);
+      const numIntervals: number = getRandomIntInclusive(3, 20);
       for (let i = 0; i < numIntervals; ++i) {
-        const start: number = getRandomInt(1, 25);
-        const end: number = start + getRandomInt(1, 10);
+        const start: number = getRandomIntInclusive(1, 25);
+        const end: number = start + getRandomIntInclusive(1, 10);
         intervals.push([start, end]);
       }
 
@@ -493,7 +492,7 @@ export const codingContractTypesMetadata: ICodingContractTypeMetadata[] = [
         "that can be created from the string:\n\n",
         `${data}\n\n`,
         "Note that an octet cannot begin with a '0' unless the number",
-        "itself is actually 0. For example, '192.168.010.1' is not a valid IP.\n\n",
+        "itself is exactly '0'. For example, '192.168.010.1' is not a valid IP.\n\n",
         "Examples:\n\n",
         '25525511135 -> ["255.255.11.135", "255.255.111.35"]\n',
         '1938718066 -> ["193.87.180.66"]',
@@ -503,7 +502,7 @@ export const codingContractTypesMetadata: ICodingContractTypeMetadata[] = [
     gen: (): string => {
       let str = "";
       for (let i = 0; i < 4; ++i) {
-        const num: number = getRandomInt(0, 255);
+        const num: number = getRandomIntInclusive(0, 255);
         const convNum: string = num.toString();
         str += convNum;
       }
@@ -562,16 +561,16 @@ export const codingContractTypesMetadata: ICodingContractTypeMetadata[] = [
         "Determine the maximum possible profit you can earn using at most",
         "one transaction (i.e. you can only buy and sell the stock once). If no profit can be made",
         "then the answer should be 0. Note",
-        "that you have to buy the stock before you can sell it",
+        "that you have to buy the stock before you can sell it.",
       ].join(" ");
     },
     difficulty: 1,
     gen: (): number[] => {
-      const len: number = getRandomInt(3, 50);
+      const len: number = getRandomIntInclusive(3, 50);
       const arr: number[] = [];
       arr.length = len;
       for (let i = 0; i < len; ++i) {
-        arr[i] = getRandomInt(1, 200);
+        arr[i] = getRandomIntInclusive(1, 200);
       }
 
       return arr;
@@ -602,16 +601,16 @@ export const codingContractTypesMetadata: ICodingContractTypeMetadata[] = [
         "and then selling one share of the stock. Note that you cannot",
         "engage in multiple transactions at once. In other words, you",
         "must sell the stock before you buy it again.\n\n",
-        "If no profit can be made, then the answer should be 0",
+        "If no profit can be made, then the answer should be 0.",
       ].join(" ");
     },
     difficulty: 2,
     gen: (): number[] => {
-      const len: number = getRandomInt(3, 50);
+      const len: number = getRandomIntInclusive(3, 50);
       const arr: number[] = [];
       arr.length = len;
       for (let i = 0; i < len; ++i) {
-        arr[i] = getRandomInt(1, 200);
+        arr[i] = getRandomIntInclusive(1, 200);
       }
 
       return arr;
@@ -640,16 +639,16 @@ export const codingContractTypesMetadata: ICodingContractTypeMetadata[] = [
         "and then selling one share of the stock. Note that you cannot",
         "engage in multiple transactions at once. In other words, you",
         "must sell the stock before you buy it again.\n\n",
-        "If no profit can be made, then the answer should be 0",
+        "If no profit can be made, then the answer should be 0.",
       ].join(" ");
     },
     difficulty: 5,
     gen: (): number[] => {
-      const len: number = getRandomInt(3, 50);
+      const len: number = getRandomIntInclusive(3, 50);
       const arr: number[] = [];
       arr.length = len;
       for (let i = 0; i < len; ++i) {
-        arr[i] = getRandomInt(1, 200);
+        arr[i] = getRandomIntInclusive(1, 200);
       }
 
       return arr;
@@ -693,12 +692,12 @@ export const codingContractTypesMetadata: ICodingContractTypeMetadata[] = [
     },
     difficulty: 8,
     gen: (): [number, number[]] => {
-      const k = getRandomInt(2, 10);
-      const len = getRandomInt(3, 50);
+      const k = getRandomIntInclusive(2, 10);
+      const len = getRandomIntInclusive(3, 50);
       const prices: number[] = [];
       prices.length = len;
       for (let i = 0; i < len; ++i) {
-        prices[i] = getRandomInt(1, 200);
+        prices[i] = getRandomIntInclusive(1, 200);
       }
 
       return [k, prices];
@@ -785,14 +784,14 @@ export const codingContractTypesMetadata: ICodingContractTypeMetadata[] = [
     difficulty: 5,
     gen: (): number[][] => {
       const triangle: number[][] = [];
-      const levels: number = getRandomInt(3, 12);
+      const levels: number = getRandomIntInclusive(3, 12);
       triangle.length = levels;
 
       for (let row = 0; row < levels; ++row) {
         triangle[row] = [];
         triangle[row].length = row + 1;
         for (let i = 0; i < triangle[row].length; ++i) {
-          triangle[row][i] = getRandomInt(1, 9);
+          triangle[row][i] = getRandomIntInclusive(1, 9);
         }
       }
 
@@ -832,8 +831,8 @@ export const codingContractTypesMetadata: ICodingContractTypeMetadata[] = [
     },
     difficulty: 3,
     gen: (): number[] => {
-      const numRows: number = getRandomInt(2, 14);
-      const numColumns: number = getRandomInt(2, 14);
+      const numRows: number = getRandomIntInclusive(2, 14);
+      const numColumns: number = getRandomIntInclusive(2, 14);
 
       return [numRows, numColumns];
     },
@@ -878,8 +877,8 @@ export const codingContractTypesMetadata: ICodingContractTypeMetadata[] = [
     },
     difficulty: 5,
     gen: (): number[][] => {
-      const numRows: number = getRandomInt(2, 12);
-      const numColumns: number = getRandomInt(2, 12);
+      const numRows: number = getRandomIntInclusive(2, 12);
+      const numColumns: number = getRandomIntInclusive(2, 12);
 
       const grid: number[][] = [];
       grid.length = numRows;
@@ -955,14 +954,14 @@ export const codingContractTypesMetadata: ICodingContractTypeMetadata[] = [
         "&nbsp;&nbsp;&nbsp;&nbsp;[[0,1],\n",
         "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[1,0]]\n",
         "\n",
-        "Answer: ''\n\n",
+        "Answer: ''",
       ].join(" ");
     },
     difficulty: 7,
     numTries: 10,
     gen: (): number[][] => {
-      const height = getRandomInt(6, 12);
-      const width = getRandomInt(6, 12);
+      const height = getRandomIntInclusive(6, 12);
+      const width = getRandomIntInclusive(6, 12);
       const dstY = height - 1;
       const dstX = width - 1;
       const minPathLength = dstY + dstX; // Math.abs(dstY - srcY) + Math.abs(dstX - srcX)
@@ -994,7 +993,7 @@ export const codingContractTypesMetadata: ICodingContractTypeMetadata[] = [
 
       const distance: [number][] = new Array(height);
       //const prev: [[number, number] | undefined][] = new Array(height);
-      const queue = new MinHeap<[number, number]>();
+      const queue: [number, number][] = [];
 
       for (let y = 0; y < height; y++) {
         distance[y] = new Array(width).fill(Infinity) as [number];
@@ -1015,21 +1014,15 @@ export const codingContractTypesMetadata: ICodingContractTypeMetadata[] = [
 
       // Prepare starting point
       distance[0][0] = 0;
-      queue.push([0, 0], 0);
+      queue.push([0, 0]);
 
       // Take next-nearest position and expand potential paths from there
-      while (queue.size > 0) {
-        const [y, x] = queue.pop() as [number, number];
+      while (queue.length > 0) {
+        const [y, x] = queue.shift() as [number, number];
         for (const [yN, xN] of neighbors(y, x)) {
-          const d = distance[y][x] + 1;
-          if (d < distance[yN][xN]) {
-            if (distance[yN][xN] == Infinity)
-              // Not reached previously
-              queue.push([yN, xN], d);
-            // Found a shorter path
-            else queue.changeWeight(([yQ, xQ]) => yQ == yN && xQ == xN, d);
-            //prev[yN][xN] = [y, x];
-            distance[yN][xN] = d;
+          if (distance[yN][xN] == Infinity) {
+            queue.push([yN, xN]);
+            distance[yN][xN] = distance[y][x] + 1;
           }
         }
       }
@@ -1087,7 +1080,7 @@ export const codingContractTypesMetadata: ICodingContractTypeMetadata[] = [
     },
     difficulty: 10,
     gen: (): string => {
-      const len: number = getRandomInt(6, 20);
+      const len: number = getRandomIntInclusive(6, 20);
       const chars: string[] = [];
       chars.length = len;
 
@@ -1205,18 +1198,18 @@ export const codingContractTypesMetadata: ICodingContractTypeMetadata[] = [
     },
     difficulty: 10,
     gen: (): [string, number] => {
-      const numDigits = getRandomInt(4, 12);
+      const numDigits = getRandomIntInclusive(4, 12);
       const digitsArray: string[] = [];
       digitsArray.length = numDigits;
       for (let i = 0; i < digitsArray.length; ++i) {
         if (i === 0) {
-          digitsArray[i] = String(getRandomInt(1, 9));
+          digitsArray[i] = String(getRandomIntInclusive(1, 9));
         } else {
-          digitsArray[i] = String(getRandomInt(0, 9));
+          digitsArray[i] = String(getRandomIntInclusive(0, 9));
         }
       }
 
-      const target: number = getRandomInt(-100, 100);
+      const target: number = getRandomIntInclusive(-100, 100);
       const digits: string = digitsArray.join("");
 
       return [digits, target];
@@ -1282,8 +1275,9 @@ export const codingContractTypesMetadata: ICodingContractTypeMetadata[] = [
       // Prevent player from providing extra wrong answers and still receiving credit
       if (result.length !== sanitizedPlayerAnsArr.length) return false;
 
-      for (const expr of result) {
-        if (!sanitizedPlayerAnsArr.includes(expr)) {
+      const resultsSet = new Set(result);
+      for (const expr of sanitizedPlayerAnsArr) {
+        if (!resultsSet.has(expr)) {
           return false;
         }
       }
@@ -1297,23 +1291,28 @@ export const codingContractTypesMetadata: ICodingContractTypeMetadata[] = [
     difficulty: 5,
     desc: (n: unknown): string => {
       return [
-        "You are given the following decimal Value: \n",
-        `${n} \n`,
-        "Convert it to a binary representation and encode it as an 'extended Hamming code'. Eg:\n ",
-        "Value 8 is expressed in binary as '1000', which will be encoded",
-        "with the pattern 'pppdpddd', where p is a parity bit and d a data bit. The encoding of\n",
-        "8 is 11110000. As another example, '10101' (Value 21) will result into (pppdpdddpd) '1001101011'.\n",
-        "The answer should be given as a string containing only 1s and 0s.\n",
-        "NOTE: the endianness of the data bits is reversed in relation to the endianness of the parity bits.\n",
-        "NOTE: The bit at index zero is the overall parity bit, this should be set last.\n",
-        "NOTE 2: You should watch the Hamming Code video from 3Blue1Brown, which explains the 'rule' of encoding,",
-        "including the first index parity bit mentioned in the previous note.\n\n",
-        "Extra rule for encoding:\n",
-        "There should be no leading zeros in the 'data bit' section",
+        "You are given the following decimal value: \n",
+        `${n} \n\n`,
+        "Convert it to a binary representation and encode it as an 'extended Hamming code'.\n ",
+        "The number should be converted to a string of '0' and '1' with no leading zeroes.\n",
+        "Parity bits are inserted at positions 0 and 2^N.\n",
+        "Parity bits are used to make the total number of '1' bits in a given set of data even.\n",
+        "The parity bit at position 0 considers all bits including parity bits.\n",
+        "Each parity bit at position 2^N alternately considers N bits then ignores N bits, starting at position 2^N.\n",
+        "The endianness of the parity bits is reversed compared to the endianness of the data bits:\n",
+        "Data bits are encoded most significant bit first and the parity bits encoded least significant bit first.\n",
+        "The parity bit at position 0 is set last.\n\n",
+        "Examples:\n",
+        "8 in binary is 1000, and encodes to 11110000 (pppdpddd - where p is a parity bit and d is a data bit)\n",
+        "21 in binary is 10101, and encodes to 1001101011 (pppdpdddpd)\n\n",
+        "For more information on the 'rule' of encoding, refer to Wikipedia (https://wikipedia.org/wiki/Hamming_code)",
+        "or the 3Blue1Brown videos on Hamming Codes. (https://youtube.com/watch?v=X8jsijhllIA)",
       ].join(" ");
     },
     gen: (): number => {
-      return getRandomInt(Math.pow(2, 4), Math.pow(2, getRandomInt(1, 57)));
+      const x = Math.pow(2, 4);
+      const y = Math.pow(2, getRandomIntInclusive(1, 57));
+      return getRandomIntInclusive(Math.min(x, y), Math.max(x, y));
     },
     solver: (data: unknown, ans: string): boolean => {
       if (typeof data !== "number") throw new Error("solver expected number");
@@ -1328,24 +1327,34 @@ export const codingContractTypesMetadata: ICodingContractTypeMetadata[] = [
       return [
         "You are given the following encoded binary string: \n",
         `'${n}' \n\n`,
-        "Treat it as an extended Hamming code with 1 'possible' error at a random index.\n",
-        "Find the 'possible' wrong bit, fix it and extract the decimal value, which is hidden inside the string.\n\n",
-        "Note: The length of the binary string is dynamic, but its encoding/decoding follows Hamming's 'rule'\n",
-        "Note 2: Index 0 is an 'overall' parity bit. Watch the Hamming code video from 3Blue1Brown for more information\n",
-        "Note 3: There's a ~55% chance for an altered Bit. So... MAYBE there is an altered Bit 😉\n",
-        "Note: The endianness of the encoded decimal value is reversed in relation to the endianness of the Hamming code. Where",
-        "the Hamming code is expressed as little-endian (LSB at index 0), the decimal value encoded in it is expressed as big-endian",
-        "(MSB at index 0).\n",
-        "Extra note for automation: return the decimal value as a string",
+        "Decode it as an 'extended Hamming code' and convert it to a decimal value.\n",
+        "The binary string may include leading zeroes.\n",
+        "Parity bits are inserted at positions 0 and 2^N.\n",
+        "Parity bits are used to make the total number of '1' bits in a given set of data even.\n",
+        "The parity bit at position 0 considers all bits including parity bits.\n",
+        "Each parity bit at position 2^N alternately considers 2^N bits then ignores 2^N bits, starting at position 2^N.\n",
+        "The endianness of the parity bits is reversed compared to the endianness of the data bits:\n",
+        "Data bits are encoded most significant bit first and the parity bits encoded least significant bit first.\n",
+        "The parity bit at position 0 is set last.\n",
+        "There is a ~55% chance for an altered bit at a random index.\n",
+        "Find the possible altered bit, fix it and extract the decimal value.\n\n",
+        "Examples:\n",
+        "'11110000' passes the parity checks and has data bits of 1000, which is 8 in binary.\n",
+        "'1001101010' fails the parity checks and needs the last bit to be corrected to get '1001101011',",
+        "after which the data bits are found to be 10101, which is 21 in binary.\n\n",
+        "For more information on the 'rule' of encoding, refer to Wikipedia (https://wikipedia.org/wiki/Hamming_code)",
+        "or the 3Blue1Brown videos on Hamming Codes. (https://youtube.com/watch?v=X8jsijhllIA)",
       ].join(" ");
     },
     gen: (): string => {
       const _alteredBit = Math.round(Math.random());
-      const _buildArray: string[] = HammingEncodeProperly(
-        getRandomInt(Math.pow(2, 4), Math.pow(2, getRandomInt(1, 57))),
-      ).split("");
+      const x = Math.pow(2, 4);
+      const y = Math.pow(2, getRandomIntInclusive(1, 57));
+      const _buildArray: string[] = HammingEncodeProperly(getRandomIntInclusive(Math.min(x, y), Math.max(x, y))).split(
+        "",
+      );
       if (_alteredBit) {
-        const _randomIndex: number = getRandomInt(0, _buildArray.length - 1);
+        const _randomIndex: number = getRandomIntInclusive(0, _buildArray.length - 1);
         _buildArray[_randomIndex] = _buildArray[_randomIndex] == "0" ? "1" : "0";
       }
       return _buildArray.join("");
@@ -1526,7 +1535,7 @@ export const codingContractTypesMetadata: ICodingContractTypeMetadata[] = [
         "&nbsp; &nbsp; aaaaabccc &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;-> &nbsp;5a1b3c\n",
         "&nbsp; &nbsp; aAaAaA &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; -> &nbsp;1a1A1a1A1a1A\n",
         "&nbsp; &nbsp; 111112333 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;-> &nbsp;511233\n",
-        "&nbsp; &nbsp; zzzzzzzzzzzzzzzzzzz &nbsp;-> &nbsp;9z9z1z &nbsp;(or 9z8z2z, etc.)\n",
+        "&nbsp; &nbsp; zzzzzzzzzzzzzzzzzzz &nbsp;-> &nbsp;9z9z1z &nbsp;(or 9z8z2z, etc.)",
       ].join(" ");
     },
     gen: (): string => {

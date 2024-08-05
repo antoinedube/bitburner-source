@@ -3,62 +3,10 @@
  *
  * Constants for specific mechanics or features will NOT be here.
  */
-export const CONSTANTS: {
-  VersionString: string;
-  isDevBranch: boolean;
-  VersionNumber: number;
-  MaxSkillLevel: number;
-  MilliPerCycle: number;
-  OfflineHackingIncome: number;
-  CorpFactionRepRequirement: number;
-  BaseFocusBonus: number;
-  TravelCost: number;
-  BaseFavorToDonate: number;
-  DonateMoneyToRepDivisor: number;
-  NeuroFluxGovernorLevelMult: number;
-  NumNetscriptPorts: number;
-  MultipleAugMultiplier: number;
-  TorRouterCost: number;
-  HospitalCostPerHp: number;
-  IntelligenceCrimeWeight: number;
-  IntelligenceCrimeBaseExpGain: number;
-  IntelligenceProgramBaseExpGain: number;
-  IntelligenceGraftBaseExpGain: number;
-  IntelligenceTerminalHackBaseExpGain: number;
-  IntelligenceSingFnBaseExpGain: number;
-  MillisecondsPer20Hours: number;
-  GameCyclesPer20Hours: number;
-  MillisecondsPer10Hours: number;
-  GameCyclesPer10Hours: number;
-  MillisecondsPer8Hours: number;
-  GameCyclesPer8Hours: number;
-  MillisecondsPer4Hours: number;
-  GameCyclesPer4Hours: number;
-  MillisecondsPer2Hours: number;
-  GameCyclesPer2Hours: number;
-  MillisecondsPerHour: number;
-  GameCyclesPerHour: number;
-  MillisecondsPerHalfHour: number;
-  GameCyclesPerHalfHour: number;
-  MillisecondsPerQuarterHour: number;
-  GameCyclesPerQuarterHour: number;
-  MillisecondsPerFiveMinutes: number;
-  GameCyclesPerFiveMinutes: number;
-  CodingContractBaseFactionRepGain: number;
-  CodingContractBaseCompanyRepGain: number;
-  CodingContractBaseMoneyGain: number;
-  AugmentationGraftingCostMult: number;
-  AugmentationGraftingTimeBase: number;
-  SoACostMult: number;
-  SoARepMult: number;
-  EntropyEffect: number;
-  Donations: number; // number of blood/plasma/palette donation the dev have verified., boosts NFG
-  CompanyRequiredReputationMultiplier: number; // Only use this if a backdoor is installed in the company's server
-  LatestUpdate: string;
-} = {
-  VersionString: "2.6.1dev",
+export const CONSTANTS = {
+  VersionString: "2.6.3dev",
   isDevBranch: true,
-  VersionNumber: 38,
+  VersionNumber: 40,
 
   /** Max level for any skill, assuming no multipliers. Determined by max numerical value in javascript for experience
    * and the skill level formula in Player.js. Note that all this means it that when experience hits MAX_INT, then
@@ -101,7 +49,6 @@ export const CONSTANTS: {
   IntelligenceCrimeBaseExpGain: 0.05,
   IntelligenceProgramBaseExpGain: 0.1, // Program required hack level divided by this to determine int exp gain
   IntelligenceGraftBaseExpGain: 0.05,
-  IntelligenceTerminalHackBaseExpGain: 200, // Hacking exp divided by this to determine int exp gain
   IntelligenceSingFnBaseExpGain: 1.5,
 
   // Time-related constants
@@ -152,62 +99,24 @@ export const CONSTANTS: {
   // Value raised to the number of entropy stacks, then multiplied to player multipliers
   EntropyEffect: 0.98,
 
+  // Number of blood, plasma, or platelet donations the developer has verified. Boosts NFG.
   Donations: 151,
 
+  // Only use this if a backdoor is installed in the company's server
   CompanyRequiredReputationMultiplier: 0.75,
 
   // Also update doc/source/changelog.rst
   LatestUpdate: `
-## v2.6.1 dev - last updated 23 Apr 2024
+## v2.6.3 Dev: Last updated 3 July 2024
 
-See 2.6.0 changelog at https://github.com/bitburner-official/bitburner-src/blob/v2.6.0/src/Documentation/doc/changelog.md
+See 2.6.2 changelog at https://github.com/bitburner-official/bitburner-src/blob/v2.6.2/src/Documentation/doc/changelog.md
 
-### MAJOR CHANGES
+### CHANGES
 
-- Exported savegames are now compressed. This means that savegames from 2.6.1dev will need to be manually converted before backloading into 2.6.0 (@catloversg)
+- No changes yet since 2.6.2 release
 
-### API
+### OTHER
 
-- (Corporation) Add a missing check on exportMaterial (@catloversg)
-- (Corporation) Add ns.corporation.sellDivision (@catloversg)
-- (Formulas) Add ns.formulas.hacking.growAmount (@d0sboots)
-- (Go) Some changes to the Go API, including some minor breaking changes. Please refer to the API documentation in the script editor or at https://github.com/bitburner-official/bitburner-src/blob/dev/markdown/bitburner.go.md (@ficocelliguy)
-- (Go) Fix a bug that allowed facing secret opponent early or with wrong board size (@ficoccelliguy)
-- (Singularity) Added ns.singularity.getFactionEnemies function (@jaguardeer)
-- (Sleeve) SleeveInfiltrationWork now has a nextCompletion promise (@Caldwell-74)
-- Fixed an issue that caused ns.disableLog to work incorrectly for some functions (@ficocelliguy)
-
-### UI
-
-- (Corporation) More granular control of office size increases (@adeilt)
-- (Gang) Fix inaccurate display of wanted reduction rate when performing "justice" tasks (@LJNeon)
-- (Go) Fix an incorrect displayed max favor on Go history page (@ficocelliguy)
-- Text files (.txt and .json) posted to the terminal from the ls command are now clickable (@catloversg)
-- Fixed a display issue on the bitverse page (@LJNeon)
-- Fixed a display issue on the stats page (@catloversg)
-
-### MISC
-
-- (Bladeburner) Internal code refactoring (@Snarling)
-- (Corporation) Fix an issue that could cause incorrect average material prices via bulk purchases (@catloversg)
-- (Go) "No AI" white player can now pass (@ficocelliguy)
-- (Go) Reimplement superko rule, adjust save data (@ficocelliguy)
-- (Go) Balance tweaks and other bugfixes (@ficocelliguy)
-- (Hacknet) Fixed an issue in the engine loop that could cause offline earnings with hacknet to be inaccurate (@d0sboots)
-- Update Credits page to show @d0sboots as an active maintainer (@Snarling)
-- Miscellaneous documentation fixes (@adeilt, @User670, @catloversg, @gmcew, @jeek, @pontsuyo, @ficocelliguy, @d0sboots)
-- Changed the name of an augmentation at the request of the original author (@hydroflame)
-- Allow .json files (@shyguy1412)
-- Remove jquery dependency (@catloversg)
-- Disable text translation, which commonly causes crashes (@catloversg)
-- Fix an incorrect unit in ns.spawn logs (@FoGsesipod)
-- Servers that don't exist yet will not show up in autocomplete data (@catloversg)
-- Add optional file for ignoring some specific commits with git blame (@adeilt)
-- Remove some unnecessary data from save file (@Snarling)
-- Remove an internal dependency and streamline code for downloading files (@catloversg)
-- Remove some unused internal constants (@catloversg)
-- Ensure lastNodeReset property is initialized correctly on the player object (@catloversg)
-- The value of "this" within the main function will no longer be the script module itself (@d0sboots)
-- Nerf noodle bar (various contributors)
+- Nerf noodle bar
 `,
-};
+} as const;
