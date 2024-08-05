@@ -76,14 +76,10 @@ export function errorMessage(ctx: NetscriptContext, msg: string, type = "RUNTIME
 }
 
 /** Generate an error dialog when workerscript is known */
-export function handleUnknownError(e: unknown, ws: WorkerScript | ScriptDeath | null = null, initialText = "") {
+export function handleUnknownError(e: unknown, ws: WorkerScript | null = null, initialText = "") {
   if (e instanceof ScriptDeath) {
-    //No dialog for an empty ScriptDeath
-    if (e.errorMessage === "") return;
-    if (!ws) {
-      ws = e;
-      e = ws.errorMessage;
-    }
+    // No dialog for ScriptDeath
+    return;
   }
   if (ws && typeof e === "string") {
     const headerText = basicErrorMessage(ws, "", "");
@@ -104,4 +100,17 @@ export function handleUnknownError(e: unknown, ws: WorkerScript | ScriptDeath | 
     e = ws ? basicErrorMessage(ws, msg, "UNKNOWN") : msg;
   }
   dialogBoxCreate(initialText + e);
+}
+
+/** Use this handler to handle the error when we call getSaveData function */
+export function handleGetSaveDataError(error: unknown) {
+  console.error(error);
+  let errorMessage = `Cannot get save data. Error: ${error}.`;
+  if (error instanceof RangeError) {
+    errorMessage += " This may be because the save data is too large.";
+  }
+  if (error instanceof Error && error.stack) {
+    errorMessage += `\nStack:\n${error.stack}`;
+  }
+  dialogBoxCreate(errorMessage);
 }

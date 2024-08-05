@@ -1,6 +1,7 @@
-import type { Board, BoardState, Neighbor, PointState, SimpleBoard } from "../Types";
+import type { Board, BoardState, Neighbor, Play, PointState, SimpleBoard } from "../Types";
 
-import { GoValidity, GoOpponent, GoColor } from "@enums";
+import { GoValidity, GoOpponent, GoColor, GoPlayType } from "@enums";
+import { Go } from "../Go";
 import {
   findAdjacentPointsInChain,
   findNeighbors,
@@ -8,8 +9,7 @@ import {
   getBoardCopy,
   getEmptySpaces,
   getNewBoardState,
-  isDefined,
-  isNotNull,
+  isNotNullish,
   updateCaptures,
   updateChains,
 } from "../boardState/boardState";
@@ -44,7 +44,7 @@ export function evaluateIfMoveIsValid(boardState: BoardState, x: number, y: numb
   }
 
   // Detect if the move might be an immediate repeat (only one board of history is saved to check)
-  const possibleRepeat = boardState.previousBoards.find((board) => getColorOnSimpleBoard(board, x, y) === player);
+  const possibleRepeat = boardState.previousBoards.find((board) => getColorOnBoardString(board, x, y) === player);
 
   if (shortcut) {
     // If the current point has some adjacent open spaces, it is not suicide. If the move is not repeated, it is legal
@@ -86,8 +86,8 @@ export function evaluateIfMoveIsValid(boardState: BoardState, x: number, y: numb
     return GoValidity.noSuicide;
   }
   if (possibleRepeat && boardState.previousBoards.length) {
-    const simpleEvalBoard = simpleBoardFromBoard(evaluationBoard);
-    if (boardState.previousBoards.find((board) => areSimpleBoardsIdentical(simpleEvalBoard, board))) {
+    const simpleEvalBoard = boardStringFromBoard(evaluationBoard);
+    if (boardState.previousBoards.includes(simpleEvalBoard)) {
       return GoValidity.boardRepeated;
     }
   }
@@ -154,9 +154,7 @@ const resetChainsById = (board: Board, chainIds: string[]) => {
 export function findEffectiveLibertiesOfNewMove(board: Board, x: number, y: number, player: GoColor) {
   const friendlyChains = getAllChains(board).filter((chain) => chain[0].color === player);
   const neighbors = findAdjacentLibertiesAndAlliesForPoint(board, x, y, player);
-  const neighborPoints = [neighbors.north, neighbors.east, neighbors.south, neighbors.west]
-    .filter(isNotNull)
-    .filter(isDefined);
+  const neighborPoints = [neighbors.north, neighbors.east, neighbors.south, neighbors.west].filter(isNotNullish);
   // Get all chains that the new move will connect to
   const allyNeighbors = neighborPoints.filter((neighbor) => neighbor.color === player);
   const allyNeighborChainLiberties = allyNeighbors
@@ -165,7 +163,7 @@ export function findEffectiveLibertiesOfNewMove(board: Board, x: number, y: numb
       return chain?.[0]?.liberties ?? null;
     })
     .flat()
-    .filter(isNotNull);
+    .filter(isNotNullish);
 
   // Get all empty spaces that the new move connects to that aren't already part of friendly liberties
   const directLiberties = neighborPoints.filter((neighbor) => neighbor.color === GoColor.empty);
@@ -187,8 +185,7 @@ export function findEffectiveLibertiesOfNewMove(board: Board, x: number, y: numb
 export function findMaxLibertyCountOfAdjacentChains(boardState: BoardState, x: number, y: number, player: GoColor) {
   const neighbors = findAdjacentLibertiesAndAlliesForPoint(boardState.board, x, y, player);
   const friendlyNeighbors = [neighbors.north, neighbors.east, neighbors.south, neighbors.west]
-    .filter(isNotNull)
-    .filter(isDefined)
+    .filter(isNotNullish)
     .filter((neighbor) => neighbor.color === player);
 
   return friendlyNeighbors.reduce((max, neighbor) => Math.max(max, neighbor?.liberties?.length ?? 0), 0);
@@ -206,8 +203,7 @@ export function findEnemyNeighborChainWithFewestLiberties(board: Board, x: numbe
   const chains = getAllChains(board);
   const neighbors = findAdjacentLibertiesAndAlliesForPoint(board, x, y, player);
   const friendlyNeighbors = [neighbors.north, neighbors.east, neighbors.south, neighbors.west]
-    .filter(isNotNull)
-    .filter(isDefined)
+    .filter(isNotNullish)
     .filter((neighbor) => neighbor.color === player);
 
   const minimumLiberties = friendlyNeighbors.reduce(
@@ -352,10 +348,7 @@ function findNeighboringChainsThatFullyEncircleEmptySpace(
 
     const evaluationBoard = getBoardCopy(board);
     const examplePoint = candidateChain[0];
-    const otherChainNeighborPoints = removePointAtIndex(neighborChainList, index)
-      .flat()
-      .filter(isNotNull)
-      .filter(isDefined);
+    const otherChainNeighborPoints = removePointAtIndex(neighborChainList, index).flat().filter(isNotNullish);
     otherChainNeighborPoints.forEach((point) => {
       const pointToEdit = evaluationBoard[point.x]?.[point.y];
       if (pointToEdit) {
@@ -555,7 +548,8 @@ export function findAdjacentLibertiesAndAlliesForPoint(
 }
 
 /**
- * Retrieves a simplified version of the board state. "X" represents black pieces, "O" white, and "." empty points.
+ * Retrieves a simplified version of the board state.
+ * "X" represents black pieces, "O" white, "." empty points, and "#" offline nodes.
  *
  * For example, a 5x5 board might look like this:
  * ```
@@ -570,14 +564,15 @@ export function findAdjacentLibertiesAndAlliesForPoint(
  *
  * Each string represents a vertical column on the board, and each character in the string represents a point.
  *
- * Traditional notation for Go is e.g. "B,1" referring to second ("B") column, first rank. This is the equivalent of index [1][0].
+ * Traditional notation for Go is e.g. "B,1" referring to second ("B") column, first rank. This is the equivalent of
+ * index (1 * N) + 0 , where N is the size of the board.
  *
- * Note that the [0][0] point is shown on the bottom-left on the visual board (as is traditional), and each
+ * Note that index 0 (the [0][0] point) is shown on the bottom-left on the visual board (as is traditional), and each
  * string represents a vertical column on the board. In other words, the printed example above can be understood to
  * be rotated 90 degrees clockwise compared to the board UI as shown in the IPvGO game.
  *
  */
-export function simpleBoardFromBoard(board: Board): string[] {
+export function simpleBoardFromBoard(board: Board): SimpleBoard {
   return board.map((column) =>
     column.reduce((str, point) => {
       if (!point) {
@@ -592,6 +587,50 @@ export function simpleBoardFromBoard(board: Board): string[] {
       return str + ".";
     }, ""),
   );
+}
+
+/**
+ * Returns a string representation of the given board.
+ * The string representation is the same as simpleBoardFromBoard() but concatenated into a single string
+ *
+ * For example, a 5x5 board might look like this:
+ * ```
+ *   "XX.O.X..OO.XO..XXO...XOO."
+ * ```
+ */
+export function boardStringFromBoard(board: Board): string {
+  return simpleBoardFromBoard(board).join("");
+}
+
+/**
+ * Returns a full board object from a string representation of the board.
+ * The string representation is the same as simpleBoardFromBoard() but concatenated into a single string
+ *
+ * For example, a 5x5 board might look like this:
+ * ```
+ *   "XX.O.X..OO.XO..XXO...XOO."
+ * ```
+ */
+export function boardFromBoardString(boardString: string): Board {
+  const simpleBoardArray = simpleBoardFromBoardString(boardString);
+
+  return boardFromSimpleBoard(simpleBoardArray);
+}
+
+/**
+ * Slices a string representation of a board into an array of strings representing the rows on the board
+ */
+export function simpleBoardFromBoardString(boardString: string): SimpleBoard {
+  // Turn the SimpleBoard string into a string array, allowing access of each point via indexes e.g. [0][1]
+  const boardSize = Math.round(Math.sqrt(boardString.length));
+  const boardTiles = boardString.split("");
+
+  // Split the single board string into rows of length equal to the board width
+  const simpleBoardArray = Array(boardSize)
+    .fill("")
+    .map((_, index) => boardTiles.slice(index * boardSize, (index + 1) * boardSize).join(""));
+
+  return simpleBoardArray;
 }
 
 /** Creates a board object from a simple board. The resulting board has no analytics (liberties/chains) */
@@ -631,10 +670,55 @@ export function areSimpleBoardsIdentical(simpleBoard1: SimpleBoard, simpleBoard2
   return simpleBoard1.every((column, x) => column === simpleBoard2[x]);
 }
 
-export function getColorOnSimpleBoard(simpleBoard: SimpleBoard, x: number, y: number): GoColor | null {
-  const char = simpleBoard[x]?.[y];
+export function getColorOnBoardString(boardString: string, x: number, y: number): GoColor | null {
+  const boardSize = Math.round(Math.sqrt(boardString.length));
+  const char = boardString[x * boardSize + y];
   if (char === "X") return GoColor.black;
   if (char === "O") return GoColor.white;
   if (char === ".") return GoColor.empty;
   return null;
+}
+
+/** Find a move made by the previous player, if present. */
+export function getPreviousMove(): [number, number] | null {
+  const priorBoard = Go.currentGame?.previousBoards[0];
+  if (Go.currentGame.passCount || !priorBoard) {
+    return null;
+  }
+
+  for (const rowIndexString in Go.currentGame.board) {
+    const row = Go.currentGame.board[+rowIndexString] ?? [];
+    for (const pointIndexString in row) {
+      const point = row[+pointIndexString];
+      const priorColor = point && priorBoard && getColorOnBoardString(priorBoard, point.x, point.y);
+      const currentColor = point?.color;
+      const isPreviousPlayer = currentColor === Go.currentGame.previousPlayer;
+      const isChanged = priorColor !== currentColor;
+      if (priorColor && currentColor && isPreviousPlayer && isChanged) {
+        return [+rowIndexString, +pointIndexString];
+      }
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Gets the last move, if it was made by the specified color and is present
+ */
+export function getPreviousMoveDetails(): Play {
+  const priorMove = getPreviousMove();
+  if (priorMove) {
+    return {
+      type: GoPlayType.move,
+      x: priorMove[0],
+      y: priorMove[1],
+    };
+  }
+
+  return {
+    type: !priorMove && Go.currentGame?.passCount ? GoPlayType.pass : GoPlayType.gameOver,
+    x: null,
+    y: null,
+  };
 }

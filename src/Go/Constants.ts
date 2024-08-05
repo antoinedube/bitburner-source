@@ -6,7 +6,8 @@ export const opponentDetails = {
   [GoOpponent.none]: {
     komi: 5.5,
     description: "Practice Board",
-    flavorText: "Practice on a subnet where you place both colors of routers.",
+    flavorText:
+      "Practice on a subnet where you place both colors of routers, or play as white against your IPvGO script.",
     bonusDescription: "",
     bonusPower: 0,
   },
@@ -39,7 +40,7 @@ export const opponentDetails = {
     description: "Martial AI",
     flavorText:
       "The faction known as Tetrads prefers to get up close and personal. Their combat style excels at circling around and cutting through their opponents, both on and off of the subnets.",
-    bonusDescription: "strength, dex, and agility levels",
+    bonusDescription: "strength, defense, dexterity, and agility levels",
     bonusPower: 0.7,
   },
   [GoOpponent.Daedalus]: {
@@ -67,7 +68,7 @@ export const opponentDetails = {
   },
 };
 
-export const boardSizes = [5, 7, 9, 13];
+export const boardSizes = [5, 7, 9, 13, 19];
 
 export const columnIndexes = "ABCDEFGHJKLMNOPQRSTUVWXYZ";
 
