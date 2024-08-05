@@ -6,8 +6,7 @@ import { Box, Button, IconButton, Table, TableBody, TableCell, TableRow, Tooltip
 import SaveIcon from "@mui/icons-material/Save";
 import ClearAllIcon from "@mui/icons-material/ClearAll";
 import { Theme, useTheme } from "@mui/material/styles";
-import makeStyles from "@mui/styles/makeStyles";
-import createStyles from "@mui/styles/createStyles";
+import { makeStyles } from "tss-react/mui";
 import {
   formatHashes,
   formatHp,
@@ -171,7 +170,7 @@ export function DataRow({ name, showBar, color, cellType }: DataRowProps): React
         </TableCell>
         <TableCell align="right" classes={{ root: classes[cellType] }}>
           <Typography id={"overview-" + name.toLowerCase() + "-hook"} color={color}>
-            {}
+            { }
           </Typography>
         </TableCell>
       </TableRow>
@@ -221,17 +220,17 @@ export function CharacterOverview({ parentOpen, save, killScripts }: OverviewPro
           <TableRow>
             <TableCell component="th" scope="row" classes={{ root: classes.cell }}>
               <Typography id="overview-extra-hook-0" color={theme.colors.hack}>
-                {}
+                { }
               </Typography>
             </TableCell>
             <TableCell component="th" scope="row" align="right" classes={{ root: classes.cell }}>
               <Typography id="overview-extra-hook-1" color={theme.colors.hack}>
-                {}
+                { }
               </Typography>
             </TableCell>
             <TableCell component="th" scope="row" align="right" classes={{ root: classes.cell }}>
               <Typography id="overview-extra-hook-2" color={theme.colors.hack}>
-                {}
+                { }
               </Typography>
             </TableCell>
           </TableRow>
@@ -669,16 +668,14 @@ function Work(): React.ReactElement {
   );
 }
 
-const useStyles = makeStyles((theme: Theme) =>
-  createStyles({
-    workCell: {
-      textAlign: "center",
-      minWidth: "100px",
-      maxWidth: "200px",
-      borderBottom: "none",
-      padding: 0,
-      margin: 0,
-    },
+const useStyles = makeStyles()((theme: Theme) => ({
+  workCell: {
+    textAlign: "center",
+    maxWidth: "200px",
+    borderBottom: "none",
+    padding: 0,
+    margin: 0,
+  },
 
   workHeader: {
     fontSize: "0.9rem",
@@ -688,53 +685,53 @@ const useStyles = makeStyles((theme: Theme) =>
     fontSize: "0.8rem",
   },
 
-    customDisplayCell: {
-      textAlign: "center",
-      minWidth: "100px",
-      maxWidth: "200px",
-      borderBottom: "none",
-      padding: "10px 0 0 0",
-      margin: 0,
-    },
+  customDisplayCell: {
+    textAlign: "center",
+    minWidth: "100px",
+    maxWidth: "200px",
+    borderBottom: "none",
+    padding: "10px 0 0 0",
+    margin: 0,
+  },
 
-    customDisplayHeader: {
-      fontSize: "0.9rem",
-      textDecoration: "underline"
-    },
+  customDisplayHeader: {
+    fontSize: "0.9rem",
+    textDecoration: "underline"
+  },
 
-    customDisplayText: {
-      fontSize: "0.8rem",
-      textAlign: "left",
-    },
+  customDisplayText: {
+    fontSize: "0.8rem",
+    textAlign: "left",
+  },
 
-    cellNone: {
-      borderBottom: "none",
-      padding: 0,
-      margin: 0,
-    },
-    cell: {
-      padding: 0,
-      margin: 0,
-    },
-    hp: {
-      color: theme.colors.hp,
-    },
-    money: {
-      color: theme.colors.money,
-    },
-    hack: {
-      color: theme.colors.hack,
-    },
-    combat: {
-      color: theme.colors.combat,
-    },
-    cha: {
-      color: theme.colors.cha,
-    },
-    int: {
-      color: theme.colors.int,
-    },
-  }),
+  cellNone: {
+    borderBottom: "none",
+    padding: 0,
+    margin: 0,
+  },
+  cell: {
+    padding: 0,
+    margin: 0,
+  },
+  hp: {
+    color: theme.colors.hp,
+  },
+  money: {
+    color: theme.colors.money,
+  },
+  hack: {
+    color: theme.colors.hack,
+  },
+  combat: {
+    color: theme.colors.combat,
+  },
+  cha: {
+    color: theme.colors.cha,
+  },
+  int: {
+    color: theme.colors.int,
+  },
+}),
 );
 
 export { useStyles };
