@@ -29,7 +29,7 @@ $$ExpectedSalesVolume = \frac{ProducedUnits}{10}$$
 
 - This means we want to sell all produced units.
 
-In cycle's SALE state, game calculates `MaxSalesVolume` of material/product. If we set price too high, `MaxSalesVolume` is penalized. In order to maximize profit, we have to set the highest possible price while `MaxSalesVolume` is still equals to `ExpectedSalesVolume`. This is what Market-TA2 does.
+In cycle's SALE state, game calculates `MaxSalesVolume` of material/product. If we set price too high, `MaxSalesVolume` is penalized. In order to maximize profit, we have to set the highest possible price while `MaxSalesVolume` is still equal to `ExpectedSalesVolume`. This is what Market-TA2 does.
 
 Calculation of material and product is pretty similar, so I'll call them "item" and use 1 formula.
 
@@ -63,16 +63,17 @@ $$MarketFactor = Max\left(0.1,{Demand\ast(100 - Competition)}\ast{0.01}\right)$$
 - Division's research bonus: this is always 1. Currently there is not any research that increases the sales bonus.
 - `MarkupMultiplier`: initialize with 1.
   - `SellingPrice` is the selling price that you set.
-  - With materials, if we set `SellingPrice` to 0, `MarkupMultiplier` is $10^{12}$ (check the formula below). Extremely high `MarkupMultiplier` means that we can sell all units, regardless of other factors. This is the fastest way to discard materials.
-  - If `(SellingPrice > MarketPrice + MarkupLimit)`:
-    $$MarkupMultiplier = \left(\frac{MarkupLimit}{SellingPrice - MarketPrice}\right)^{2}$$
-  - If item is material and `SellingPrice` is less than `MarketPrice`:
+  - If we set `SellingPrice` to 0 or a negative number, `MarkupMultiplier` is $10^{12}$ (check the formula below). With an extremely high `MarkupMultiplier`, we can sell all units, regardless of other factors. This is the fastest way to discard stored units.
+  - If `(SellingPrice > MarketPrice)`:
+    - If `(SellingPrice > MarketPrice + MarkupLimit)`:
+      $$MarkupMultiplier = \left(\frac{MarkupLimit}{SellingPrice - MarketPrice}\right)^{2}$$
+  - If `(SellingPrice <= MarketPrice)`:
 
-$$MarkupMultiplier = \begin{cases}\frac{MarketPrice}{SellingPrice}, & SellingPrice > 0 \land SellingPrice < MarketPrice \newline 10^{12}, & SellingPrice \leq 0 \end{cases}$$
+$$MarkupMultiplier = \begin{cases}\frac{MarketPrice}{SellingPrice}, & SellingPrice > 0 \newline 10^{12}, & SellingPrice \leq 0 \end{cases}$$
 
 ## Optimal selling price
 
-As we can see with previous part, `MarkupMultiplier` is basically a penalty modifier if we set `SellingPrice` greater than `(MarketPrice + MarkupLimit)`, and we'll always do this. This means we need to find out highest possible `SellingPrice` while `MaxSalesVolume` is still equals to `ExpectedSalesVolume`.
+As we can see with previous part, `MarkupMultiplier` is basically a penalty modifier if we set `SellingPrice` greater than `(MarketPrice + MarkupLimit)`, and we'll always do this. This means we need to find out highest possible `SellingPrice` while `MaxSalesVolume` is still equal to `ExpectedSalesVolume`.
 
 This is the reason why we should not bother with Market-TA1. It simply sets `SellingPrice = MarketPrice + MarkupLimit`. This means Market-TA1 sets a "safe" `SellingPrice` for us, it guarantees that we won't be penalized due to too high price. However, this "safe" `SellingPrice` is too low, and we can find a much higher `SellingPrice`.
 
@@ -82,7 +83,7 @@ Formula:
 
 $$M = \ ItemMultiplier\ast BusinessFactor\ast AdvertFactor\ast MarketFactor\ast SaleBotsBonus\ast ResearchBonus$$
 
-- We want `MaxSalesVolume` equals `ExpectedSalesVolume`:
+- We want `MaxSalesVolume` to equal `ExpectedSalesVolume`:
 
 $$MaxSalesVolume = ExpectedSalesVolume$$
 

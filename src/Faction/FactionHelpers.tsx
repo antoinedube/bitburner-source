@@ -2,7 +2,6 @@ import type { Augmentation } from "../Augmentation/Augmentation";
 import type { Faction } from "./Faction";
 
 import { Augmentations } from "../Augmentation/Augmentations";
-import { PlayerOwnedAugmentation } from "../Augmentation/PlayerOwnedAugmentation";
 import { AugmentationName, FactionDiscovery } from "@enums";
 import { currentNodeMults } from "../BitNode/BitNodeMultipliers";
 
@@ -16,7 +15,7 @@ import {
 } from "../PersonObjects/formulas/reputation";
 
 import { dialogBoxCreate } from "../ui/React/DialogBox";
-import { InvitationEvent } from "./ui/InvitationModal";
+import { FactionInvitationEvents } from "./ui/FactionInvitationManager";
 import { SFC32RNG } from "../Casino/RNG";
 import { isFactionWork } from "../Work/FactionWork";
 import { getAugCost } from "../Augmentation/AugmentationHelpers";
@@ -28,7 +27,7 @@ export function inviteToFaction(faction: Faction): void {
   faction.alreadyInvited = true;
   faction.discovery = FactionDiscovery.known;
   if (!Settings.SuppressFactionInvites) {
-    InvitationEvent.emit(faction);
+    FactionInvitationEvents.emit({ type: "New", factionName: faction.name });
   }
 }
 
@@ -84,11 +83,7 @@ export function purchaseAugmentation(aug: Augmentation, fac: Faction, sing = fal
     }
     dialogBoxCreate(txt);
   } else if (augCosts.moneyCost === 0 || Player.money >= augCosts.moneyCost) {
-    const queuedAugmentation = new PlayerOwnedAugmentation(aug.name);
-    if (aug.name == AugmentationName.NeuroFluxGovernor) {
-      queuedAugmentation.level = aug.getNextLevel();
-    }
-    Player.queuedAugmentations.push(queuedAugmentation);
+    Player.queueAugmentation(aug.name);
 
     Player.loseMoney(augCosts.moneyCost, "augmentations");
 
@@ -149,7 +144,7 @@ export const getFactionAugmentationsFiltered = (faction: Faction): AugmentationN
       augs.push(Augmentations[AugmentationName.TheRedPill]);
     }
 
-    const rng = SFC32RNG(`BN${Player.bitNodeN}.${Player.sourceFileLvl(Player.bitNodeN)}`);
+    const rng = SFC32RNG(`BN${Player.bitNodeN}.${Player.activeSourceFileLvl(Player.bitNodeN)}`);
     // Remove faction-unique augs that don't belong to this faction
     const uniqueFilter = (a: Augmentation): boolean => {
       // Keep all the non-unique one

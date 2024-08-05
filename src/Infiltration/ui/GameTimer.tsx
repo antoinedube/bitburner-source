@@ -9,6 +9,7 @@ type GameTimerProps = {
   onExpire: () => void;
   noPaper?: boolean;
   ignoreAugment_WKSharmonizer?: boolean;
+  tick?: number;
 };
 
 export function GameTimer({
@@ -16,16 +17,21 @@ export function GameTimer({
   onExpire,
   noPaper,
   ignoreAugment_WKSharmonizer,
+  tick = 100,
 }: GameTimerProps): React.ReactElement {
   const [v, setV] = useState(100);
   const totalMillis =
     (!ignoreAugment_WKSharmonizer && Player.hasAugmentation(AugmentationName.WKSharmonizer, true) ? 1.3 : 1) * millis;
 
-  const tick = 200;
+  useEffect(() => {
+    if (v <= 0) {
+      onExpire();
+    }
+  }, [v, onExpire]);
+
   useEffect(() => {
     const intervalId = setInterval(() => {
       setV((old) => {
-        if (old <= 0) onExpire();
         return old - (tick / totalMillis) * 100;
       });
     }, tick);
@@ -33,16 +39,16 @@ export function GameTimer({
     return () => {
       clearInterval(intervalId);
     };
-  }, [onExpire, totalMillis]);
+  }, [onExpire, tick, totalMillis]);
 
   // https://stackoverflow.com/questions/55593367/disable-material-uis-linearprogress-animation
   // TODO(hydroflame): there's like a bug where it triggers the end before the
   // bar physically reaches the end
   return noPaper ? (
-    <ProgressBar variant="determinate" value={v} color="primary" />
+    <ProgressBar variant="determinate" value={Math.max(v, 0)} color="primary" />
   ) : (
     <Paper sx={{ p: 1, mb: 1 }}>
-      <ProgressBar variant="determinate" value={v} color="primary" />
+      <ProgressBar variant="determinate" value={Math.max(v, 0)} color="primary" />
     </Paper>
   );
 }

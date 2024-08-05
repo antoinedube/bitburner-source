@@ -25,15 +25,15 @@ If you are reduced to `0` hp or below, the infiltration will immediately end.
 - Some use WASD or arrows interchangeably.
 - A few others use the rest of the keyboard.
 
-### Slash when his guard is down!
+### Attack the distracted sentinel
 
-Press space when the guard is preparing to attack you.
+Press space bar to attack when the sentinel drops his guard and is distracted. Do not alert him!
 
 There are 3 phases:
 
-1. guarding - attacking back will result in failure.
-2. preparing - attacking will result in a victory.
-3. attacking - the guard will attack you resulting in failure.
+1. Guarding - The sentinel is guarding. Attacking will result in a failure.
+2. Distracted - The sentinel is distracted. Attacking will result in a victory.
+3. Alerted - The sentinel is alerted. Attacking will result in a failure.
 
 ### Close the brackets
 

@@ -1,4 +1,4 @@
-import type { Player as IPlayer } from "@nsdefs";
+import type { BitNodeOptions, Player as IPlayer } from "@nsdefs";
 import type { PlayerAchievement } from "../../Achievements/Achievements";
 import type { Bladeburner } from "../../Bladeburner/Bladeburner";
 import type { Corporation } from "../../Corporation/Corporation";
@@ -19,11 +19,11 @@ import * as workMethods from "./PlayerObjectWorkMethods";
 import { setPlayer } from "@player";
 import { CompanyName, FactionName, JobName, LocationName } from "@enums";
 import { HashManager } from "../../Hacknet/HashManager";
-import { MoneySourceTracker } from "../../utils/MoneySourceTracker";
+import { type MoneySource, MoneySourceTracker } from "../../utils/MoneySourceTracker";
 import { constructorsForReviver, Generic_toJSON, Generic_fromJSON, IReviverValue } from "../../utils/JSONReviver";
 import { JSONMap, JSONSet } from "../../Types/Jsonable";
 import { cyrb53 } from "../../utils/StringHelperFunctions";
-import { getRandomInt } from "../../utils/helpers/getRandomInt";
+import { getRandomIntInclusive } from "../../utils/helpers/getRandomIntInclusive";
 import { CONSTANTS } from "../../Constants";
 import { Person } from "../Person";
 import { isMember } from "../../utils/EnumHelper";
@@ -74,6 +74,22 @@ export class PlayerObject extends Person implements IPlayer {
 
   entropy = 0;
 
+  bitNodeOptions: BitNodeOptions = {
+    sourceFileOverrides: new JSONMap<number, number>(),
+    intelligenceOverride: undefined,
+    restrictHomePCUpgrade: false,
+    disableGang: false,
+    disableCorporation: false,
+    disableBladeburner: false,
+    disable4SData: false,
+    disableHacknetServer: false,
+    disableSleeveExpAndAugmentation: false,
+  };
+
+  get activeSourceFiles(): JSONMap<number, number> {
+    return new JSONMap([...this.sourceFiles, ...this.bitNodeOptions.sourceFileOverrides]);
+  }
+
   // Player-specific methods
   init = generalMethods.init;
   startWork = workMethods.startWork;
@@ -110,7 +126,6 @@ export class PlayerObject extends Person implements IPlayer {
   startFocusing = generalMethods.startFocusing;
   startGang = gangMethods.startGang;
   takeDamage = generalMethods.takeDamage;
-  travel = generalMethods.travel;
   giveExploit = generalMethods.giveExploit;
   giveAchievement = generalMethods.giveAchievement;
   getCasinoWinnings = generalMethods.getCasinoWinnings;
@@ -130,6 +145,7 @@ export class PlayerObject extends Person implements IPlayer {
   setBitNodeNumber = generalMethods.setBitNodeNumber;
   canAccessCotMG = generalMethods.canAccessCotMG;
   sourceFileLvl = generalMethods.sourceFileLvl;
+  activeSourceFileLvl = generalMethods.activeSourceFileLvl;
   applyEntropy = augmentationMethods.applyEntropy;
   focusPenalty = generalMethods.focusPenalty;
 
@@ -142,9 +158,13 @@ export class PlayerObject extends Person implements IPlayer {
         navigator.userAgent +
         window.innerWidth +
         window.innerHeight +
-        getRandomInt(100, 999),
+        getRandomIntInclusive(100, 999),
     );
     this.lastAugReset = this.lastNodeReset = Date.now();
+  }
+
+  travelCostMoneySource(): MoneySource {
+    return "other";
   }
 
   whoAmI(): string {

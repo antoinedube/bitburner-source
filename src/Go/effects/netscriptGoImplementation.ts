@@ -1,18 +1,21 @@
-import type { BoardState, Play } from "../Types";
+import { Play, SimpleBoard, SimpleOpponentStats } from "../Types";
 
 import { Player } from "@player";
 import { AugmentationName, GoColor, GoOpponent, GoPlayType, GoValidity } from "@enums";
 import { Go, GoEvents } from "../Go";
-import { getMove, sleep } from "../boardAnalysis/goAI";
 import { getNewBoardState, makeMove, passTurn, updateCaptures, updateChains } from "../boardState/boardState";
+import { makeAIMove } from "../boardAnalysis/goAI";
 import {
   evaluateIfMoveIsValid,
-  getColorOnSimpleBoard,
   getControlledSpace,
+  getPreviousMove,
   simpleBoardFromBoard,
+  simpleBoardFromBoardString,
 } from "../boardAnalysis/boardAnalysis";
-import { getScore, resetWinstreak } from "../boardAnalysis/scoring";
+import { endGoGame, getOpponentStats, getScore, resetWinstreak } from "../boardAnalysis/scoring";
 import { WHRNG } from "../../Casino/RNG";
+import { getRecordKeys } from "../../Types/Record";
+import { CalculateEffect, getEffectTypeForFaction } from "./effect";
 
 /**
  * Check the move based on the current settings
@@ -102,7 +105,7 @@ export async function handlePassTurn(logger: (s: string) => void) {
     logEndGame(logger);
     return getOpponentNextMove(false, logger);
   } else {
-    return getAIMove(Go.currentGame);
+    return makeAIMove(Go.currentGame);
   }
 }
 
@@ -120,26 +123,13 @@ export async function makePlayerMove(logger: (s: string) => void, error: (s: str
 
   GoEvents.emit();
   logger(`Go move played: ${x}, ${y}`);
-  return getAIMove(boardState);
+  return makeAIMove(boardState);
 }
 
 /**
   Returns the promise that provides the opponent's move, once it finishes thinking.
  */
 export async function getOpponentNextMove(logOpponentMove = true, logger: (s: string) => void) {
-  // Handle the case where Go.nextTurn isn't populated yet
-  if (!Go.nextTurn) {
-    const previousMove = getPreviousMove();
-    const type =
-      Go.currentGame.previousPlayer === null ? GoPlayType.gameOver : previousMove ? GoPlayType.move : GoPlayType.pass;
-
-    Go.nextTurn = Promise.resolve({
-      type,
-      x: previousMove?.[0] ?? null,
-      y: previousMove?.[1] ?? null,
-    });
-  }
-
   // Only asynchronously log the opponent move if not disabled by the player
   if (logOpponentMove) {
     return Go.nextTurn.then((move) => {
@@ -154,43 +144,6 @@ export async function getOpponentNextMove(logOpponentMove = true, logger: (s: st
     });
   }
 
-  return Go.nextTurn;
-}
-
-/**
- * Retrieves a move from the current faction in response to the player's move
- */
-export async function getAIMove(boardState: BoardState): Promise<Play> {
-  let resolve: (value: Play) => void;
-  Go.nextTurn = new Promise<Play>((res) => {
-    resolve = res;
-  });
-
-  getMove(boardState, GoColor.white, Go.currentGame.ai).then(async (result) => {
-    if (result.type === GoPlayType.pass) {
-      passTurn(Go.currentGame, GoColor.white);
-    }
-
-    // If there is no move to apply, simply return the result
-    if (boardState !== Go.currentGame || result.type !== GoPlayType.move || result.x === null || result.y === null) {
-      return resolve(result);
-    }
-
-    await sleep(400);
-    const aiUpdatedBoard = makeMove(boardState, result.x, result.y, GoColor.white);
-
-    // Handle the AI breaking. This shouldn't ever happen.
-    if (!aiUpdatedBoard) {
-      boardState.previousPlayer = GoColor.white;
-      console.error(`Invalid AI move attempted: ${result.x}, ${result.y}. This should not happen.`);
-      GoEvents.emit();
-      return resolve(result);
-    }
-
-    await sleep(300);
-    GoEvents.emit();
-    resolve(result);
-  });
   return Go.nextTurn;
 }
 
@@ -271,6 +224,8 @@ export function getControlledEmptyNodes() {
  * Gets the status of the current game.
  * Shows the current player, current score, and the previous move coordinates.
  * Previous move coordinates will be [-1, -1] for a pass, or if there are no prior moves.
+ *
+ * Also provides the white player's komi (bonus starting score), and the amount of bonus cycles from offline time remaining
  */
 export function getGameState() {
   const currentPlayer = getCurrentPlayer();
@@ -282,7 +237,13 @@ export function getGameState() {
     whiteScore: score[GoColor.white].sum,
     blackScore: score[GoColor.black].sum,
     previousMove,
+    komi: score[GoColor.white].komi,
+    bonusCycles: Go.storedCycles,
   };
+}
+
+export function getMoveHistory(): SimpleBoard[] {
+  return Go.currentGame.previousBoards.map((boardString) => simpleBoardFromBoardString(boardString));
 }
 
 /**
@@ -293,32 +254,6 @@ export function getCurrentPlayer(): "None" | "White" | "Black" {
     return "None";
   }
   return Go.currentGame.previousPlayer === GoColor.black ? GoColor.white : GoColor.black;
-}
-
-/**
- * Find a move made by the previous player, if present.
- */
-export function getPreviousMove(): [number, number] | null {
-  const priorBoard = Go.currentGame?.previousBoards[0];
-  if (Go.currentGame.passCount || !priorBoard) {
-    return null;
-  }
-
-  for (const rowIndexString in Go.currentGame.board) {
-    const row = Go.currentGame.board[+rowIndexString] ?? [];
-    for (const pointIndexString in row) {
-      const point = row[+pointIndexString];
-      const priorColor = point && priorBoard && getColorOnSimpleBoard(priorBoard, point.x, point.y);
-      const currentColor = point?.color;
-      const isPreviousPlayer = currentColor === Go.currentGame.previousPlayer;
-      const isChanged = priorColor !== currentColor;
-      if (priorColor && currentColor && isPreviousPlayer && isChanged) {
-        return [+rowIndexString, +pointIndexString];
-      }
-    }
-  }
-
-  return null;
 }
 
 /**
@@ -362,10 +297,34 @@ export function resetBoardState(
   return simpleBoardFromBoard(Go.currentGame.board);
 }
 
+/**
+ * Retrieve and clean up stats for each opponent played against
+ */
+export function getStats() {
+  const statDetails: Partial<Record<GoOpponent, SimpleOpponentStats>> = {};
+  for (const opponent of getRecordKeys(Go.stats)) {
+    const details = getOpponentStats(opponent);
+    const nodePower = getOpponentStats(opponent).nodePower;
+    const effectPercent = (CalculateEffect(nodePower, opponent) - 1) * 100;
+    const effectDescription = getEffectTypeForFaction(opponent);
+    statDetails[opponent] = {
+      wins: details.wins,
+      losses: details.losses,
+      winStreak: details.winStreak,
+      highestWinStreak: details.highestWinStreak,
+      favor: details.favor,
+      bonusPercent: effectPercent,
+      bonusDescription: effectDescription,
+    };
+  }
+
+  return statDetails;
+}
+
 /** Validate singularity access by throwing an error if the player does not have access. */
 export function checkCheatApiAccess(error: (s: string) => void): void {
-  const hasSourceFile = Player.sourceFileLvl(14) > 1;
-  const isBitnodeFourteenTwo = Player.sourceFileLvl(14) === 1 && Player.bitNodeN === 14;
+  const hasSourceFile = Player.activeSourceFileLvl(14) > 1;
+  const isBitnodeFourteenTwo = Player.activeSourceFileLvl(14) === 1 && Player.bitNodeN === 14;
   if (!hasSourceFile && !isBitnodeFourteenTwo) {
     error(
       `The go.cheat API requires Source-File 14.2 to run, a power up you obtain later in the game.
@@ -387,30 +346,27 @@ export async function determineCheatSuccess(
 ): Promise<Play> {
   const state = Go.currentGame;
   const rng = new WHRNG(Player.totalPlaytime);
+  state.passCount = 0;
+
   // If cheat is successful, run callback
   if ((successRngOverride ?? rng.random()) <= cheatSuccessChance(state.cheatCount)) {
     callback();
-    state.cheatCount++;
     GoEvents.emit();
-    return getAIMove(state);
   }
   // If there have been prior cheat attempts, and the cheat fails, there is a 10% chance of instantly losing
   else if (state.cheatCount && (ejectRngOverride ?? rng.random()) < 0.1) {
     logger(`Cheat failed! You have been ejected from the subnet.`);
-    resetBoardState(logger, logger, state.ai, state.board[0].length);
-    return {
-      type: GoPlayType.gameOver,
-      x: null,
-      y: null,
-    };
+    endGoGame(state);
+    return Go.nextTurn;
   }
   // If the cheat fails, your turn is skipped
   else {
     logger(`Cheat failed. Your turn has been skipped.`);
     passTurn(state, GoColor.black, false);
-    state.cheatCount++;
-    return getAIMove(state);
   }
+
+  state.cheatCount++;
+  return makeAIMove(state);
 }
 
 /**
@@ -431,7 +387,7 @@ export async function determineCheatSuccess(
  * 15: +31,358,645%
  */
 export function cheatSuccessChance(cheatCount: number) {
-  const sourceFileBonus = Player.sourceFileLvl(14) === 3 ? 0.25 : 0;
+  const sourceFileBonus = Player.activeSourceFileLvl(14) === 3 ? 0.25 : 0;
   const cheatCountScalar = (0.7 - 0.02 * cheatCount) ** cheatCount;
   return Math.max(Math.min(0.6 * cheatCountScalar * Player.mults.crime_success + sourceFileBonus, 1), 0);
 }
@@ -445,7 +401,7 @@ export function cheatRemoveRouter(
   y: number,
   successRngOverride?: number,
   ejectRngOverride?: number,
-) {
+): Promise<Play> {
   const point = Go.currentGame.board[x][y]!;
   return determineCheatSuccess(
     logger,
@@ -471,7 +427,7 @@ export function cheatPlayTwoMoves(
   y2: number,
   successRngOverride?: number,
   ejectRngOverride?: number,
-) {
+): Promise<Play> {
   const point1 = Go.currentGame.board[x1][y1]!;
   const point2 = Go.currentGame.board[x2][y2]!;
 
@@ -496,7 +452,7 @@ export function cheatRepairOfflineNode(
   y: number,
   successRngOverride?: number,
   ejectRngOverride?: number,
-) {
+): Promise<Play> {
   return determineCheatSuccess(
     logger,
     () => {
@@ -522,7 +478,7 @@ export function cheatDestroyNode(
   y: number,
   successRngOverride?: number,
   ejectRngOverride?: number,
-) {
+): Promise<Play> {
   return determineCheatSuccess(
     logger,
     () => {

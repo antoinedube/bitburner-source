@@ -2,13 +2,14 @@ import type { BoardState, OpponentStats, SimpleBoard } from "./Types";
 import type { PartialRecord } from "../Types/Record";
 
 import { Truthy } from "lodash";
-import { GoColor, GoOpponent } from "@enums";
+import { GoColor, GoOpponent, GoPlayType } from "@enums";
 import { Go } from "./Go";
-import { boardStateFromSimpleBoard, simpleBoardFromBoard } from "./boardAnalysis/boardAnalysis";
+import { boardStateFromSimpleBoard, getPreviousMove, simpleBoardFromBoard } from "./boardAnalysis/boardAnalysis";
 import { assertLoadingType } from "../utils/TypeAssertion";
 import { getEnumHelper } from "../utils/EnumHelper";
 import { boardSizes } from "./Constants";
 import { isInteger, isNumber } from "../types";
+import { makeAIMove } from "./boardAnalysis/goAI";
 
 type PreviousGameSaveData = { ai: GoOpponent; board: SimpleBoard; previousPlayer: GoColor | null } | null;
 type CurrentGameSaveData = PreviousGameSaveData & {
@@ -20,6 +21,7 @@ type SaveFormat = {
   previousGame: PreviousGameSaveData;
   currentGame: CurrentGameSaveData;
   stats: PartialRecord<GoOpponent, OpponentStats>;
+  storedCycles: number;
 };
 
 export function getGoSave(): SaveFormat {
@@ -39,6 +41,7 @@ export function getGoSave(): SaveFormat {
       passCount: Go.currentGame.passCount,
     },
     stats: Go.stats,
+    storedCycles: Go.storedCycles,
   };
 }
 
@@ -77,6 +80,19 @@ export function loadGo(data: unknown): boolean {
   Go.currentGame = currentGame;
   Go.previousGame = previousGame;
   Go.stats = stats;
+  Go.storeCycles(loadStoredCycles(parsedData.storedCycles));
+
+  // If it's the AI's turn, initiate their turn, which will populate nextTurn
+  if (currentGame.previousPlayer === GoColor.black && currentGame.ai !== GoOpponent.none) makeAIMove(currentGame);
+  // If it's not the AI's turn and we're not in gameover status, initialize nextTurn promise based on the previous move/pass
+  else if (currentGame.previousPlayer) {
+    const previousMove = getPreviousMove();
+    Go.nextTurn = Promise.resolve(
+      previousMove
+        ? { type: GoPlayType.move, x: previousMove[0], y: previousMove[1] }
+        : { type: GoPlayType.pass, x: null, y: null },
+    );
+  }
   return true;
 }
 
@@ -164,4 +180,12 @@ function loadSimpleBoard(simpleBoard: unknown, requiredSize?: number): SimpleBoa
     return "Incorrect types or column size while loading a SimpleBoard.";
   }
   return simpleBoard;
+}
+
+function loadStoredCycles(storedCycles: unknown): number {
+  if (!storedCycles || isNaN(+storedCycles)) {
+    return 0;
+  }
+
+  return +storedCycles;
 }

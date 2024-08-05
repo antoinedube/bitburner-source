@@ -30,7 +30,9 @@
 |  [AutocompleteData](./bitburner.autocompletedata.md) | Used for autocompletion |
 |  [BackdoorRequirement](./bitburner.backdoorrequirement.md) | Player must have installed a backdoor on this server. |
 |  [BasicHGWOptions](./bitburner.basichgwoptions.md) | Options to affect the behavior of [hack](./bitburner.ns.hack.md)<!-- -->, [grow](./bitburner.ns.grow.md)<!-- -->, and [weaken](./bitburner.ns.weaken.md)<!-- -->. |
+|  [BitNodeBooleanOptions](./bitburner.bitnodebooleanoptions.md) | <p>restrictHomePCUpgrade: The home computer's maximum RAM and number of cores are lower than normal. Max RAM: 128GB. Max core: 1.</p><p>disableSleeveExpAndAugmentation: Your Sleeves do not gain experience when they perform action. You also cannot buy augmentations for them.</p> |
 |  [BitNodeMultipliers](./bitburner.bitnodemultipliers.md) | All multipliers affecting the difficulty of the current challenge. |
+|  [BitNodeOptions](./bitburner.bitnodeoptions.md) | <p>Default value: - sourceFileOverrides: an empty Map - intelligenceOverride: undefined - All boolean options: false</p><p>If you specify intelligenceOverride, it must be a non-negative integer.</p> |
 |  [BitNodeRequirement](./bitburner.bitnoderequirement.md) | Player must be located in this BitNode. |
 |  [Bladeburner](./bitburner.bladeburner.md) | Bladeburner API |
 |  [BladeburnerCurAction](./bitburner.bladeburnercuraction.md) | Bladeburner current action. |
@@ -70,6 +72,8 @@
 |  [GangTaskStats](./bitburner.gangtaskstats.md) | Object representing data representing a gang member task. |
 |  [GangTerritory](./bitburner.gangterritory.md) |  |
 |  [Go](./bitburner.go.md) | IPvGO api |
+|  [GoAnalysis](./bitburner.goanalysis.md) | Tools to analyze the IPvGO subnet. |
+|  [GoCheat](./bitburner.gocheat.md) | Illicit and dangerous IPvGO tools. Not for the faint of heart. Requires BitNode 14.2 to use. |
 |  [Grafting](./bitburner.grafting.md) | Grafting API |
 |  [GraftingTask](./bitburner.graftingtask.md) | Faction Work |
 |  [HackingFormulas](./bitburner.hackingformulas.md) | Hacking formulas |
@@ -92,7 +96,7 @@
 |  [InvestmentOffer](./bitburner.investmentoffer.md) | Corporation investment offer |
 |  [IStyleSettings](./bitburner.istylesettings.md) | Interface Styles |
 |  [JobTitleRequirement](./bitburner.jobtitlerequirement.md) | Player must have this job title at some company. |
-|  [KarmaRequiremennt](./bitburner.karmarequiremennt.md) | Player must have less than this much karma. |
+|  [KarmaRequirement](./bitburner.karmarequirement.md) | Player must have less than this much karma. |
 |  [LocationRequirement](./bitburner.locationrequirement.md) | Player must be at this location within a city. |
 |  [Material](./bitburner.material.md) | Material in a warehouse |
 |  [MoneyRequirement](./bitburner.moneyrequirement.md) | Player must have at least this much money. |
@@ -130,7 +134,7 @@
 |  [SourceFileRequirement](./bitburner.sourcefilerequirement.md) | Player must have this Source File. |
 |  [SpawnOptions](./bitburner.spawnoptions.md) |  |
 |  [Stanek](./bitburner.stanek.md) | Stanek's Gift API. |
-|  [StockMarketConstants](./bitburner.stockmarketconstants.md) | Constants used for the stockmarket game mechanic. |
+|  [StockMarketConstants](./bitburner.stockmarketconstants.md) | Constants used for the stock market game mechanic. |
 |  [StockOrder](./bitburner.stockorder.md) | <p>Return value of [getOrders](./bitburner.tix.getorders.md)</p><p>Keys are stock symbols, properties are arrays of [StockOrderObject](./bitburner.stockorderobject.md)</p> |
 |  [StockOrderObject](./bitburner.stockorderobject.md) | Value in map of [StockOrder](./bitburner.stockorder.md) |
 |  [StudyTask](./bitburner.studytask.md) | Study |
@@ -162,6 +166,7 @@
 |  [PlayerRequirement](./bitburner.playerrequirement.md) | Structured interface to requirements for joining a faction or company. For fields with numerical value &gt; 0, the player must have at least this value. For fields with numerical value &lt;<!-- -->= 0, the player must have at most this value. For "not", the sub-condition must be failed instead of passed. For "someCondition", at least one sub-condition must be passed. |
 |  [ReactNode](./bitburner.reactnode.md) | <p>A stand-in for the real React.ReactNode. A [ReactElement](./bitburner.reactelement.md) is rendered dynamically with React. number and string are displayed directly. boolean, null, and undefined are ignored and not rendered. An array of ReactNodes will display all members of that array sequentially.</p><p>Use React.createElement to make the ReactElement type, see [creating an element without jsx](https://react.dev/reference/react/createElement#creating-an-element-without-jsx) from the official React documentation.</p> |
 |  [ScriptArg](./bitburner.scriptarg.md) |  |
+|  [SimpleOpponentStats](./bitburner.simpleopponentstats.md) |  |
 |  [SleeveBladeburnerTask](./bitburner.sleevebladeburnertask.md) |  |
 |  [SleeveClassTask](./bitburner.sleeveclasstask.md) |  |
 |  [SleeveCompanyTask](./bitburner.sleevecompanytask.md) |  |

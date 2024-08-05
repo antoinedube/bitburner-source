@@ -141,16 +141,16 @@ function generateStatsDescription(mults: Multipliers, programs?: string[], start
   // Hacknet: costs are negative
   if (mults.hacknet_node_money !== 1) desc += `\n+${f(mults.hacknet_node_money - 1)} hacknet production`;
   if (mults.hacknet_node_purchase_cost !== 1) {
-    desc += `\n-${f(-(mults.hacknet_node_purchase_cost - 1))} hacknet nodes cost`;
+    desc += `\n-${f(-(mults.hacknet_node_purchase_cost - 1))} hacknet purchase cost`;
   }
   if (mults.hacknet_node_level_cost !== 1) {
     desc += `\n-${f(-(mults.hacknet_node_level_cost - 1))} hacknet level upgrade cost`;
   }
   if (mults.hacknet_node_ram_cost !== 1) {
-    desc += `\n-${f(-(mults.hacknet_node_ram_cost - 1))} hacknet RAM cost`;
+    desc += `\n-${f(-(mults.hacknet_node_ram_cost - 1))} hacknet RAM upgrade cost`;
   }
   if (mults.hacknet_node_core_cost !== 1) {
-    desc += `\n-${f(-(mults.hacknet_node_core_cost - 1))} hacknet core cost`;
+    desc += `\n-${f(-(mults.hacknet_node_core_cost - 1))} hacknet core upgrade cost`;
   }
 
   // Bladeburner
@@ -195,6 +195,12 @@ export class Augmentation {
   // The Player/Person classes
   mults: Multipliers = defaultMultipliers();
 
+  // Amount of money given to the Player when prestiging with this augmentation.
+  startingMoney: number;
+
+  // Array of programs to be given to the player when prestiging with this augmentation.
+  programs: CompletedProgramName[];
+
   // Factions that offer this aug.
   factions: FactionName[] = [];
 
@@ -218,6 +224,9 @@ export class Augmentation {
       const mult = params[multName];
       if (mult) this.mults[multName] = mult;
     }
+
+    this.startingMoney = params.startingMoney ?? 0;
+    this.programs = params.programs ?? [];
 
     if (params.stats === undefined)
       this.stats = generateStatsDescription(this.mults, params.programs, params.startingMoney);

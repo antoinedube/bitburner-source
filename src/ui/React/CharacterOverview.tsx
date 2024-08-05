@@ -133,6 +133,20 @@ export function Val({ name, color }: ValProps): React.ReactElement {
     return clearSubscription;
   }, [name]);
 
+  if (
+    name === "Int" &&
+    Player.bitNodeOptions.intelligenceOverride !== undefined &&
+    Player.bitNodeOptions.intelligenceOverride < Player.skills.intelligence
+  ) {
+    return (
+      <Tooltip title={`Intelligence: ${formatSkill(Player.skills.intelligence)}`}>
+        <Typography color={color}>
+          {formatSkill(Player.bitNodeOptions.intelligenceOverride)}
+          <sup>*</sup>
+        </Typography>
+      </Tooltip>
+    );
+  }
   return <Typography color={color}>{formattedVals[name]()}</Typography>;
 }
 
@@ -143,7 +157,7 @@ interface DataRowProps {
   cellType: "cellNone" | "cell";
 }
 export function DataRow({ name, showBar, color, cellType }: DataRowProps): React.ReactElement {
-  const classes = useStyles();
+  const { classes } = useStyles();
   const isSkill = name in skillNameMap;
   const skillBar = showBar && isSkill ? <SkillBar name={name as SkillRowName} color={color} /> : <></>;
   return (
@@ -185,7 +199,7 @@ export function CharacterOverview({ parentOpen, save, killScripts }: OverviewPro
     }, 600);
     return () => clearInterval(interval);
   }, [parentOpen]);
-  const classes = useStyles();
+  const { classes } = useStyles();
   const theme = useTheme();
   return (
     <>
@@ -261,7 +275,7 @@ function ActionText({ action }: { action: ActionIdentifier }): React.ReactElemen
 }
 
 function BladeburnerText(): React.ReactElement {
-  const classes = useStyles();
+  const { classes } = useStyles();
   const rerender = useRerender();
   useEffect(() => {
     const clearSubscription = OverviewEventEmitter.subscribe(rerender);
@@ -302,7 +316,7 @@ const onClickFocusWork = (): void => {
   Router.toPage(Page.Work);
 };
 function WorkInProgressOverview({ tooltip, children, header }: WorkInProgressOverviewProps): React.ReactElement {
-  const classes = useStyles();
+  const { classes } = useStyles();
   return (
     <>
       <TableRow>
@@ -666,13 +680,13 @@ const useStyles = makeStyles((theme: Theme) =>
       margin: 0,
     },
 
-    workHeader: {
-      fontSize: "0.9rem",
-    },
+  workHeader: {
+    fontSize: "0.9rem",
+  },
 
-    workSubtitles: {
-      fontSize: "0.8rem",
-    },
+  workSubtitles: {
+    fontSize: "0.8rem",
+  },
 
     customDisplayCell: {
       textAlign: "center",

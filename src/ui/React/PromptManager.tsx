@@ -18,19 +18,31 @@ interface Prompt {
 
 export function PromptManager({ hidden }: { hidden: boolean }): React.ReactElement {
   const [prompt, setPrompt] = useState<Prompt | null>(null);
+
+  const resolveCurrentPromptWithDefaultValue = (currentPrompt: Prompt) => {
+    if (["text", "select"].includes(currentPrompt.options?.type ?? "")) {
+      currentPrompt.resolve("");
+    } else {
+      currentPrompt.resolve(false);
+    }
+  };
+
   useEffect(() => {
-    return PromptEvent.subscribe((p: Prompt) => {
-      setPrompt(p);
+    return PromptEvent.subscribe((newPrompt: Prompt) => {
+      setPrompt((currentPrompt) => {
+        if (currentPrompt) {
+          resolveCurrentPromptWithDefaultValue(currentPrompt);
+        }
+        return newPrompt;
+      });
     });
   }, []);
 
   function close(): void {
-    if (prompt === null) return;
-    if (["text", "select"].includes(prompt.options?.type ?? "")) {
-      prompt.resolve("");
-    } else {
-      prompt.resolve(false);
+    if (prompt === null) {
+      return;
     }
+    resolveCurrentPromptWithDefaultValue(prompt);
     setPrompt(null);
   }
 
@@ -40,8 +52,9 @@ export function PromptManager({ hidden }: { hidden: boolean }): React.ReactEleme
   };
 
   let PromptContent = PromptMenuBoolean;
-  if (prompt?.options?.type && ["text", "select"].includes(prompt.options.type))
+  if (prompt?.options?.type && ["text", "select"].includes(prompt.options.type)) {
     PromptContent = types[prompt.options.type];
+  }
   const resolve = (value: boolean | string): void => {
     prompt?.resolve(value);
     setPrompt(null);
@@ -82,10 +95,17 @@ function PromptMenuBoolean({ resolve }: IContentProps): React.ReactElement {
   );
 }
 
-function PromptMenuText({ resolve }: IContentProps): React.ReactElement {
+function PromptMenuText({ prompt, resolve }: IContentProps): React.ReactElement {
   const [value, setValue] = useState("");
 
-  const submit = (): void => resolve(value);
+  const submit = (): void => {
+    resolve(value);
+    setValue("");
+  };
+
+  useEffect(() => {
+    setValue("");
+  }, [prompt]);
 
   const onInput = (event: React.ChangeEvent<HTMLInputElement>): void => {
     setValue(event.target.value);
@@ -121,7 +141,14 @@ function PromptMenuText({ resolve }: IContentProps): React.ReactElement {
 function PromptMenuSelect({ prompt, resolve }: IContentProps): React.ReactElement {
   const [value, setValue] = useState("");
 
-  const submit = (): void => resolve(value);
+  const submit = (): void => {
+    resolve(value);
+    setValue("");
+  };
+
+  useEffect(() => {
+    setValue("");
+  }, [prompt]);
 
   const onChange = (event: SelectChangeEvent): void => {
     setValue(event.target.value);
@@ -146,7 +173,11 @@ function PromptMenuSelect({ prompt, resolve }: IContentProps): React.ReactElemen
   return (
     <>
       <div style={{ display: "flex", alignItems: "center", paddingTop: "10px" }}>
-        <Select onChange={onChange} value={value} style={{ flex: "1 0 auto" }}>
+        <Select
+          onChange={onChange}
+          value={prompt.options?.choices.includes(value) ? value : ""}
+          style={{ flex: "1 0 auto" }}
+        >
           {getItems(prompt.options?.choices || [])}
         </Select>
         <Button onClick={submit} disabled={value === ""}>

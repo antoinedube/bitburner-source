@@ -4,7 +4,7 @@
 
 ## Go.makeMove() method
 
-Make a move on the IPvGO subnet gameboard, and await the opponent's response. x:0 y:0 represents the bottom-left corner of the board in the UI.
+Make a move on the IPvGO subnet game board, and await the opponent's response. x:0 y:0 represents the bottom-left corner of the board in the UI.
 
 **Signature:**
 
@@ -30,7 +30,7 @@ makeMove(
 
 Promise&lt;{ type: "move" \| "pass" \| "gameOver"; x: number \| null; y: number \| null; }&gt;
 
-a promise that contains if your move was valid and successful, the opponent move's x and y coordinates (or pass) in response, or an indication if the game has ended
+a promise that contains the opponent move's x and y coordinates (or pass) in response, or an indication if the game has ended
 
 ## Remarks
 
