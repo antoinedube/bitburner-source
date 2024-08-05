@@ -9,13 +9,5 @@ Tools to analyze the IPvGO subnet.
 **Signature:**
 
 ```typescript
-analysis: {
-    getValidMoves(): boolean[][];
-
-    getChains(): (number | null)[][];
-
-    getLiberties(): number[][];
-
-    getControlledEmptyNodes(): string[];
-  };
+analysis: GoAnalysis;
 ```

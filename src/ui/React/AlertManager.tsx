@@ -3,33 +3,28 @@ import { EventEmitter } from "../../utils/EventEmitter";
 import { Modal } from "./Modal";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
-import { sha256 } from "js-sha256";
+import { cyrb53 } from "../../utils/StringHelperFunctions";
 
 export const AlertEvents = new EventEmitter<[string | JSX.Element]>();
 
 interface Alert {
-  id: string;
   text: string | JSX.Element;
   hash: string;
 }
 
-let i = 0;
 export function AlertManager({ hidden }: { hidden: boolean }): React.ReactElement {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   useEffect(
     () =>
       AlertEvents.subscribe((text: string | JSX.Element) => {
-        const id = i + "";
-        i++;
+        const hash = getMessageHash(text);
         setAlerts((old) => {
-          const hash = getMessageHash(text);
           if (old.some((a) => a.hash === hash)) {
             return old;
           }
           return [
             ...old,
             {
-              id: id,
               text: text,
               hash: hash,
             },
@@ -52,13 +47,15 @@ export function AlertManager({ hidden }: { hidden: boolean }): React.ReactElemen
   const alertMessage = alerts[0]?.text || "No alert to show";
 
   function getMessageHash(text: string | JSX.Element): string {
-    if (typeof text === "string") return sha256(text);
-    return sha256(JSON.stringify(text.props));
+    if (typeof text === "string") {
+      return cyrb53(text);
+    }
+    return cyrb53(JSON.stringify(text.props));
   }
 
   function close(): void {
     setAlerts((old) => {
-      return old.slice(1, 1e99);
+      return old.slice(1);
     });
   }
 

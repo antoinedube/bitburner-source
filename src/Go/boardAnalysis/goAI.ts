@@ -1,9 +1,9 @@
-import type { Board, BoardState, EyeMove, Move, MoveOptions, PointState } from "../Types";
+import type { Board, BoardState, EyeMove, Move, MoveOptions, Play, PointState } from "../Types";
 
 import { Player } from "@player";
-import { AugmentationName, GoOpponent, GoColor, GoPlayType } from "@enums";
+import { AugmentationName, GoColor, GoOpponent, GoPlayType } from "@enums";
 import { opponentDetails } from "../Constants";
-import { findNeighbors, floor, isDefined, isNotNull, passTurn } from "../boardState/boardState";
+import { findNeighbors, isNotNullish, makeMove, passTurn } from "../boardState/boardState";
 import {
   evaluateIfMoveIsValid,
   evaluateMoveResult,
@@ -15,10 +15,82 @@ import {
   getAllEyesByChainId,
   getAllNeighboringChains,
   getAllValidMoves,
+  getPreviousMoveDetails,
 } from "./boardAnalysis";
 import { findDisputedTerritory } from "./controlledTerritory";
 import { findAnyMatchedPatterns } from "./patternMatching";
 import { WHRNG } from "../../Casino/RNG";
+import { Go, GoEvents } from "../Go";
+
+let isAiThinking: boolean = false;
+let currentTurnResolver: (() => void) | null = null;
+
+/**
+ * Retrieves a move from the current faction in response to the player's move
+ */
+export function makeAIMove(boardState: BoardState, useOfflineCycles = true): Promise<Play> {
+  // If AI is already taking their turn, return the existing turn.
+  if (isAiThinking) {
+    return Go.nextTurn;
+  }
+  isAiThinking = true;
+
+  // If the AI is disabled, simply make a promise to be resolved once the player makes a move as white
+  if (boardState.ai === GoOpponent.none) {
+    GoEvents.emit();
+    // Update currentTurnResolver to call Go.nextTurn's resolve function with the last played move's details
+    Go.nextTurn = new Promise((resolve) => (currentTurnResolver = () => resolve(getPreviousMoveDetails())));
+  }
+  // If an AI is in use, find the faction's move in response, and resolve the Go.nextTurn promise once it is found and played.
+  else {
+    Go.nextTurn = getMove(boardState, GoColor.white, Go.currentGame.ai, useOfflineCycles).then(
+      async (play): Promise<Play> => {
+        if (boardState !== Go.currentGame) return play; //Stale game
+
+        // Handle AI passing
+        if (play.type === GoPlayType.pass) {
+          passTurn(boardState, GoColor.white);
+          // if passTurn called endGoGame, or the player has no valid moves left, the move should be shown as a game over
+          if (boardState.previousPlayer === null || !getAllValidMoves(boardState, GoColor.black).length) {
+            return { type: GoPlayType.gameOver, x: null, y: null };
+          }
+          return play;
+        }
+
+        // Handle AI making a move
+        await waitCycle(useOfflineCycles);
+        const aiUpdatedBoard = makeMove(boardState, play.x, play.y, GoColor.white);
+
+        // Handle the AI breaking. This shouldn't ever happen.
+        if (!aiUpdatedBoard) {
+          boardState.previousPlayer = GoColor.white;
+          console.error(`Invalid AI move attempted: ${play.x}, ${play.y}. This should not happen.`);
+        }
+
+        return play;
+      },
+    );
+  }
+
+  // Once the AI moves (or the player playing as white with No AI moves),
+  // clear the isAiThinking semaphore and update the board UI.
+  Go.nextTurn = Go.nextTurn.finally(() => {
+    isAiThinking = false;
+    GoEvents.emit();
+  });
+
+  return Go.nextTurn;
+}
+
+/**
+ * Resolves the current turn.
+ * This is used for players manually playing against their script on the no-ai board.
+ */
+export function resolveCurrentTurn() {
+  // Call the resolve function on Go.nextTurn, if it exists
+  currentTurnResolver?.();
+  currentTurnResolver = null;
+}
 
 /*
   Basic GO AIs, each with some personality and weaknesses
@@ -38,8 +110,14 @@ import { WHRNG } from "../../Casino/RNG";
  *
  * @returns a promise that will resolve with a move (or pass) from the designated AI opponent.
  */
-export async function getMove(boardState: BoardState, player: GoColor, opponent: GoOpponent, rngOverride?: number) {
-  await sleep(300);
+export async function getMove(
+  boardState: BoardState,
+  player: GoColor,
+  opponent: GoOpponent,
+  useOfflineCycles = true,
+  rngOverride?: number,
+): Promise<Play & { type: GoPlayType.move | GoPlayType.pass }> {
+  await waitCycle(useOfflineCycles);
   const rng = new WHRNG(rngOverride || Player.totalPlaytime);
   const smart = isSmart(opponent, rng.random());
   const moves = getMoveOptions(boardState, player, rng.random(), smart);
@@ -63,49 +141,18 @@ export async function getMove(boardState: BoardState, player: GoColor, opponent:
     (await moves.eyeMove())?.point,
     (await moves.eyeBlock())?.point,
   ]
-    .filter(isNotNull)
-    .filter(isDefined)
+    .filter(isNotNullish)
     .filter((point) => evaluateIfMoveIsValid(boardState, point.x, point.y, player, false));
 
-  const chosenMove = moveOptions[floor(rng.random() * moveOptions.length)];
+  const chosenMove = moveOptions[Math.floor(rng.random() * moveOptions.length)];
+  await waitCycle(useOfflineCycles);
 
   if (chosenMove) {
-    await sleep(200);
     //console.debug(`Non-priority move chosen: ${chosenMove.x} ${chosenMove.y}`);
-    return {
-      type: GoPlayType.move,
-      x: chosenMove.x,
-      y: chosenMove.y,
-    };
-  } else {
-    //console.debug("No valid moves found");
-    return handleNoMoveFound(boardState, player);
+    return { type: GoPlayType.move, x: chosenMove.x, y: chosenMove.y };
   }
-}
-
-/**
- * Detects if the AI is merely passing their turn, or if the game should end.
- *
- * Ends the game if the player passed on the previous turn before the AI passes,
- *   or if the player will be forced to pass their next turn after the AI passes.
- */
-function handleNoMoveFound(boardState: BoardState, player: GoColor) {
-  passTurn(boardState, player);
-  const opposingPlayer = player === GoColor.white ? GoColor.black : GoColor.white;
-  const remainingTerritory = getAllValidMoves(boardState, opposingPlayer).length;
-  if (remainingTerritory > 0 && boardState.passCount < 2) {
-    return {
-      type: GoPlayType.pass,
-      x: null,
-      y: null,
-    };
-  } else {
-    return {
-      type: GoPlayType.gameOver,
-      x: null,
-      y: null,
-    };
-  }
+  // Pass if no valid moves were found
+  return { type: GoPlayType.pass, x: null, y: null };
 }
 
 /**
@@ -375,7 +422,7 @@ function isCornerAvailableForMove(board: Board, x1: number, y1: number, x2: numb
  */
 function getExpansionMove(board: Board, availableSpaces: PointState[], rng: number, moveArray?: Move[]) {
   const moveOptions = moveArray ?? getExpansionMoveArray(board, availableSpaces);
-  const randomIndex = floor(rng * moveOptions.length);
+  const randomIndex = Math.floor(rng * moveOptions.length);
   return moveOptions[randomIndex];
 }
 
@@ -392,7 +439,7 @@ function getJumpMove(board: Board, player: GoColor, availableSpaces: PointState[
     ].some((point) => point?.color === player),
   );
 
-  const randomIndex = floor(rng * moveOptions.length);
+  const randomIndex = Math.floor(rng * moveOptions.length);
   return moveOptions[randomIndex];
 }
 
@@ -451,14 +498,13 @@ async function getLibertyGrowthMoves(board: Board, player: GoColor, availableSpa
   // Get all liberties of friendly chains as potential growth move options
   const liberties = friendlyChains
     .map((chain) =>
-      chain[0].liberties?.filter(isNotNull).map((liberty) => ({
+      chain[0].liberties?.filter(isNotNullish).map((liberty) => ({
         libertyPoint: liberty,
         oldLibertyCount: chain[0].liberties?.length,
       })),
     )
     .flat()
-    .filter(isNotNull)
-    .filter(isDefined)
+    .filter(isNotNullish)
     .filter((liberty) =>
       availableSpaces.find((point) => liberty.libertyPoint.x === point.x && liberty.libertyPoint.y === point.y),
     );
@@ -491,7 +537,7 @@ async function getGrowthMove(board: Board, player: GoColor, availableSpaces: Poi
   const maxLibertyCount = Math.max(...growthMoves.map((l) => l.newLibertyCount - l.oldLibertyCount));
 
   const moveCandidates = growthMoves.filter((l) => l.newLibertyCount - l.oldLibertyCount === maxLibertyCount);
-  return moveCandidates[floor(rng * moveCandidates.length)];
+  return moveCandidates[Math.floor(rng * moveCandidates.length)];
 }
 
 /**
@@ -509,7 +555,7 @@ async function getDefendMove(board: Board, player: GoColor, availableSpaces: Poi
   }
 
   const moveCandidates = libertyIncreases.filter((l) => l.newLibertyCount - l.oldLibertyCount === maxLibertyCount);
-  return moveCandidates[floor(Math.random() * moveCandidates.length)];
+  return moveCandidates[Math.floor(Math.random() * moveCandidates.length)];
 }
 
 /**
@@ -528,7 +574,7 @@ async function getSurroundMove(board: Board, player: GoColor, availableSpaces: P
     .map((chain) => chain[0].liberties)
     .flat()
     .filter((liberty) => availableSpaces.find((point) => liberty?.x === point.x && liberty?.y === point.y))
-    .filter(isNotNull);
+    .filter(isNotNullish);
 
   const captureMoves: Move[] = [];
   const atariMoves: Move[] = [];
@@ -617,7 +663,7 @@ function getEyeCreationMoves(board: Board, player: GoColor, availableSpaces: Poi
     .filter((chain) => !currentLivingGroupIDs.includes(chain[0].chain))
     .map((chain) => chain[0].liberties)
     .flat()
-    .filter(isNotNull)
+    .filter(isNotNullish)
     .filter((point) =>
       availableSpaces.find((availablePoint) => availablePoint.x === point.x && availablePoint.y === point.y),
     )
@@ -737,13 +783,13 @@ function getMoveOptions(
     random: async () => {
       // Only offer a random move if there are some contested spaces on the board.
       // (Random move should not be picked if the AI would otherwise pass turn.)
-      const point = contestedPoints.length ? availableSpaces[floor(rng * availableSpaces.length)] : null;
+      const point = contestedPoints.length ? availableSpaces[Math.floor(rng * availableSpaces.length)] : null;
       return point ? { point } : null;
     },
   };
 
   async function retrieveMoveOption(id: keyof typeof moveOptions): Promise<Move | null> {
-    await sleep(100);
+    await waitCycle();
     if (moveOptions[id] !== undefined) {
       return moveOptions[id] ?? null;
     }
@@ -770,6 +816,18 @@ export function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+/**
+ * Spend some time waiting to allow the UI & CSS to render smoothly
+ * If bonus time is available, significantly decrease the length of the wait
+ */
+function waitCycle(useOfflineCycles = true): Promise<void> {
+  if (useOfflineCycles && Go.storedCycles > 0) {
+    Go.storedCycles -= 2;
+    return sleep(40);
+  }
+  return sleep(200);
+}
+
 export function showWorldDemon() {
-  return Player.hasAugmentation(AugmentationName.TheRedPill, true) && Player.sourceFileLvl(1);
+  return Player.hasAugmentation(AugmentationName.TheRedPill, true) && Player.activeSourceFileLvl(1);
 }

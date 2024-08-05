@@ -2,14 +2,14 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import { EventEmitter } from "../../utils/EventEmitter";
 import { RunningScript } from "../../Script/RunningScript";
 import { killWorkerScriptByPid } from "../../Netscript/killWorkerScript";
+
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
+
 import Draggable, { DraggableEvent } from "react-draggable";
 import { ResizableBox, ResizeCallbackData } from "react-resizable";
 import IconButton from "@mui/material/IconButton";
-import makeStyles from "@mui/styles/makeStyles";
-import createStyles from "@mui/styles/createStyles";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import CloseIcon from "@mui/icons-material/Close";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -25,7 +25,8 @@ import { Settings } from "../../Settings/Settings";
 import { ANSIITypography } from "./ANSIITypography";
 import { useRerender } from "./hooks";
 import { dialogBoxCreate } from "./DialogBox";
-
+import { makeStyles } from "tss-react/mui";
+import { logBoxBaseZIndex } from "./Constants";
 let layerCounter = 0;
 
 export const LogBoxEvents = new EventEmitter<[RunningScript]>();
@@ -58,6 +59,7 @@ export class LogBoxProperties {
     this.x = x;
     this.y = y;
     this.updateDOM();
+    this.rerender();
   }
 
   setSize(width: number, height: number): void {
@@ -142,33 +144,29 @@ interface LogWindowProps {
   hidden: boolean;
 }
 
-const useStyles = makeStyles(() =>
-  createStyles({
-    logs: {
-      overflowY: "scroll",
-      overflowX: "hidden",
-      scrollbarWidth: "auto",
-      flexDirection: "column-reverse",
-      whiteSpace: "pre-wrap",
-      wordWrap: "break-word",
-    },
-    titleButton: {
-      borderWidth: "0 0 0 1px",
-      borderColor: Settings.theme.welllight,
-      borderStyle: "solid",
-      borderRadius: "0",
-      padding: "0",
-      height: "100%",
-    },
-  }),
-);
-
-export const logBoxBaseZIndex = 1500;
+const useStyles = makeStyles()({
+  logs: {
+    overflowY: "scroll",
+    overflowX: "hidden",
+    scrollbarWidth: "auto",
+    flexDirection: "column-reverse",
+    whiteSpace: "pre-wrap",
+    wordWrap: "break-word",
+  },
+  titleButton: {
+    borderWidth: "0 0 0 1px",
+    borderColor: Settings.theme.welllight,
+    borderStyle: "solid",
+    borderRadius: "0",
+    padding: "0",
+    height: "100%",
+  },
+});
 
 function LogWindow({ hidden, script, onClose }: LogWindowProps): React.ReactElement {
   const draggableRef = useRef<HTMLDivElement>(null);
   const rootRef = useRef<Draggable>(null);
-  const classes = useStyles();
+  const { classes } = useStyles();
   const container = useRef<HTMLDivElement>(null);
   const textArea = useRef<HTMLDivElement>(null);
   const rerender = useRerender(Settings.TailRenderInterval);
@@ -306,8 +304,15 @@ function LogWindow({ hidden, script, onClose }: LogWindowProps): React.ReactElem
     if (
       e instanceof MouseEvent &&
       (e.clientX < 0 || e.clientY < 0 || e.clientX > innerWidth || e.clientY > innerHeight)
-    )
+    ) {
       return false;
+    }
+    if (rootRef.current) {
+      // We can set x,y directly. Calling setPosition will make unnecessary calls of updateDOM and rerender.
+      const currentState = rootRef.current.state as { x: number; y: number };
+      propsRef.current.x = currentState.x;
+      propsRef.current.y = currentState.y;
+    }
   };
 
   // Max [width, height]
