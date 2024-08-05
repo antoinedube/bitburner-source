@@ -709,6 +709,7 @@ const useStyles = makeStyles()((theme: Theme) => ({
     padding: 0,
     margin: 0,
   },
+  
   cell: {
     padding: 0,
     margin: 0,
