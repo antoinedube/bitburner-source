@@ -7,9 +7,16 @@ import SaveIcon from "@mui/icons-material/Save";
 import ClearAllIcon from "@mui/icons-material/ClearAll";
 import { Theme, useTheme } from "@mui/material/styles";
 import { makeStyles } from "tss-react/mui";
-
+import {
+  formatHashes,
+  formatHp,
+  formatMoney,
+  formatNumberNoSuffix,
+  formatRam,
+  formatReputation,
+  formatSkill
+} from "../formatNumber";
 import { Player } from "@player";
-import { formatHp, formatMoney, formatSkill } from "../formatNumber";
 import { Reputation } from "./Reputation";
 import { KillScriptsModal } from "./KillScriptsModal";
 import { convertTimeMsToTimeElapsedString } from "../../utils/StringHelperFunctions";
@@ -19,6 +26,13 @@ import { Router } from "../GameRoot";
 import { Page } from "../Router";
 import { StatsProgressOverviewCell } from "./StatsProgressBar";
 import { currentNodeMults } from "../../BitNode/BitNodeMultipliers";
+import { getPurchaseServerLimit, getPurchaseServerMaxRam } from "../../Server/ServerPurchases";
+import { GetServer, GetAllServers } from "../../Server/AllServers";
+import { HacknetServerConstants } from "../../Hacknet/data/Constants";
+import { HacknetNode } from "../../Hacknet/HacknetNode";
+import { HacknetServer } from "../../Hacknet/HacknetServer";
+import { GangConstants } from "../../Gang/data/Constants";
+import { Factions } from "../../Faction/Factions";
 
 import { isClassWork } from "../../Work/ClassWork";
 import { CONSTANTS } from "../../Constants";
@@ -156,7 +170,7 @@ export function DataRow({ name, showBar, color, cellType }: DataRowProps): React
         </TableCell>
         <TableCell align="right" classes={{ root: classes[cellType] }}>
           <Typography id={"overview-" + name.toLowerCase() + "-hook"} color={color}>
-            {}
+            { }
           </Typography>
         </TableCell>
       </TableRow>
@@ -206,20 +220,24 @@ export function CharacterOverview({ parentOpen, save, killScripts }: OverviewPro
           <TableRow>
             <TableCell component="th" scope="row" classes={{ root: classes.cell }}>
               <Typography id="overview-extra-hook-0" color={theme.colors.hack}>
-                {}
+                { }
               </Typography>
             </TableCell>
             <TableCell component="th" scope="row" align="right" classes={{ root: classes.cell }}>
               <Typography id="overview-extra-hook-1" color={theme.colors.hack}>
-                {}
+                { }
               </Typography>
             </TableCell>
             <TableCell component="th" scope="row" align="right" classes={{ root: classes.cell }}>
               <Typography id="overview-extra-hook-2" color={theme.colors.hack}>
-                {}
+                { }
               </Typography>
             </TableCell>
           </TableRow>
+          <CustomDisplayHackedServers />
+          <CustomDisplayHackingServers />
+          <CustomDisplayHacknetServers />
+          <CustomDisplayGang />
           <Work />
           <BladeburnerText />
         </TableBody>
@@ -326,6 +344,234 @@ function WorkInProgressOverview({ tooltip, children, header }: WorkInProgressOve
         ),
         [classes.cellNone],
       )}
+    </>
+  );
+}
+
+function CustomDisplayHackedServers(): React.ReactElement {
+  const rerender = useRerender();
+  useEffect(() => {
+    const clearSubscription = OverviewEventEmitter.subscribe(rerender);
+    return clearSubscription;
+  }, [rerender]);
+
+  const serversToAvoid = [
+    "home",
+    "run4theh111z",
+    "I.I.I.I",
+    "avmnite-02h",
+    ".",
+    "CSEC",
+    "The-Cave",
+    "w0r1d_d43m0n",
+    "darkweb",
+  ];
+
+  const { classes } = useStyles();
+
+  const allServers = GetAllServers();
+  const servers = allServers
+    .filter((server) => !serversToAvoid.includes(server.hostname))
+    .filter((server) => !server.hostname.startsWith("hacknet-server"))
+    .filter((server) => !server.hostname.startsWith("neighbor"))
+    .map((server) => ({
+      hostname: server.hostname,
+      "has-admin-rights": server.hasAdminRights,
+      "backdoor-installed": server.backdoorInstalled,
+    }));
+
+  const numServers = servers.length;
+  const numServersWithAdminRights = servers.filter((item) => item["has-admin-rights"]).length;
+  const numServersWithBackdoorInstalled = servers.filter((item) => item["backdoor-installed"]).length;
+
+  const hackedServersHeader: ReactNode = <>Hacked servers</>;
+  const hackedServersInnerText: ReactNode = (
+    <>
+      hacked: {numServersWithAdminRights} / {numServers} <br />
+      backdoored: {numServersWithBackdoorInstalled} / {numServers}
+    </>
+  );
+
+  return (
+    <>
+      <TableRow>
+        <TableCell component="th" scope="row" colSpan={2} classes={{ root: classes.customDisplayCell }}>
+          <Typography className={classes.customDisplayHeader}>{hackedServersHeader}</Typography>
+        </TableCell>
+      </TableRow>
+      <TableRow>
+        <TableCell component="th" scope="row" colSpan={2} classes={{ root: classes.customDisplayCell }}>
+          <Typography className={classes.customDisplayText}>{hackedServersInnerText}</Typography>
+        </TableCell>
+      </TableRow>
+    </>
+  );
+}
+
+function CustomDisplayHackingServers(): React.ReactElement {
+  const rerender = useRerender();
+  useEffect(() => {
+    const clearSubscription = OverviewEventEmitter.subscribe(rerender);
+    return clearSubscription;
+  }, [rerender]);
+
+  const { classes } = useStyles();
+
+  const numberPurchasedServers = Player.purchasedServers.length;
+  const purchasedServerLimit = getPurchaseServerLimit();
+  const currentPurchasedHostname = Player.purchasedServers.length > 0 ? Player.purchasedServers[0] : null;
+
+  let hackingServersHeader: ReactNode = "";
+  hackingServersHeader = <>Hacking servers</>;
+  let hackingServersInnerText: ReactNode = "";
+  if (currentPurchasedHostname) {
+    const currentPurchasedServer = GetServer(currentPurchasedHostname);
+    // GetServer returns:
+    // object with keys {contracts, cpuCores, ftpPortOpen, hasAdminRights, hostname, httpPortOpen, ip, isConnectedTo, maxRam, messages, organizationName, programs, ramUsed, runningScriptMap, savedScripts, scripts, serversOnNetwork, smtpPortOpen, sqlPortOpen, sshPortOpen, textFiles, purchasedByPlayer, backdoorInstalled, baseDifficulty, hackDifficulty, minDifficulty, moneyAvailable, moneyMax, numOpenPortsRequired, openPortCount, requiredHackingSkill, serverGrowth}
+    if (currentPurchasedServer) {
+      hackingServersInnerText = (
+        <>
+          number: {numberPurchasedServers} / {purchasedServerLimit} <br />
+          stats: {formatRam(currentPurchasedServer.maxRam)} / {formatRam(getPurchaseServerMaxRam())}
+        </>
+      );
+    }
+  } else {
+    hackingServersInnerText = <>no hacking servers yet!</>;
+  }
+
+  return (
+    <>
+      <TableRow>
+        <TableCell component="th" scope="row" colSpan={2} classes={{ root: classes.customDisplayCell }}>
+          <Typography className={classes.customDisplayHeader}>{hackingServersHeader}</Typography>
+        </TableCell>
+      </TableRow>
+      <TableRow>
+        <TableCell component="th" scope="row" colSpan={2} classes={{ root: classes.customDisplayCell }}>
+          <Typography className={classes.customDisplayText}>{hackingServersInnerText}</Typography>
+        </TableCell>
+      </TableRow>
+    </>
+  );
+}
+
+function CustomDisplayHacknetServers(): React.ReactElement {
+  const rerender = useRerender();
+  useEffect(() => {
+    const clearSubscription = OverviewEventEmitter.subscribe(rerender);
+    return clearSubscription;
+  }, [rerender]);
+
+  const { classes } = useStyles();
+
+  let hacknetServersHeader: ReactNode;
+  let hackingServersInnerText: ReactNode;
+
+  if (Player.sourceFileLvl(9) >= 3 || Player.bitNodeN === 9) {
+    // Hacknet servers
+    hacknetServersHeader = <>Hacknet servers</>;
+    const numberHacknetServers = Player.hacknetNodes.length;
+    const hacknetServerLimit = HacknetServerConstants.MaxServers;
+    let totalProduction = 0;
+    for (let i = 0; i < numberHacknetServers; ++i) {
+      const node = Player.hacknetNodes[i];
+      if (node instanceof HacknetNode) throw new Error("node was hacknet node"); // should never happen
+      const hserver = GetServer(node);
+      if (!(hserver instanceof HacknetServer)) throw new Error("node was not hacknet server"); // should never happen
+      if (hserver) {
+        totalProduction += hserver.hashRate;
+      }
+    }
+    hackingServersInnerText = (
+      <>
+        number: {numberHacknetServers} / {hacknetServerLimit} <br />
+        production: {formatHashes(totalProduction)}/s <br />
+        hashes: {formatHashes(Player.hashManager.hashes)} <br />
+        capacity: {formatHashes(Player.hashManager.capacity)}
+      </>
+    );
+  } else {
+    // Hacknet nodes
+    hacknetServersHeader = <>Hacknet nodes</>;
+    const numberHacknetNodes = Player.hacknetNodes.length;
+    let totalProduction = 0;
+    for (let i = 0; i < numberHacknetNodes; ++i) {
+      const node = Player.hacknetNodes[i];
+      if (typeof node === "string") throw new Error("node was ip string"); // should never happen
+      totalProduction += node.moneyGainRatePerSecond;
+    }
+    hackingServersInnerText = (
+      <>
+        number: {numberHacknetNodes} <br />
+        production: {formatMoney(totalProduction)}/s
+      </>
+    );
+  }
+
+  return (
+    <>
+      <TableRow>
+        <TableCell component="th" scope="row" colSpan={2} classes={{ root: classes.customDisplayCell }}>
+          <Typography className={classes.customDisplayHeader}>{hacknetServersHeader}</Typography>
+        </TableCell>
+      </TableRow>
+      <TableRow>
+        <TableCell component="th" scope="row" colSpan={2} classes={{ root: classes.customDisplayCell }}>
+          <Typography className={classes.customDisplayText}>{hackingServersInnerText}</Typography>
+        </TableCell>
+      </TableRow>
+    </>
+  );
+}
+
+function CustomDisplayGang(): React.ReactElement {
+  const rerender = useRerender();
+  useEffect(() => {
+    const clearSubscription = OverviewEventEmitter.subscribe(rerender);
+    return clearSubscription;
+  }, [rerender]);
+
+  const { classes } = useStyles();
+
+  let gangHeader: ReactNode;
+  let gangInnerText: ReactNode;
+
+  const gang = Player.gang;
+  if (gang) {
+    const reputation = Factions[gang.facName].playerReputation;
+    const numMembers = gang.members.length;
+    const tasks = [];
+    for (let i = 0; i < numMembers; i++) {
+      const member = gang.members[i];
+      tasks.push(member.task);
+    }
+    gangHeader = <>Gang</>;
+    const currentTasks = Array.from(new Set(tasks)).join(', ');
+    gangInnerText = (
+      <>
+        name: {gang.facName} <br />
+        members: {numMembers} / {GangConstants.MaximumGangMembers} <br />
+        tasks: {currentTasks} <br />
+        wanted level penalty: {formatNumberNoSuffix((1 - gang.getWantedPenalty()) * 100, 2)}% <br />
+        money gain: {formatMoney(5 * gang.moneyGainRate)}/s <br />
+        reputation: {formatReputation(reputation)}
+      </>
+    );
+  }
+
+  return (
+    <>
+      <TableRow>
+        <TableCell component="th" scope="row" colSpan={2} classes={{ root: classes.customDisplayCell }}>
+          <Typography className={classes.customDisplayHeader}>{gangHeader}</Typography>
+        </TableCell>
+      </TableRow>
+      <TableRow>
+        <TableCell component="th" scope="row" colSpan={2} classes={{ root: classes.customDisplayCell }}>
+          <Typography className={classes.customDisplayText}>{gangInnerText}</Typography>
+        </TableCell>
+      </TableRow>
     </>
   );
 }
@@ -439,11 +685,31 @@ const useStyles = makeStyles()((theme: Theme) => ({
     fontSize: "0.8rem",
   },
 
+  customDisplayCell: {
+    textAlign: "center",
+    minWidth: "100px",
+    maxWidth: "200px",
+    borderBottom: "none",
+    padding: "10px 0 0 0",
+    margin: 0,
+  },
+
+  customDisplayHeader: {
+    fontSize: "0.9rem",
+    textDecoration: "underline"
+  },
+
+  customDisplayText: {
+    fontSize: "0.8rem",
+    textAlign: "left",
+  },
+
   cellNone: {
     borderBottom: "none",
     padding: 0,
     margin: 0,
   },
+
   cell: {
     padding: 0,
     margin: 0,
@@ -466,6 +732,7 @@ const useStyles = makeStyles()((theme: Theme) => ({
   int: {
     color: theme.colors.int,
   },
-}));
+}),
+);
 
 export { useStyles };
