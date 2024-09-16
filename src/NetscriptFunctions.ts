@@ -261,13 +261,7 @@ export const ns: InternalAPI<NSFull> = {
 
     const server = helpers.getServer(ctx, hostname);
     if (!(server instanceof Server)) {
-      helpers.log(ctx, () => "Cannot be executed on this server.");
-      return Promise.resolve(0);
-    }
-
-    const host = GetServer(ctx.workerScript.hostname);
-    if (host === null) {
-      throw new Error("Workerscript host is null");
+      throw helpers.errorMessage(ctx, "Cannot be executed on this server.");
     }
 
     // No root access or skill level too low
@@ -286,6 +280,10 @@ export const ns: InternalAPI<NSFull> = {
         )} (t=${formatThreads(threads)}).`,
     );
     return helpers.netscriptDelay(ctx, growTime * 1000).then(function () {
+      const host = GetServer(ctx.workerScript.hostname);
+      if (host === null) {
+        throw helpers.errorMessage(ctx, `Cannot find host of WorkerScript. Hostname: ${ctx.workerScript.hostname}.`);
+      }
       const moneyBefore = server.moneyAvailable <= 0 ? 1 : server.moneyAvailable;
       processSingleServerGrowth(server, threads, host.cpuCores);
       const moneyAfter = server.moneyAvailable;
@@ -360,8 +358,7 @@ export const ns: InternalAPI<NSFull> = {
 
     const server = helpers.getServer(ctx, hostname);
     if (!(server instanceof Server)) {
-      helpers.log(ctx, () => "Cannot be executed on this server.");
-      return Promise.resolve(0);
+      throw helpers.errorMessage(ctx, "Cannot be executed on this server.");
     }
 
     // No root access or skill level too low
@@ -382,8 +379,7 @@ export const ns: InternalAPI<NSFull> = {
     return helpers.netscriptDelay(ctx, weakenTime * 1000).then(function () {
       const host = GetServer(ctx.workerScript.hostname);
       if (host === null) {
-        helpers.log(ctx, () => "Server is null, did it die?");
-        return Promise.resolve(0);
+        throw helpers.errorMessage(ctx, `Cannot find host of WorkerScript. Hostname: ${ctx.workerScript.hostname}.`);
       }
       const weakenAmt = getWeakenEffect(threads, host.cpuCores);
       server.weaken(weakenAmt);
@@ -495,37 +491,46 @@ export const ns: InternalAPI<NSFull> = {
   },
   disableLog: (ctx) => (_fn) => {
     const fn = helpers.string(ctx, "fn", _fn);
-    if (fn === "ALL") {
-      for (const fn of Object.keys(possibleLogs)) {
-        ctx.workerScript.disableLogs[fn] = true;
-      }
-      helpers.log(ctx, () => `Disabled logging for all functions`);
-    } else if (possibleLogs[fn] === undefined) {
+    if (possibleLogs[fn] === undefined) {
       throw helpers.errorMessage(ctx, `Invalid argument: ${fn}.`);
+    }
+    if (fn === "ALL") {
+      ctx.workerScript.disableLogs = allDisabled;
+      // No need to log here, it's been disabled.
     } else {
-      ctx.workerScript.disableLogs[fn] = true;
-      helpers.log(ctx, () => `Disabled logging for ${fn}`);
+      // We don't track individual log entries when all are disabled.
+      if (!ctx.workerScript.disableLogs["ALL"]) {
+        ctx.workerScript.disableLogs[fn] = true;
+        helpers.log(ctx, () => `Disabled logging for ${fn}`);
+      }
     }
   },
   enableLog: (ctx) => (_fn) => {
     const fn = helpers.string(ctx, "fn", _fn);
-    if (fn === "ALL") {
-      for (const fn of Object.keys(possibleLogs)) {
-        delete ctx.workerScript.disableLogs[fn];
-      }
-      helpers.log(ctx, () => `Enabled logging for all functions`);
-    } else if (possibleLogs[fn] === undefined) {
+    if (possibleLogs[fn] === undefined) {
       throw helpers.errorMessage(ctx, `Invalid argument: ${fn}.`);
     }
-    delete ctx.workerScript.disableLogs[fn];
-    helpers.log(ctx, () => `Enabled logging for ${fn}`);
+    if (fn === "ALL") {
+      ctx.workerScript.disableLogs = {};
+      helpers.log(ctx, () => `Enabled logging for all functions`);
+    } else {
+      if (ctx.workerScript.disableLogs["ALL"]) {
+        // As an optimization, we normally store only that key, but we have to
+        // expand it out to all keys at this point.
+        // Conveniently, possibleLogs serves as a model for "all keys disabled."
+        ctx.workerScript.disableLogs = Object.assign({}, possibleLogs, { ALL: false, [fn]: false });
+      } else {
+        ctx.workerScript.disableLogs[fn] = false;
+      }
+      helpers.log(ctx, () => `Enabled logging for ${fn}`);
+    }
   },
   isLogEnabled: (ctx) => (_fn) => {
     const fn = helpers.string(ctx, "fn", _fn);
     if (possibleLogs[fn] === undefined) {
       throw helpers.errorMessage(ctx, `Invalid argument: ${fn}.`);
     }
-    return !ctx.workerScript.disableLogs[fn];
+    return ctx.workerScript.shouldLog(fn);
   },
   getScriptLogs:
     (ctx) =>
@@ -771,6 +776,11 @@ export const ns: InternalAPI<NSFull> = {
         throw new ScriptDeath(ctx.workerScript);
       }
     },
+  self: (ctx) => () => {
+    const runningScript = helpers.getRunningScript(ctx, ctx.workerScript.pid);
+    if (runningScript == null) throw helpers.errorMessage(ctx, "Cannot find running script. This is a bug.");
+    return helpers.createPublicRunningScript(runningScript, ctx.workerScript);
+  },
   kill:
     (ctx) =>
     (scriptID, hostname = ctx.workerScript.hostname, ...scriptArgs) => {
@@ -1840,7 +1850,13 @@ export function NetscriptFunctions(ws: WorkerScript): NSFull {
   return NSProxy(ws, ns, [], { args: ws.args.slice(), pid: ws.pid, enums });
 }
 
-const possibleLogs = Object.fromEntries([...getFunctionNames(ns, "")].map((a) => [a, true]));
+const possibleLogs = Object.fromEntries(getFunctionNames(ns, "").map((a) => [a, true]));
+possibleLogs.ALL = true;
+
+// We reuse this object for *all* scripts that disable all keys, to prevent memory growth.
+// Any script that needs a custom set of values will use a fresh object.
+const allDisabled = { ALL: true } as const;
+
 /** Provides an array of all function names on a nested object */
 function getFunctionNames(obj: object, prefix: string): string[] {
   const functionNames: string[] = [];

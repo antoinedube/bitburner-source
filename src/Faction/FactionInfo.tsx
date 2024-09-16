@@ -763,9 +763,9 @@ export const FactionInfos: Record<FactionName, FactionInfo> = {
     assignment: (): React.ReactElement => {
       return (
         <Option
-          buttonText={"Open Staneks Gift"}
+          buttonText={"Open Stanek's Gift"}
           infoText={
-            "Stanek's Gift is a powerful augmentation that powers up the stat you chose to boost." +
+            "Stanek's Gift is a powerful augmentation that powers up the stat you chose to boost. " +
             "Gaining reputation with the Church of the Machine God can only be done by charging the gift."
           }
           onClick={() => Router.toPage(Page.StaneksGift)}
