@@ -30,14 +30,13 @@ export function getPurchaseServerCost(ram: number): number {
     return Infinity;
   }
 
-  const upg = Math.max(0, Math.log(sanitizedRam) / Math.log(2) - 6);
+  // const upg = Math.max(0, Math.log(sanitizedRam) / Math.log(2) - 6);
 
   return (
-    0.01 *
     sanitizedRam *
     ServerConstants.BaseCostFor1GBOfRamServer *
-    currentNodeMults.PurchasedServerCost *
-    Math.pow(currentNodeMults.PurchasedServerSoftcap, upg)
+    currentNodeMults.PurchasedServerCost
+    // Math.pow(currentNodeMults.PurchasedServerSoftcap, upg)
   );
 }
 
