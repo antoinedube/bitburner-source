@@ -30,14 +30,12 @@ export function getCloudServerCost(ram: number): number {
     return Infinity;
   }
 
-  const upg = Math.max(0, Math.log(sanitizedRam) / Math.log(2) - 6);
+  // const upg = Math.max(0, Math.log(sanitizedRam) / Math.log(2) - 6);
 
   return (
-    0.01 *
     sanitizedRam *
     ServerConstants.BaseCostFor1GBOfRamServer *
-    currentNodeMults.CloudServerCost *
-    Math.pow(currentNodeMults.CloudServerSoftcap, upg)
+    currentNodeMults.CloudServerCost
   );
 }
 
