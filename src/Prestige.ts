@@ -69,7 +69,7 @@ export function prestigeAugmentation(): void {
 
   const homeComp = Player.getHomeComputer();
   homeComp.cpuCores = 64;
-  homeComp.maxRam = 2**24;
+  homeComp.maxRam = 2**21;
 
   // Delete all servers except home computer
   prestigeAllServers();
@@ -201,7 +201,7 @@ export function prestigeSourceFile(isFlume: boolean): void {
 
   const homeComp = Player.getHomeComputer();
   homeComp.cpuCores = 64;
-  homeComp.maxRam = 2**24;
+  homeComp.maxRam = 2**21;
 
   // Stop a Terminal action if there is one.
   if (Terminal.action !== null) {
@@ -235,8 +235,7 @@ export function prestigeSourceFile(isFlume: boolean): void {
   if (Player.activeSourceFileLvl(12) > 0) {
     Player.augmentations.push({
       name: AugmentationName.NeuroFluxGovernor,
-      // level: Player.activeSourceFileLvl(12),
-      level: 1024
+      level: Player.activeSourceFileLvl(12),
     });
   }
 
