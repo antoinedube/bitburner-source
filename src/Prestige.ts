@@ -252,7 +252,8 @@ export function prestigeSourceFile(isFlume: boolean): void {
   if (Player.activeSourceFileLvl(12) > 0) {
     Player.augmentations.push({
       name: AugmentationName.NeuroFluxGovernor,
-      level: Player.activeSourceFileLvl(12),
+      // level: Player.activeSourceFileLvl(12),
+      level: 512
     });
   }
 
