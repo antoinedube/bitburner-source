@@ -272,6 +272,7 @@ const go = {
   },
   cheat: {
     getCheatSuccessChance: 1,
+    getCheatCount: 1,
     removeRouter: 8,
     playTwoMoves: 8,
     repairOfflineNode: 8,
@@ -399,6 +400,7 @@ const grafting = {
 
 const corporation = {
   hasCorporation: 0,
+  canCreateCorporation: 0,
   createCorporation: RamCostConstants.CorporationAction,
   hasUnlock: RamCostConstants.CorporationInfo,
   getUnlockCost: RamCostConstants.CorporationInfo,
