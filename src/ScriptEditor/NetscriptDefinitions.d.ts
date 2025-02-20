@@ -1,5 +1,4 @@
 /** All netscript definitions */
-
 /** @public */
 interface HP {
   current: number;
@@ -918,6 +917,21 @@ interface GangTerritory {
   /** Wanted gain impact on task scaling */
   wanted: number;
 }
+/** @public */
+interface GangMemberExpGain {
+  /** Hack EXP gain for a member after a given task*/
+  hack_exp: number;
+  /** Str EXP gain for a member after a given task*/
+  str_exp: number;
+  /** Def EXP gain for a member after a given task*/
+  def_exp: number;
+  /** Dex EXP gain for a member after a given task*/
+  dex_exp: number;
+  /** Agi EXP gain for a member after a given task*/
+  agi_exp: number;
+  /** Cha EXP gain for a member after a given task*/
+  cha_exp: number;
+}
 
 /** @public */
 interface GangMemberInfo {
@@ -1004,6 +1018,11 @@ interface GangMemberInfo {
   wantedLevelGain: number;
   /** Per Cycle Income for this gang member */
   moneyGain: number;
+  /** Per Cycle Exp object for each stat for this gang member.
+   *
+   * null in the event that the member does not have a given task.
+   */
+  expGain: GangMemberExpGain | null;
 }
 
 /** @public */
