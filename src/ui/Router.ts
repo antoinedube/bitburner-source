@@ -14,8 +14,6 @@ export type PageContext<T extends Page> = T extends ComplexPage.BitVerse
   ? { flume: boolean; quick: boolean }
   : T extends ComplexPage.Infiltration
   ? { location: Location }
-  : T extends ComplexPage.Job
-  ? { location: Location }
   : T extends ComplexPage.Faction
   ? { faction: Faction }
   : T extends ComplexPage.FactionAugmentations
@@ -33,7 +31,6 @@ export type PageContext<T extends Page> = T extends ComplexPage.BitVerse
 export type PageWithContext =
   | ({ page: ComplexPage.BitVerse } & PageContext<ComplexPage.BitVerse>)
   | ({ page: ComplexPage.Infiltration } & PageContext<ComplexPage.Infiltration>)
-  | ({ page: ComplexPage.Job } & PageContext<ComplexPage.Job>)
   | ({ page: ComplexPage.Faction } & PageContext<ComplexPage.Faction>)
   | ({ page: ComplexPage.FactionAugmentations } & PageContext<ComplexPage.FactionAugmentations>)
   | ({ page: ComplexPage.ScriptEditor } & PageContext<ComplexPage.ScriptEditor>)

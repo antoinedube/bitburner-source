@@ -31,6 +31,7 @@ export enum SimplePage {
   StockMarket = "Stock Market",
   Terminal = "Terminal",
   Travel = "Travel",
+  Job = "Job",
   Work = "Work",
   BladeburnerCinematic = "Bladeburner Cinematic",
   Loading = "Loading",
@@ -43,7 +44,6 @@ export enum SimplePage {
 export enum ComplexPage {
   BitVerse = "BitVerse",
   Infiltration = "Infiltration",
-  Job = "Job",
   Faction = "Faction",
   FactionAugmentations = "Faction Augmentations",
   ScriptEditor = "Script Editor",

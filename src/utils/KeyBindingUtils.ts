@@ -28,7 +28,7 @@ export const GoToPageKeyBindingTypes = [
   SimplePage.Hacknet,
   SimplePage.City,
   SimplePage.Travel,
-  ComplexPage.Job,
+  SimplePage.Job,
   SimplePage.StockMarket,
   SimplePage.Go,
   SimplePage.Milestones,
@@ -165,7 +165,7 @@ export const DefaultKeyBindings: Record<KeyBindingType, [KeyCombination | null, 
     },
     null,
   ],
-  [ComplexPage.Job]: [
+  [SimplePage.Job]: [
     {
       control: false,
       alt: true,

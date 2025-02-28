@@ -54,7 +54,6 @@ import { AugmentationName, CityName } from "@enums";
 import { ProgramsSeen } from "../../Programs/ui/ProgramsRoot";
 import { InvitationsSeen } from "../../Faction/ui/FactionsRoot";
 import { commitHash } from "../../utils/helpers/commitHash";
-import { Locations } from "../../Locations/Locations";
 import { useCycleRerender } from "../../ui/React/hooks";
 import { playerHasDiscoveredGo } from "../../Go/effects/effect";
 import { knowAboutBitverse } from "../../BitNode/BitNodeUtils";
@@ -176,9 +175,7 @@ export function SidebarRoot(props: { page: Page }): React.ReactElement {
 
   const clickPage = useCallback(
     (page: Page) => {
-      if (page === Page.Job) {
-        Router.toPage(page, { location: Locations[Object.keys(Player.jobs)[0]] });
-      } else if (page == Page.ScriptEditor || page == Page.Documentation) {
+      if (page == Page.ScriptEditor || page == Page.Documentation) {
         Router.toPage(page, {});
       } else if (isSimplePage(page)) {
         Router.toPage(page);
@@ -221,7 +218,7 @@ export function SidebarRoot(props: { page: Page }): React.ReactElement {
           return canOpenSleeves;
         case SimplePage.Grafting:
           return canOpenGrafting;
-        case ComplexPage.Job:
+        case SimplePage.Job:
           return canJob;
         case SimplePage.StockMarket:
           return canStockMarket;
