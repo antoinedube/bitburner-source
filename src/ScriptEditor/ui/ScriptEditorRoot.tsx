@@ -47,6 +47,7 @@ import {
 import { SpecialServers } from "../../Server/data/SpecialServers";
 import { SnackbarEvents } from "../../ui/React/Snackbar";
 import { ToastVariant } from "@enums";
+import { createRunningScriptInstance, startWorkerScript } from "../../NetscriptWorker";
 
 // Extend acorn-walk to support TypeScript nodes.
 extendAcornWalkForTypeScriptNodes(walk.base);
@@ -219,6 +220,32 @@ function Root(props: IProps): React.ReactElement {
     rerender();
   }, [rerender]);
 
+  const run = useCallback(() => {
+    if (currentScript === null) {
+      return;
+    }
+    // Check if "currentScript" is a script. It may be a text file.
+    if (!hasScriptExtension(currentScript.path)) {
+      dialogBoxCreate(`Cannot run ${currentScript.path}. It is not a script.`);
+      return;
+    }
+    // Check if the current script's server is valid.
+    const server = GetServer(currentScript.hostname);
+    if (server === null) {
+      return;
+    }
+
+    // Always save before doing anything else.
+    save();
+
+    const result = createRunningScriptInstance(server, currentScript.path, null, 1, []);
+    if (!result.success) {
+      dialogBoxCreate(result.message);
+      return;
+    }
+    startWorkerScript(result.runningScript, server);
+  }, [save]);
+
   useEffect(() => {
     function keydown(event: KeyboardEvent): void {
       if (Settings.DisableHotkeys) {
@@ -234,10 +261,14 @@ function Root(props: IProps): React.ReactElement {
         event.preventDefault();
         Router.toPage(Page.Terminal);
       }
+      if (keyBindingTypes.has(ScriptEditorAction.Run)) {
+        event.preventDefault();
+        run();
+      }
     }
     document.addEventListener("keydown", keydown);
     return () => document.removeEventListener("keydown", keydown);
-  }, [save]);
+  }, [save, run]);
 
   function infLoop(ast: AST, code: string): void {
     if (editorRef.current === null || currentScript === null || isLegacyScript(currentScript.path)) {
@@ -568,7 +599,7 @@ function Root(props: IProps): React.ReactElement {
 
         {statusBarRef.current}
 
-        <Toolbar onSave={save} editor={editorRef.current} />
+        <Toolbar onSave={save} onRun={run} editor={editorRef.current} />
       </div>
       {!currentScript && <NoOpenScripts />}
     </>
