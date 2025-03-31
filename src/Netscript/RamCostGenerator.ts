@@ -273,6 +273,9 @@ const go = {
     getStats: 0,
     resetStats: 0,
     setTestingBoardState: 4,
+    highlightPoint: 0,
+    clearPointHighlight: 0,
+    clearAllPointHighlights: 0,
   },
   cheat: {
     getCheatSuccessChance: 1,

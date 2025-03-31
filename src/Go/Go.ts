@@ -6,6 +6,10 @@ import { resetGoPromises } from "./boardAnalysis/goAI";
 import { getNewBoardState } from "./boardState/boardState";
 import { EventEmitter } from "../utils/EventEmitter";
 
+export const getEmptyHighlightedPoints = (size: number = 7) => {
+  return Array.from({ length: size }, () => Array.from({ length: size }, () => null));
+};
+
 export class GoObject {
   // Todo: Make previous game a slimmer interface
   previousGame: BoardState | null = null;
