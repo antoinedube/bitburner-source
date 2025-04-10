@@ -64,6 +64,7 @@ export async function main(ns) {
 |  [closeTail(pid)](./bitburner.ns.closetail.md) | Close the tail window of a script. This function is deprecated and will be removed in a later version. |
 |  [deleteServer(host)](./bitburner.ns.deleteserver.md) | Delete a purchased server. |
 |  [disableLog(fn)](./bitburner.ns.disablelog.md) | Disables logging for the given NS function. |
+|  [dynamicImport(path)](./bitburner.ns.dynamicimport.md) | Dynamically import a script. Only scripts located on the same server can be imported. A dynamic import will not adjust RAM usage. This must be done manually with [ramOverride](./bitburner.ns.ramoverride.md)<!-- -->. |
 |  [enableLog(fn)](./bitburner.ns.enablelog.md) | Enables logging for the given NS function. |
 |  [exec(script, hostname, threadOrOptions, args)](./bitburner.ns.exec.md) | Start another script on any server. |
 |  [exit()](./bitburner.ns.exit.md) | Terminates the current script immediately. |
