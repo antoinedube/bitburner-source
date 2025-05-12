@@ -189,7 +189,7 @@ export const achievements: Record<string, Achievement> = {
   },
   NEUROFLUX_255: {
     ...achievementData.NEUROFLUX_255,
-    Icon: "nf255",
+    Icon: "nfg255",
     Condition: () => Player.augmentations.some((a) => a.name === AugmentationName.NeuroFluxGovernor && a.level >= 255),
   },
   NS2: {
@@ -199,7 +199,7 @@ export const achievements: Record<string, Achievement> = {
   },
   FROZE: {
     ...achievementData.FROZE,
-    Icon: "forze",
+    Icon: "frozen",
     Condition: () => location.href.includes("noScripts"),
   },
   RUNNING_SCRIPTS_1000: {
