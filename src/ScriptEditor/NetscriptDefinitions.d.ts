@@ -8786,6 +8786,7 @@ type CodingContractNameEnumType = {
   EncryptionICaesarCipher: "Encryption I: Caesar Cipher";
   EncryptionIIVigenereCipher: "Encryption II: Vigenère Cipher";
   SquareRoot: "Square Root";
+  TotalPrimesInRange: "Total Number of Primes";
 };
 
 /** @public */
@@ -8820,6 +8821,7 @@ export type CodingContractSignatures = {
   "Encryption I: Caesar Cipher": [[string, number], string];
   "Encryption II: Vigenère Cipher": [[string, string], string];
   "Square Root": [bigint, bigint, [string, string]];
+  "Total Number of Primes": [number[], number];
 };
 
 export type CodingContractObject = {
