@@ -21,7 +21,7 @@ import { FactionName, FactionWorkType } from "@enums";
 import { GangButton } from "./GangButton";
 import { FactionWork } from "../../Work/FactionWork";
 import { useCycleRerender } from "../../ui/React/hooks";
-import { repNeededToDonate } from "../formulas/donation";
+import { favorNeededToDonate } from "../formulas/donation";
 
 type FactionRootProps = {
   faction: Faction;
@@ -45,7 +45,7 @@ const securityWorkInfo =
   "You will gain exp for all combat stats and hacking.";
 const augmentationsInfo =
   "As your reputation with this faction rises, you will " +
-  "unlock Augmentations, which you can purchase to enhance " +
+  "unlock augmentations, which you can purchase to enhance " +
   "your abilities.";
 const sleevePurchasesInfo = "Purchase Duplicate Sleeves and upgrades. These are permanent!";
 
@@ -103,7 +103,7 @@ function MainPage({ faction, rerender, onAugmentations }: IMainProps): React.Rea
 
   // Flags for whether special options (gang, sleeve purchases, donate, etc.)
   // should be shown
-  const favorToDonate = repNeededToDonate();
+  const favorToDonate = favorNeededToDonate();
   const canDonate = faction.favor >= favorToDonate;
   const canPurchaseSleeves = faction.name === FactionName.TheCovenant && Player.bitNodeN === 10;
 

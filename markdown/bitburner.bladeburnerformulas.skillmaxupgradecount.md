@@ -9,20 +9,16 @@ Calculate the number of times that you can upgrade a skill.
 **Signature:**
 
 ```typescript
-skillMaxUpgradeCount(
-    name: BladeburnerSkillName | `${BladeburnerSkillName}`,
-    level: number,
-    skillPoints: number,
-  ): number;
+skillMaxUpgradeCount(name: BladeburnerSkillName, level: number, skillPoints: number): number;
 ```
 
 ## Parameters
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  name | [BladeburnerSkillName](./bitburner.bladeburnerskillname.md) \| \`${[BladeburnerSkillName](./bitburner.bladeburnerskillname.md)<!-- -->}\` | Skill name. It's case-sensitive and must be an exact match. |
+|  name | [BladeburnerSkillName](./bitburner.bladeburnerskillname.md) | Skill name. It's case-sensitive and must be an exact match. |
 |  level | number | Skill level. It must be a non-negative number. |
-|  skillPoints | number | Number of skill points to upgrade the skill. It must be a positive number. |
+|  skillPoints | number | Number of skill points to upgrade the skill. It must be a non-negative number. |
 
 **Returns:**
 
