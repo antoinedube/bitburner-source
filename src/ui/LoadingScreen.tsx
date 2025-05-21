@@ -34,16 +34,15 @@ export function LoadingScreen(): React.ReactElement {
   });
 
   useEffect(() => {
-    load()
-      .then((saveData) => Promise.all([initSwc(), Engine.load(saveData)]))
+    Promise.all([initSwc(), load()])
+      .then(([__, saveData]) => Engine.load(saveData))
       .then(() => {
         pushGameReady();
         setLoaded(true);
       })
-      .catch(async (error) => {
+      .catch((error) => {
         console.error(error);
         ActivateRecoveryMode(error);
-        await Engine.load("");
         setLoaded(true);
       });
   }, []);

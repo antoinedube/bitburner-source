@@ -9,7 +9,11 @@ export function repFromDonation(amt: number, person: IPerson): number {
   return (amt / CONSTANTS.DonateMoneyToRepDivisor) * person.mults.faction_rep * currentNodeMults.FactionWorkRepGain;
 }
 
-export function repNeededToDonate(): number {
+export function donationForRep(rep: number, person: IPerson): number {
+  return (rep * CONSTANTS.DonateMoneyToRepDivisor) / person.mults.faction_rep / currentNodeMults.FactionWorkRepGain;
+}
+
+export function favorNeededToDonate(): number {
   return Math.floor(CONSTANTS.BaseFavorToDonate * currentNodeMults.RepToDonateToFaction);
 }
 
