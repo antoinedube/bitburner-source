@@ -10,7 +10,7 @@ import { OfficeSpace } from "./OfficeSpace";
 import { Material } from "./Material";
 import { Product } from "./Product";
 import { Warehouse } from "./Warehouse";
-import { CreatingCorporationCheckResult, FactionName, IndustryType } from "@enums";
+import { CreatingCorporationCheckResultEnum, FactionName, IndustryType } from "@enums";
 import { ResearchMap } from "./ResearchMap";
 import { isRelevantMaterial } from "./ui/Helpers";
 import { CityName } from "@enums";
@@ -28,18 +28,18 @@ import {
 import { PositiveInteger, Result } from "../types";
 import { Factions } from "../Faction/Factions";
 import { throwIfReachable } from "../utils/helpers/throwIfReachable";
-import { formatMoney } from "../ui/formatNumber";
+import { formatMoney, formatNumber } from "../ui/formatNumber";
 
 export function createCorporation(corporationName: string, selfFund: boolean, restart: boolean): Result {
   const checkResult = canCreateCorporation(selfFund, restart);
   switch (checkResult) {
-    case CreatingCorporationCheckResult.Success:
+    case CreatingCorporationCheckResultEnum.Success:
       break;
-    case CreatingCorporationCheckResult.NoSf3OrDisabled:
-    case CreatingCorporationCheckResult.CorporationExists:
+    case CreatingCorporationCheckResultEnum.NoSf3OrDisabled:
+    case CreatingCorporationCheckResultEnum.CorporationExists:
       return { success: false, message: convertCreatingCorporationCheckResultToMessage(checkResult) };
-    case CreatingCorporationCheckResult.UseSeedMoneyOutsideBN3:
-    case CreatingCorporationCheckResult.DisabledBySoftCap:
+    case CreatingCorporationCheckResultEnum.UseSeedMoneyOutsideBN3:
+    case CreatingCorporationCheckResultEnum.DisabledBySoftCap:
       // In order to maintain backward compatibility, we have to throw an error in these cases.
       throw new Error(convertCreatingCorporationCheckResultToMessage(checkResult));
     default:
@@ -209,6 +209,14 @@ export function acceptInvestmentOffer(corporation: Corporation): void {
 
 export function convertPriceString(price: string): string {
   /**
+   * This is a common error. We should check it to get a "user-friendly" error message. If we pass an empty string to
+   * eval(), it will return undefined, and the "is-it-a-valid-number" following check will throw an unhelpful error
+   * message.
+   */
+  if (price === "") {
+    throw new Error("Price cannot be an empty string.");
+  }
+  /**
    * Replace invalid characters. Only accepts:
    * - Digit characters
    * - 4 most basic algebraic operations (+ - * /)
@@ -239,6 +247,14 @@ export function convertPriceString(price: string): string {
 }
 
 export function convertAmountString(amount: string): string {
+  /**
+   * This is a common error. We should check it to get a "user-friendly" error message. If we pass an empty string to
+   * eval(), it will return undefined, and the "is-it-a-valid-number" following check will throw an unhelpful error
+   * message.
+   */
+  if (amount === "") {
+    throw new Error("Amount cannot be an empty string.");
+  }
   /**
    * Replace invalid characters. Only accepts:
    * - Digit characters
@@ -616,16 +632,24 @@ export function bribe(
   fundsForBribing: number,
   factionName: FactionName,
 ): Result<{ reputationGain: number }> {
-  if (corporation.valuation < corpConstants.bribeThreshold) {
-    return {
-      success: false,
-      message: `The corporation valuation is below the threshold. Threshold: ${corpConstants.bribeThreshold}.`,
-    };
-  }
   if (!Number.isFinite(fundsForBribing) || fundsForBribing <= 0 || corporation.funds < fundsForBribing) {
     return {
       success: false,
-      message: "Invalid amount of cash for bribing",
+      message: "Invalid amount of cash for bribing.",
+    };
+  }
+  if (corporation.valuation < corpConstants.bribeThreshold) {
+    return {
+      success: false,
+      message: `The corporation valuation is below the threshold. Threshold: ${formatNumber(
+        corpConstants.bribeThreshold,
+      )}.`,
+    };
+  }
+  if (!Player.factions.includes(factionName)) {
+    return {
+      success: false,
+      message: `You are not a member of ${factionName}.`,
     };
   }
   const faction = Factions[factionName];
