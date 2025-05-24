@@ -2805,6 +2805,15 @@ export interface Singularity {
    * @returns - An object representing the current work. Fields depend on the kind of work.
    */
   getCurrentWork(): Task | null;
+
+  /**
+   * Get a list of all unlocked achievements.
+   * @remarks
+   * Ram cost: 5 GB * 16/4/1
+   *
+   * @returns - A list containing all of the IDs of achievements that the player has unlocked.
+   */
+  getUnlockedAchievements(): string[];
 }
 
 /**
