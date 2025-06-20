@@ -8882,7 +8882,7 @@ export interface OfficeAPI {
    * @param divisionName - Name of the division
    * @param researchName - Name of the research
    */
-  research(divisionName: string, researchName: string): void;
+  research(divisionName: string, researchName: CorpResearchName): void;
 
   /**
    * Get data about an office.
@@ -8928,7 +8928,7 @@ export interface OfficeAPI {
    * @param researchName - Name of the research
    * @returns Cost
    */
-  getResearchCost(divisionName: string, researchName: string): number;
+  getResearchCost(divisionName: string, researchName: CorpResearchName): number;
 
   /**
    * Check if you unlocked a research.
@@ -8940,7 +8940,7 @@ export interface OfficeAPI {
    * @param researchName - Name of the research
    * @returns true is unlocked, false if not
    */
-  hasResearched(divisionName: string, researchName: string): boolean;
+  hasResearched(divisionName: string, researchName: CorpResearchName): boolean;
 
   /**
    * Set the job assignment for a job.
@@ -8996,7 +8996,7 @@ export interface WarehouseAPI {
    * @param amt - Amount to sell, can be "MAX"
    * @param price - Price to sell, can be "MP"
    */
-  sellMaterial(divisionName: string, city: CityName, materialName: string, amt: string, price: string): void;
+  sellMaterial(divisionName: string, city: CityName, materialName: CorpMaterialName, amt: string, price: string): void;
 
   /**
    * Set product sell data.
@@ -9054,7 +9054,12 @@ export interface WarehouseAPI {
    * @param materialName - Name of the material
    * @param option - Smart supply option. Set "leftovers" to use leftovers, "imports" to use only imported materials, and "none" to not use stored materials.
    */
-  setSmartSupplyOption(divisionName: string, city: CityName, materialName: string, option: CorpSmartSupplyOption): void;
+  setSmartSupplyOption(
+    divisionName: string,
+    city: CityName,
+    materialName: CorpMaterialName,
+    option: CorpSmartSupplyOption,
+  ): void;
 
   /**
    * Set material buy data.
@@ -9067,7 +9072,7 @@ export interface WarehouseAPI {
    * @param materialName - Name of the material
    * @param amt - Amount of material to buy
    */
-  buyMaterial(divisionName: string, city: CityName, materialName: string, amt: number): void;
+  buyMaterial(divisionName: string, city: CityName, materialName: CorpMaterialName, amt: number): void;
 
   /**
    * Set material to bulk-buy.
@@ -9080,7 +9085,7 @@ export interface WarehouseAPI {
    * @param materialName - Name of the material
    * @param amt - Amount of material to buy
    */
-  bulkPurchase(divisionName: string, city: CityName, materialName: string, amt: number): void;
+  bulkPurchase(divisionName: string, city: CityName, materialName: CorpMaterialName, amt: number): void;
 
   /**
    * Get warehouse data.
@@ -9118,7 +9123,7 @@ export interface WarehouseAPI {
    * @param materialName - Name of the material
    * @returns Material data
    */
-  getMaterial(divisionName: string, city: CityName, materialName: string): Material;
+  getMaterial(divisionName: string, city: CityName, materialName: CorpMaterialName): Material;
 
   /**
    * Set Market-TA1 for a material.
@@ -9131,7 +9136,7 @@ export interface WarehouseAPI {
    * @param materialName - Name of the material
    * @param on - Use true to enable, false otherwise.
    */
-  setMaterialMarketTA1(divisionName: string, city: CityName, materialName: string, on: boolean): void;
+  setMaterialMarketTA1(divisionName: string, city: CityName, materialName: CorpMaterialName, on: boolean): void;
 
   /**
    * Set Market-TA2 for a material.
@@ -9144,7 +9149,7 @@ export interface WarehouseAPI {
    * @param materialName - Name of the material
    * @param on - Use true to enable, false otherwise.
    */
-  setMaterialMarketTA2(divisionName: string, city: CityName, materialName: string, on: boolean): void;
+  setMaterialMarketTA2(divisionName: string, city: CityName, materialName: CorpMaterialName, on: boolean): void;
 
   /**
    * Set Market-TA1 for a product.
@@ -9188,7 +9193,7 @@ export interface WarehouseAPI {
     sourceCity: CityName,
     targetDivision: string,
     targetCity: CityName,
-    materialName: string,
+    materialName: CorpMaterialName,
     amt: number | string,
   ): void;
 
@@ -9209,7 +9214,7 @@ export interface WarehouseAPI {
     sourceCity: CityName,
     targetDivision: string,
     targetCity: CityName,
-    materialName: string,
+    materialName: CorpMaterialName,
   ): void;
 
   /**
@@ -9266,7 +9271,7 @@ export interface WarehouseAPI {
    * @param materialName - Name of the material.
    * @param qty - Amount to limit to. Pass a negative value to remove the limit instead.
    */
-  limitMaterialProduction(divisionName: string, city: CityName, materialName: string, qty: number): void;
+  limitMaterialProduction(divisionName: string, city: CityName, materialName: CorpMaterialName, qty: number): void;
 
   /**
    * Limit product production.
@@ -9371,7 +9376,7 @@ export interface Corporation extends WarehouseAPI, OfficeAPI {
    * @param upgradeName - Name of the upgrade
    * @returns true if unlocked and false if not
    */
-  hasUnlock(upgradeName: string): boolean;
+  hasUnlock(upgradeName: CorpUnlockName): boolean;
 
   /**
    * Get the cost to unlock a one-time unlockable upgrade.
@@ -9382,7 +9387,7 @@ export interface Corporation extends WarehouseAPI, OfficeAPI {
    * @param upgradeName - Name of the upgrade
    * @returns Cost of the upgrade
    */
-  getUnlockCost(upgradeName: string): number;
+  getUnlockCost(upgradeName: CorpUnlockName): number;
 
   /**
    * Get the level of a levelable upgrade.
@@ -9393,7 +9398,7 @@ export interface Corporation extends WarehouseAPI, OfficeAPI {
    * @param upgradeName - Name of the upgrade
    * @returns The level of the upgrade
    */
-  getUpgradeLevel(upgradeName: string): number;
+  getUpgradeLevel(upgradeName: CorpUpgradeName): number;
 
   /**
    * Get the cost to unlock the next level of a levelable upgrade.
@@ -9404,7 +9409,7 @@ export interface Corporation extends WarehouseAPI, OfficeAPI {
    * @param upgradeName - Name of the upgrade
    * @returns Cost of the upgrade
    */
-  getUpgradeLevelCost(upgradeName: string): number;
+  getUpgradeLevelCost(upgradeName: CorpUpgradeName): number;
 
   /**
    * Get an offer for investment based on current corporation valuation.
@@ -9541,7 +9546,7 @@ export interface Corporation extends WarehouseAPI, OfficeAPI {
    *
    * @param upgradeName - Name of the upgrade
    */
-  purchaseUnlock(upgradeName: string): void;
+  purchaseUnlock(upgradeName: CorpUnlockName): void;
 
   /**
    * Level up an upgrade.
@@ -9551,7 +9556,7 @@ export interface Corporation extends WarehouseAPI, OfficeAPI {
    *
    * @param upgradeName - Name of the upgrade
    */
-  levelUpgrade(upgradeName: string): void;
+  levelUpgrade(upgradeName: CorpUpgradeName): void;
 
   /**
    * Issue dividends.
