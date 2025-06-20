@@ -4037,7 +4037,7 @@ export interface CodingContract {
    * @param type - Type of contract to generate
    * @returns Filename of the contract.
    */
-  createDummyContract(type: string): string;
+  createDummyContract(type: CodingContractName): string;
 
   /**
    * List all contract types.
