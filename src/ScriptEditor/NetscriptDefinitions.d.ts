@@ -9728,8 +9728,8 @@ interface CorporationInfo {
   sharePrice: number;
   /** Fraction of profits issued as dividends */
   dividendRate: number;
-  /** Tax applied on your earnings as a shareholder */
-  dividendTax: number;
+  /** Your income from dividend is negatively affected by this penalty modifier */
+  tributeModifier: number;
   /** Your earnings as a shareholder per second this cycle */
   dividendEarnings: number;
   /** The next state to be processed.
