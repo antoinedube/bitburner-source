@@ -30,6 +30,8 @@ import { isObject, assertObject } from "./utils/TypeAssertion";
 import { evaluateVersionCompatibility } from "./utils/SaveDataMigrationUtils";
 import { Reviver } from "./utils/GenericReviver";
 import { giveExportBonus } from "./ExportBonus";
+import { loadInfiltrations } from "./Infiltration/SaveLoadInfiltration";
+import { InfiltrationState } from "./Infiltration/formulas/game";
 
 /* SaveObject.js
  *  Defines the object used to save/load games
@@ -83,6 +85,7 @@ export type BitburnerSaveObjectType = {
   LastExportBonus?: string;
   StaneksGiftSave: string;
   GoSave: unknown; // "loadGo" function can process unknown data
+  InfiltrationsSave: unknown;
 };
 
 type ParsedSaveData = {
@@ -171,6 +174,7 @@ class BitburnerSaveObject implements BitburnerSaveObjectType {
   LastExportBonus = "0";
   StaneksGiftSave = "";
   GoSave = "";
+  InfiltrationsSave = "";
 
   async getSaveData(forceExcludeRunningScripts = false): Promise<SaveData> {
     this.PlayerSave = JSON.stringify(Player);
@@ -191,6 +195,7 @@ class BitburnerSaveObject implements BitburnerSaveObjectType {
     this.LastExportBonus = JSON.stringify(ExportBonus.LastExportBonus);
     this.StaneksGiftSave = JSON.stringify(staneksGift);
     this.GoSave = JSON.stringify(getGoSave());
+    this.InfiltrationsSave = JSON.stringify(InfiltrationState);
 
     if (Player.gang) this.AllGangsSave = JSON.stringify(AllGangs);
 
@@ -429,6 +434,7 @@ async function loadGame(saveData: SaveData): Promise<boolean> {
   loadCompanies(saveObj.CompaniesSave);
   loadFactions(saveObj.FactionsSave, Player);
   loadGo(saveObj.GoSave);
+  loadInfiltrations(saveObj.InfiltrationsSave);
   try {
     loadAliases(saveObj.AliasesSave);
   } catch (e) {
