@@ -1613,13 +1613,17 @@ export const ns: InternalAPI<NSFull> = {
       throw helpers.errorMessage(ctx, `Source text file ${sourcePath} does not exist on ${host}`);
     }
     const success = sourceContentFile.deleteFromServer(server);
-    if (success) {
-      const { overwritten } = server.writeToContentFile(destinationPath, sourceContentFile.content);
-      if (overwritten) helpers.log(ctx, () => `WARNING: Overwriting file ${destinationPath} on ${host}`);
-      helpers.log(ctx, () => `Moved ${sourcePath} to ${destinationPath} on ${host}`);
-      return;
+    if (!success) {
+      helpers.log(
+        ctx,
+        () =>
+          `ERROR: Failed. Was unable to remove file ${sourcePath} from its original location. If ${sourcePath} is a script, make sure that it is NOT running before trying to use 'mv' on it.`,
+      );
     }
-    helpers.log(ctx, () => `ERROR: Failed. Was unable to remove file ${sourcePath} from its original location.`);
+    const { overwritten } = server.writeToContentFile(destinationPath, sourceContentFile.content);
+    if (overwritten) helpers.log(ctx, () => `WARNING: Overwriting file ${destinationPath} on ${host}`);
+    helpers.log(ctx, () => `Moved ${sourcePath} to ${destinationPath} on ${host}`);
+    return;
   },
   getResetInfo: () => () => ({
     lastAugReset: Player.lastAugReset,
