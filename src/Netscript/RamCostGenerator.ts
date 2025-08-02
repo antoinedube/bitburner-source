@@ -128,10 +128,10 @@ const hacknet = {
 // Stock API
 const stock = {
   getConstants: 0,
-  hasWSEAccount: 0.05,
-  hasTIXAPIAccess: 0.05,
+  hasWseAccount: 0.05,
+  hasTixApiAccess: 0.05,
   has4SData: 0.05,
-  has4SDataTIXAPI: 0.05,
+  has4SDataTixApi: 0.05,
   getBonusTime: 0,
   nextUpdate: RamCostConstants.CycleTiming,
   getSymbols: RamCostConstants.GetStock,
@@ -199,6 +199,7 @@ const singularity = {
   getFactionFavorGain: SF4Cost(RamCostConstants.SingularityFn2 / 4),
   donateToFaction: SF4Cost(RamCostConstants.SingularityFn3),
   createProgram: SF4Cost(RamCostConstants.SingularityFn3),
+  getHackingLevelRequirementOfProgram: SF4Cost(RamCostConstants.SingularityFn3),
   commitCrime: SF4Cost(RamCostConstants.SingularityFn3),
   getCrimeChance: SF4Cost(RamCostConstants.SingularityFn3),
   getCrimeStats: SF4Cost(RamCostConstants.SingularityFn3),
@@ -222,6 +223,7 @@ const singularity = {
   b1tflum3: SF4Cost(16),
   destroyW0r1dD43m0n: SF4Cost(32),
   getCurrentWork: SF4Cost(0.5),
+  getUnlockedAchievements: SF4Cost(RamCostConstants.SingularityFn3),
 } as const;
 
 const format = {
@@ -484,7 +486,7 @@ const corporation = {
   getHireAdVertCount: RamCostConstants.CorporationInfo,
   getResearchCost: RamCostConstants.CorporationInfo,
   hasResearched: RamCostConstants.CorporationInfo,
-  setAutoJobAssignment: RamCostConstants.CorporationAction,
+  setJobAssignment: RamCostConstants.CorporationAction,
   getOfficeSizeUpgradeCost: RamCostConstants.CorporationInfo,
 } as const;
 
@@ -587,6 +589,7 @@ export const RamCosts: RamCostTree<NSFull> = {
   write: 0,
   tryWritePort: 0,
   read: 0,
+  getFileMetadata: 0,
   peek: 0,
   clear: 0,
   writePort: 0,
