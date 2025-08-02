@@ -28,6 +28,10 @@ import {
   CompanyName,
   FactionName,
   type MessageFilename,
+  PositionType,
+  OrderType,
+  BladeburnerActionType,
+  SpecialBladeburnerActionTypeForSleeve,
 } from "@enums";
 import { PromptEvent } from "./ui/React/PromptManager";
 import { GetServer, DeleteServer, AddToAllServers, createUniqueRandomIp } from "./Server/AllServers";
@@ -47,7 +51,6 @@ import {
   renamePurchasedServer,
   upgradePurchasedServer,
 } from "./Server/ServerPurchases";
-import { Server } from "./Server/Server";
 import { influenceStockThroughServerGrow } from "./StockMarket/PlayerInfluencing";
 import { runScriptFromScript } from "./NetscriptWorker";
 import { killWorkerScript, killWorkerScriptByPid } from "./Netscript/killWorkerScript";
@@ -128,6 +131,10 @@ export const enums: NSEnums = {
   CompanyName,
   FactionName,
   CodingContractName,
+  PositionType,
+  OrderType,
+  BladeburnerActionType,
+  SpecialBladeburnerActionTypeForSleeve,
 };
 for (const val of Object.values(enums)) Object.freeze(val);
 Object.freeze(enums);
@@ -192,11 +199,7 @@ export const ns: InternalAPI<NSFull> = {
     const hackAmount = helpers.number(ctx, "hackAmount", _hackAmount);
 
     // Check argument validity
-    const server = helpers.getServer(ctx, host);
-    if (!(server instanceof Server)) {
-      helpers.log(ctx, () => "Cannot be executed on this server.");
-      return -1;
-    }
+    const server = helpers.getNormalServer(ctx, host);
     if (isNaN(hackAmount)) {
       throw helpers.errorMessage(
         ctx,
@@ -221,11 +224,7 @@ export const ns: InternalAPI<NSFull> = {
   hackAnalyze: (ctx) => (_host) => {
     const host = helpers.string(ctx, "host", _host);
 
-    const server = helpers.getServer(ctx, host);
-    if (!(server instanceof Server)) {
-      helpers.log(ctx, () => "Cannot be executed on this server.");
-      return 0;
-    }
+    const server = helpers.getNormalServer(ctx, host);
 
     return calculatePercentMoneyHacked(server, Player);
   },
@@ -233,11 +232,7 @@ export const ns: InternalAPI<NSFull> = {
     let threads = helpers.number(ctx, "threads", _threads);
     if (_host) {
       const host = helpers.string(ctx, "host", _host);
-      const server = helpers.getServer(ctx, host);
-      if (!(server instanceof Server)) {
-        helpers.log(ctx, () => "Cannot be executed on this server.");
-        return 0;
-      }
+      const server = helpers.getNormalServer(ctx, host);
 
       const percentHacked = calculatePercentMoneyHacked(server, Player);
 
@@ -252,11 +247,7 @@ export const ns: InternalAPI<NSFull> = {
   hackAnalyzeChance: (ctx) => (_host) => {
     const host = helpers.string(ctx, "host", _host);
 
-    const server = helpers.getServer(ctx, host);
-    if (!(server instanceof Server)) {
-      helpers.log(ctx, () => "Cannot be executed on this server.");
-      return 0;
-    }
+    const server = helpers.getNormalServer(ctx, host);
 
     return calculateHackingChance(server, Player);
   },
@@ -280,10 +271,7 @@ export const ns: InternalAPI<NSFull> = {
     const host = helpers.string(ctx, "host", _host);
     const { threads, stock, additionalMsec } = helpers.validateHGWOptions(ctx, opts);
 
-    const server = helpers.getServer(ctx, host);
-    if (!(server instanceof Server)) {
-      throw helpers.errorMessage(ctx, "Cannot be executed on this server.");
-    }
+    const server = helpers.getNormalServer(ctx, host);
 
     // No root access or skill level too low
     const canHack = netscriptCanGrow(server);
@@ -333,12 +321,7 @@ export const ns: InternalAPI<NSFull> = {
       const cores = helpers.positiveInteger(ctx, "cores", _cores);
 
       // Check argument validity
-      const server = helpers.getServer(ctx, host);
-      if (!(server instanceof Server)) {
-        // Todo 2.3: Make this throw instead of returning 0?
-        helpers.log(ctx, () => `${host} is not a hackable server. Returning 0.`);
-        return 0;
-      }
+      const server = helpers.getNormalServer(ctx, host);
       if (!Number.isFinite(mult) || mult < 1) {
         throw helpers.errorMessage(ctx, `Invalid argument: multiplier must be finite and >= 1, is ${mult}.`);
       }
@@ -352,12 +335,7 @@ export const ns: InternalAPI<NSFull> = {
       if (_host) {
         const cores = helpers.number(ctx, "cores", _cores);
         const host = helpers.string(ctx, "host", _host);
-        const server = helpers.getServer(ctx, host);
-
-        if (!(server instanceof Server)) {
-          helpers.log(ctx, () => "Cannot be executed on this server.");
-          return 0;
-        }
+        const server = helpers.getNormalServer(ctx, host);
 
         const maxThreadsNeeded = Math.ceil(
           numCycleForGrowthCorrected(server, server.moneyMax, server.moneyAvailable, cores),
@@ -372,10 +350,7 @@ export const ns: InternalAPI<NSFull> = {
     const host = helpers.string(ctx, "host", _host);
     const { threads, additionalMsec } = helpers.validateHGWOptions(ctx, opts);
 
-    const server = helpers.getServer(ctx, host);
-    if (!(server instanceof Server)) {
-      throw helpers.errorMessage(ctx, "Cannot be executed on this server.");
-    }
+    const server = helpers.getNormalServer(ctx, host);
 
     // No root access or skill level too low
     const canHack = netscriptCanWeaken(server);
@@ -564,20 +539,18 @@ export const ns: InternalAPI<NSFull> = {
   nuke: (ctx) => (_host) => {
     const host = helpers.string(ctx, "host", _host);
 
-    const server = helpers.getServer(ctx, host);
-    if (!(server instanceof Server)) {
-      helpers.log(ctx, () => "Cannot be executed on this server.");
-      return false;
-    }
+    const server = helpers.getNormalServer(ctx, host);
     if (server.hasAdminRights) {
       helpers.log(ctx, () => `Already have root access to '${server.hostname}'.`);
       return true;
     }
     if (!Player.hasProgram(CompletedProgramName.nuke)) {
-      throw helpers.errorMessage(ctx, "You do not have the NUKE.exe virus!");
+      helpers.log(ctx, () => "You do not have the NUKE.exe virus!");
+      return false;
     }
     if (server.openPortCount < server.numOpenPortsRequired) {
-      throw helpers.errorMessage(ctx, "Not enough ports opened to use NUKE.exe virus.");
+      helpers.log(ctx, () => "Not enough ports opened to use NUKE.exe virus.");
+      return false;
     }
     server.hasAdminRights = true;
     helpers.log(ctx, () => `Executed NUKE.exe virus on '${server.hostname}' to gain root access.`);
@@ -585,13 +558,10 @@ export const ns: InternalAPI<NSFull> = {
   },
   brutessh: (ctx) => (_host) => {
     const host = helpers.string(ctx, "host", _host);
-    const server = helpers.getServer(ctx, host);
-    if (!(server instanceof Server)) {
-      helpers.log(ctx, () => "Cannot be executed on this server.");
-      return false;
-    }
+    const server = helpers.getNormalServer(ctx, host);
     if (!Player.hasProgram(CompletedProgramName.bruteSsh)) {
-      throw helpers.errorMessage(ctx, "You do not have the BruteSSH.exe program!");
+      helpers.log(ctx, () => "You do not have the BruteSSH.exe program!");
+      return false;
     }
     if (!server.sshPortOpen) {
       helpers.log(ctx, () => `Executed BruteSSH.exe on '${server.hostname}' to open SSH port (22).`);
@@ -604,13 +574,10 @@ export const ns: InternalAPI<NSFull> = {
   },
   ftpcrack: (ctx) => (_host) => {
     const host = helpers.string(ctx, "host", _host);
-    const server = helpers.getServer(ctx, host);
-    if (!(server instanceof Server)) {
-      helpers.log(ctx, () => "Cannot be executed on this server.");
-      return false;
-    }
+    const server = helpers.getNormalServer(ctx, host);
     if (!Player.hasProgram(CompletedProgramName.ftpCrack)) {
-      throw helpers.errorMessage(ctx, "You do not have the FTPCrack.exe program!");
+      helpers.log(ctx, () => "You do not have the FTPCrack.exe program!");
+      return false;
     }
     if (!server.ftpPortOpen) {
       helpers.log(ctx, () => `Executed FTPCrack.exe on '${server.hostname}' to open FTP port (21).`);
@@ -623,13 +590,10 @@ export const ns: InternalAPI<NSFull> = {
   },
   relaysmtp: (ctx) => (_host) => {
     const host = helpers.string(ctx, "host", _host);
-    const server = helpers.getServer(ctx, host);
-    if (!(server instanceof Server)) {
-      helpers.log(ctx, () => "Cannot be executed on this server.");
-      return false;
-    }
+    const server = helpers.getNormalServer(ctx, host);
     if (!Player.hasProgram(CompletedProgramName.relaySmtp)) {
-      throw helpers.errorMessage(ctx, "You do not have the relaySMTP.exe program!");
+      helpers.log(ctx, () => "You do not have the relaySMTP.exe program!");
+      return false;
     }
     if (!server.smtpPortOpen) {
       helpers.log(ctx, () => `Executed relaySMTP.exe on '${server.hostname}' to open SMTP port (25).`);
@@ -642,13 +606,10 @@ export const ns: InternalAPI<NSFull> = {
   },
   httpworm: (ctx) => (_host) => {
     const host = helpers.string(ctx, "host", _host);
-    const server = helpers.getServer(ctx, host);
-    if (!(server instanceof Server)) {
-      helpers.log(ctx, () => "Cannot be executed on this server.");
-      return false;
-    }
+    const server = helpers.getNormalServer(ctx, host);
     if (!Player.hasProgram(CompletedProgramName.httpWorm)) {
-      throw helpers.errorMessage(ctx, "You do not have the HTTPWorm.exe program!");
+      helpers.log(ctx, () => "You do not have the HTTPWorm.exe program!");
+      return false;
     }
     if (!server.httpPortOpen) {
       helpers.log(ctx, () => `Executed HTTPWorm.exe on '${server.hostname}' to open HTTP port (80).`);
@@ -661,13 +622,10 @@ export const ns: InternalAPI<NSFull> = {
   },
   sqlinject: (ctx) => (_host) => {
     const host = helpers.string(ctx, "host", _host);
-    const server = helpers.getServer(ctx, host);
-    if (!(server instanceof Server)) {
-      helpers.log(ctx, () => "Cannot be executed on this server.");
-      return false;
-    }
+    const server = helpers.getNormalServer(ctx, host);
     if (!Player.hasProgram(CompletedProgramName.sqlInject)) {
-      throw helpers.errorMessage(ctx, "You do not have the SQLInject.exe program!");
+      helpers.log(ctx, () => "You do not have the SQLInject.exe program!");
+      return false;
     }
     if (!server.sqlPortOpen) {
       helpers.log(ctx, () => `Executed SQLInject.exe on '${server.hostname}' to open SQL port (1433).`);
@@ -992,14 +950,7 @@ export const ns: InternalAPI<NSFull> = {
   },
   getServerMoneyAvailable: (ctx) => (_host) => {
     const host = helpers.string(ctx, "host", _host);
-    const server = helpers.getServer(ctx, host);
-    if (!(server instanceof Server)) {
-      helpers.log(ctx, () => "Cannot be executed on this server.");
-      return 0;
-    }
-    if (helpers.failOnHacknetServer(ctx, server)) {
-      return 0;
-    }
+    const server = helpers.getNormalServer(ctx, host);
     if (server.hostname == "home") {
       // Return player's money
       helpers.log(ctx, () => `returned player's money: ${formatMoney(Player.money)}`);
@@ -1010,92 +961,43 @@ export const ns: InternalAPI<NSFull> = {
   },
   getServerSecurityLevel: (ctx) => (_host) => {
     const host = helpers.string(ctx, "host", _host);
-    const server = helpers.getServer(ctx, host);
-    if (!(server instanceof Server)) {
-      helpers.log(ctx, () => "Cannot be executed on this server.");
-      return 1;
-    }
-    if (helpers.failOnHacknetServer(ctx, server)) {
-      return 1;
-    }
+    const server = helpers.getNormalServer(ctx, host);
     helpers.log(ctx, () => `returned ${formatSecurity(server.hackDifficulty)} for '${server.hostname}'`);
     return server.hackDifficulty;
   },
   getServerBaseSecurityLevel: (ctx) => (_host) => {
     const host = helpers.string(ctx, "host", _host);
-    const server = helpers.getServer(ctx, host);
-    if (!(server instanceof Server)) {
-      helpers.log(ctx, () => "Cannot be executed on this server.");
-      return 1;
-    }
-    if (helpers.failOnHacknetServer(ctx, server)) {
-      return 1;
-    }
+    const server = helpers.getNormalServer(ctx, host);
     helpers.log(ctx, () => `returned ${formatSecurity(server.baseDifficulty)} for '${server.hostname}'`);
     return server.baseDifficulty;
   },
   getServerMinSecurityLevel: (ctx) => (_host) => {
     const host = helpers.string(ctx, "host", _host);
-    const server = helpers.getServer(ctx, host);
-    if (!(server instanceof Server)) {
-      helpers.log(ctx, () => "Cannot be executed on this server.");
-      return 1;
-    }
-    if (helpers.failOnHacknetServer(ctx, server)) {
-      return 1;
-    }
+    const server = helpers.getNormalServer(ctx, host);
     helpers.log(ctx, () => `returned ${formatSecurity(server.minDifficulty)} for ${server.hostname}`);
     return server.minDifficulty;
   },
   getServerRequiredHackingLevel: (ctx) => (_host) => {
     const host = helpers.string(ctx, "host", _host);
-    const server = helpers.getServer(ctx, host);
-    if (!(server instanceof Server)) {
-      helpers.log(ctx, () => "Cannot be executed on this server.");
-      return 1;
-    }
-    if (helpers.failOnHacknetServer(ctx, server)) {
-      return 1;
-    }
+    const server = helpers.getNormalServer(ctx, host);
     helpers.log(ctx, () => `returned ${formatNumberNoSuffix(server.requiredHackingSkill, 0)} for '${server.hostname}'`);
     return server.requiredHackingSkill;
   },
   getServerMaxMoney: (ctx) => (_host) => {
     const host = helpers.string(ctx, "host", _host);
-    const server = helpers.getServer(ctx, host);
-    if (!(server instanceof Server)) {
-      helpers.log(ctx, () => "Cannot be executed on this server.");
-      return 0;
-    }
-    if (helpers.failOnHacknetServer(ctx, server)) {
-      return 0;
-    }
+    const server = helpers.getNormalServer(ctx, host);
     helpers.log(ctx, () => `returned ${formatMoney(server.moneyMax)} for '${server.hostname}'`);
     return server.moneyMax;
   },
   getServerGrowth: (ctx) => (_host) => {
     const host = helpers.string(ctx, "host", _host);
-    const server = helpers.getServer(ctx, host);
-    if (!(server instanceof Server)) {
-      helpers.log(ctx, () => "Cannot be executed on this server.");
-      return 1;
-    }
-    if (helpers.failOnHacknetServer(ctx, server)) {
-      return 1;
-    }
+    const server = helpers.getNormalServer(ctx, host);
     helpers.log(ctx, () => `returned ${server.serverGrowth} for '${server.hostname}'`);
     return server.serverGrowth;
   },
   getServerNumPortsRequired: (ctx) => (_host) => {
     const host = helpers.string(ctx, "host", _host);
-    const server = helpers.getServer(ctx, host);
-    if (!(server instanceof Server)) {
-      helpers.log(ctx, () => "Cannot be executed on this server.");
-      return 5;
-    }
-    if (helpers.failOnHacknetServer(ctx, server)) {
-      return 5;
-    }
+    const server = helpers.getNormalServer(ctx, host);
     helpers.log(ctx, () => `returned ${server.numOpenPortsRequired} for '${server.hostname}'`);
     return server.numOpenPortsRequired;
   },
@@ -1259,11 +1161,7 @@ export const ns: InternalAPI<NSFull> = {
     const name = helpers.string(ctx, "name", _name);
     let hostnameStr = String(name);
     hostnameStr = hostnameStr.replace(/\s\s+/g, "");
-    const server = GetServer(hostnameStr);
-    if (!(server instanceof Server)) {
-      helpers.log(ctx, () => `Invalid argument: hostname='${hostnameStr}'`);
-      return false;
-    }
+    const server = helpers.getNormalServer(ctx, hostnameStr);
 
     if (!server.purchasedByPlayer || server.hostname === "home") {
       helpers.log(ctx, () => "Cannot delete non-purchased server.");
@@ -1387,6 +1285,18 @@ export const ns: InternalAPI<NSFull> = {
     const server = ctx.workerScript.getServer();
     return server.getContentFile(path)?.content ?? "";
   },
+  getFileMetadata: (ctx) => (_filename) => {
+    const path = helpers.filePath(ctx, "filename", _filename);
+    if (!hasScriptExtension(path) && !hasTextExtension(path)) {
+      throw new Error(`Invalid path: ${_filename}. It must be a text file or a script.`);
+    }
+    const server = ctx.workerScript.getServer();
+    const contentFile = server.getContentFile(path);
+    if (!contentFile) {
+      throw new Error(`Invalid path: ${_filename}. The file does not exist on ${server.hostname}.`);
+    }
+    return contentFile.metadata.plain();
+  },
   peek: (ctx) => (_portNumber) => {
     const portNumber = helpers.portNumber(ctx, _portNumber);
     return peekPort(portNumber);
@@ -1501,14 +1411,7 @@ export const ns: InternalAPI<NSFull> = {
     (ctx) =>
     (_host = ctx.workerScript.hostname) => {
       const host = helpers.string(ctx, "hostname", _host);
-      const server = helpers.getServer(ctx, host);
-      if (!(server instanceof Server)) {
-        helpers.log(ctx, () => "invalid for this kind of server");
-        return Infinity;
-      }
-      if (helpers.failOnHacknetServer(ctx, server)) {
-        return Infinity;
-      }
+      const server = helpers.getNormalServer(ctx, host);
 
       return calculateHackingTime(server, Player) * 1000;
     },
@@ -1516,14 +1419,7 @@ export const ns: InternalAPI<NSFull> = {
     (ctx) =>
     (_host = ctx.workerScript.hostname) => {
       const host = helpers.string(ctx, "host", _host);
-      const server = helpers.getServer(ctx, host);
-      if (!(server instanceof Server)) {
-        helpers.log(ctx, () => "invalid for this kind of server");
-        return Infinity;
-      }
-      if (helpers.failOnHacknetServer(ctx, server)) {
-        return Infinity;
-      }
+      const server = helpers.getNormalServer(ctx, host);
 
       return calculateGrowTime(server, Player) * 1000;
     },
@@ -1531,14 +1427,7 @@ export const ns: InternalAPI<NSFull> = {
     (ctx) =>
     (_host = ctx.workerScript.hostname) => {
       const host = helpers.string(ctx, "hostname", _host);
-      const server = helpers.getServer(ctx, host);
-      if (!(server instanceof Server)) {
-        helpers.log(ctx, () => "invalid for this kind of server");
-        return Infinity;
-      }
-      if (helpers.failOnHacknetServer(ctx, server)) {
-        return Infinity;
-      }
+      const server = helpers.getNormalServer(ctx, host);
 
       return calculateWeakenTime(server, Player) * 1000;
     },
@@ -1672,7 +1561,7 @@ export const ns: InternalAPI<NSFull> = {
     return true;
   },
   getFavorToDonate: () => () => {
-    return Math.floor(CONSTANTS.BaseFavorToDonate * currentNodeMults.RepToDonateToFaction);
+    return Math.floor(CONSTANTS.BaseFavorToDonate * currentNodeMults.FavorToDonateToFaction);
   },
   getPlayer: () => () => {
     const data = {
@@ -1713,7 +1602,10 @@ export const ns: InternalAPI<NSFull> = {
       (!hasTextExtension(sourcePath) && !hasScriptExtension(sourcePath)) ||
       (!hasTextExtension(destinationPath) && !hasScriptExtension(destinationPath))
     ) {
-      throw helpers.errorMessage(ctx, `'mv' can only be used on scripts and text files (.txt)`);
+      throw helpers.errorMessage(
+        ctx,
+        `'mv' can only be used on scripts (.js, .jsx, .ts, .tsx) and text files (.txt, .json)`,
+      );
     }
     if (sourcePath === destinationPath) {
       helpers.log(ctx, () => "WARNING: Did nothing, source and destination paths were the same.");
@@ -1724,13 +1616,19 @@ export const ns: InternalAPI<NSFull> = {
       throw helpers.errorMessage(ctx, `Source text file ${sourcePath} does not exist on ${host}`);
     }
     const success = sourceContentFile.deleteFromServer(server);
-    if (success) {
-      const { overwritten } = server.writeToContentFile(destinationPath, sourceContentFile.content);
-      if (overwritten) helpers.log(ctx, () => `WARNING: Overwriting file ${destinationPath} on ${host}`);
-      helpers.log(ctx, () => `Moved ${sourcePath} to ${destinationPath} on ${host}`);
+    if (!success) {
+      helpers.log(
+        ctx,
+        () =>
+          `ERROR: Failed. Was unable to remove file ${sourcePath} from its original location. If ${sourcePath} is a script, make sure that it is NOT running before trying to use 'mv' on it.`,
+      );
       return;
     }
-    helpers.log(ctx, () => `ERROR: Failed. Was unable to remove file ${sourcePath} from its original location.`);
+    const { overwritten } = server.writeToContentFile(destinationPath, sourceContentFile.content);
+    if (overwritten) {
+      helpers.log(ctx, () => `WARNING: Overwriting file ${destinationPath} on ${host}`);
+    }
+    helpers.log(ctx, () => `Moved ${sourcePath} to ${destinationPath} on ${host}`);
   },
   getResetInfo: () => () => ({
     lastAugReset: Player.lastAugReset,
