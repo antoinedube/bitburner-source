@@ -4,6 +4,20 @@
 type _ValueOf<T> = T[keyof T];
 
 /** All netscript definitions */
+
+/**
+ * Metadata of a file
+ * @public
+ */
+interface FileMetadata {
+  /** Time of Access */
+  atime: number;
+  /** Time of Modification */
+  mtime: number;
+  /** Time of Birth (creation) */
+  btime: number;
+}
+
 /** @public */
 interface HP {
   current: number;
@@ -76,7 +90,7 @@ interface ResetInfo {
    * BitNode options into account.
    *
    * For example, let's say you have SF 1.3, but you overrode the active level of SF1 and set it to level 1. In this
-   * case, this map contains this entry: Key: 1 => Value: 1.
+   * case, this map contains this entry: Key: 1 =\> Value: 1.
    *
    * If the active level of a source file is 0, that source file won't be included in the result.
    */
@@ -453,9 +467,9 @@ interface StockMarketConstants {
   /** An internal constant used while determining when to flip a stock's forecast */
   TicksPerCycle: number;
   /** Cost of the WSE account */
-  WSEAccountCost: number;
+  WseAccountCost: number;
   /** Cost of the TIX API */
-  TIXAPICost: number;
+  TixApiCost: number;
   /** Cost of the 4S Market Data */
   MarketData4SCost: number;
   /** Cost of the 4S Market Data TIX API integration */
@@ -746,7 +760,7 @@ interface BitNodeMultipliers {
   /** Influences the maximum allowed RAM for a purchased server */
   PurchasedServerMaxRam: number;
   /** Influences the minimum favor the player must have with a faction before they can donate to gain rep. */
-  RepToDonateToFaction: number;
+  FavorToDonateToFaction: number;
   /** Influences how much money is stolen from a server when the player performs a hack against it. */
   ScriptHackMoney: number;
   /**
@@ -852,6 +866,8 @@ interface GangGenInfo {
   territoryWarfareEngaged: boolean;
   /** Number indicating the current wanted penalty */
   wantedPenalty: number;
+  /** Gang gives a discount on all equipment. This multiplier is applied to the equipment cost. */
+  equipmentCostMult: number;
 }
 
 /** @public */
@@ -1219,19 +1235,22 @@ export interface NetscriptPort {
  * @public
  */
 export interface TIX {
-  /** Get game constants for the stock market mechanic.
-   *  @remarks RAM cost: 0 GB */
+  /**
+   * Get game constants for the stock market mechanic.
+   *
+   * @remarks RAM cost: 0 GB
+   */
   getConstants(): StockMarketConstants;
   /**
    * Returns true if the player has access to a WSE Account
    * @remarks RAM cost: 0.05 GB
    */
-  hasWSEAccount(): boolean;
+  hasWseAccount(): boolean;
   /**
    * Returns true if the player has access to the TIX API
    * @remarks RAM cost: 0.05 GB
    */
-  hasTIXAPIAccess(): boolean;
+  hasTixApiAccess(): boolean;
   /**
    * Returns true if the player has access to the 4S Data
    * @remarks RAM cost: 0.05 GB
@@ -1241,7 +1260,7 @@ export interface TIX {
    * Returns true if the player has access to the 4SData TIX API
    * @remarks RAM cost: 0.05 GB
    */
-  has4SDataTIXAPI(): boolean;
+  has4SDataTixApi(): boolean;
   /**
    * Returns an array of the symbols of the tradable stocks
    *
@@ -1259,9 +1278,9 @@ export interface TIX {
    * The stock’s price is the average of its bid and ask prices. This function requires
    * that you have the following:
    *
-   * 1. WSE Account
+   * - WSE Account
    *
-   * 1. TIX API Access
+   * - TIX API Access
    *
    * @example
    * ```js
@@ -1287,9 +1306,9 @@ export interface TIX {
    * The organization associated with the corresponding stock symbol. This function
    * requires that you have the following:
    *
-   * 1. WSE Account
+   * - WSE Account
    *
-   * 1. TIX API Access
+   * - TIX API Access
    *
    * @example
    * ```js
@@ -1783,8 +1802,11 @@ export type Task = StudyTask | CompanyWorkTask | CreateProgramWorkTask | CrimeTa
 
 /**
  * Default value:
+ *
  * - sourceFileOverrides: an empty Map
+ *
  * - intelligenceOverride: undefined
+ *
  * - All boolean options: false
  *
  * If you specify intelligenceOverride, it must be a non-negative integer.
@@ -1797,10 +1819,12 @@ export interface BitNodeOptions extends BitNodeBooleanOptions {
 }
 
 /**
- * restrictHomePCUpgrade: The home computer's maximum RAM and number of cores are lower than normal. Max RAM: 128GB. Max
+ * Note:
+ *
+ * - restrictHomePCUpgrade: The home computer's maximum RAM and number of cores are lower than normal. Max RAM: 128GB. Max
  * core: 1.
  *
- * disableSleeveExpAndAugmentation: Your Sleeves do not gain experience when they perform action. You also cannot buy
+ * - disableSleeveExpAndAugmentation: Your Sleeves do not gain experience when they perform action. You also cannot buy
  * augmentations for them.
  *
  * @public
@@ -1840,7 +1864,7 @@ export interface Singularity {
    * This function will automatically open the backup save prompt and claim the free faction favour if available.
    *
    */
-  exportGame(): void;
+  exportGame(): Promise<void>;
 
   /**
    * Returns Backup save bonus availability.
@@ -2122,8 +2146,7 @@ export interface Singularity {
    * const success = ns.singularity.workForCompany(companyName);
    * if (!success) ns.tprint(`ERROR: Failed to start work at ${companyName}.`);
    * ```
-   * @param companyName - Name of company to work for. Must be an exact match. Optional. If not specified, this
-   *   argument defaults to the last job that you worked.
+   * @param companyName - Name of company to work for. Must be an exact match.
    * @param focus - Acquire player focus on this work operation. Optional. Defaults to true.
    * @returns True if the player starts working, and false otherwise.
    */
@@ -2397,17 +2420,9 @@ export interface Singularity {
    *
    * This function returns true if you successfully start working on the specified program, and false otherwise.
    *
-   * Note that creating a program using this function has the same hacking level requirements as it normally would.
-   * These level requirements are:<br/>
-   * - BruteSSH.exe: 50<br/>
-   * - FTPCrack.exe: 100<br/>
-   * - relaySMTP.exe: 250<br/>
-   * - HTTPWorm.exe: 500<br/>
-   * - SQLInject.exe: 750<br/>
-   * - DeepscanV1.exe: 75<br/>
-   * - DeepscanV2.exe: 400<br/>
-   * - ServerProfiler.exe: 75<br/>
-   * - AutoLink.exe: 25
+   * Note that creating a program using this function has the same hacking level requirements as it normally would. You
+   * can call {@link Singularity.getHackingLevelRequirementOfProgram | getHackingLevelRequirementOfProgram} to get that
+   * value.
    *
    * @example
    * ```js
@@ -2420,6 +2435,19 @@ export interface Singularity {
    * @returns True if you successfully start working on the specified program, and false otherwise.
    */
   createProgram(program: string, focus?: boolean): boolean;
+
+  /**
+   * Get the hacking level requirement of a program.
+   * @remarks
+   * RAM cost: 5 GB * 16/4/1
+   *
+   * In order to create a program via UI or {@link Singularity.createProgram | createProgram}, your hacking level must
+   * meet the requirement of that program. This API returns that value.
+   *
+   * @param program - Name of program to create.
+   * @returns Hacking level requirement. Return Infinity if the specified program cannot be created.
+   */
+  getHackingLevelRequirementOfProgram(program: string): number;
 
   /**
    * Commit a crime.
@@ -2493,7 +2521,7 @@ export interface Singularity {
    * Returns an array of source files. This function takes BitNode options into account.
    *
    * For example, let's say you have SF 1.3, but you overrode the active level of SF1 and set it to level 1. In this
-   * case, this function returns {"n":1,"lvl":1}.
+   * case, this function returns \{"n":1,"lvl":1\}.
    *
    * If the active level of a source file is 0, that source file won't be included in the result.
    *
@@ -2805,6 +2833,15 @@ export interface Singularity {
    * @returns - An object representing the current work. Fields depend on the kind of work.
    */
   getCurrentWork(): Task | null;
+
+  /**
+   * Get a list of all unlocked achievements.
+   * @remarks
+   * Ram cost: 5 GB * 16/4/1
+   *
+   * @returns - A list containing all of the IDs of achievements that the player has unlocked.
+   */
+  getUnlockedAchievements(): string[];
 }
 
 /**
@@ -2820,6 +2857,20 @@ export interface CompanyPositionInfo {
   requiredReputation: number;
   requiredSkills: Skills;
 }
+
+/** @public */
+type HacknetServerHashUpgrade =
+  | "Sell for Money"
+  | "Sell for Corporation Funds"
+  | "Reduce Minimum Security"
+  | "Increase Maximum Money"
+  | "Improve Studying"
+  | "Improve Gym Training"
+  | "Exchange for Corporation Research"
+  | "Exchange for Bladeburner Rank"
+  | "Exchange for Bladeburner SP"
+  | "Generate Coding Contract"
+  | "Company Favor";
 
 /**
  * Hacknet API
@@ -3075,11 +3126,11 @@ export interface Hacknet {
    *   ns.hacknet.spendHashes(upgradeName);
    * }
    * ```
-   * @param upgName - Name of the upgrade of Hacknet Node.
+   * @param upgName - Name of the upgrade using hash of Hacknet Server.
    * @param count - Number of upgrades to buy at once. Defaults to 1 if not specified.
    * @returns Number of hashes required for the specified upgrade.
    */
-  hashCost(upgName: string, count?: number): number;
+  hashCost(upgName: HacknetServerHashUpgrade, count?: number): number;
 
   /**
    * Purchase a hash upgrade.
@@ -3102,13 +3153,13 @@ export interface Hacknet {
    * // For upgrades requiring a target
    * ns.hacknet.spendHashes("Increase Maximum Money", "foodnstuff");
    * ```
-   * @param upgName - Name of the upgrade of Hacknet Node.
+   * @param upgName - Name of the upgrade using hash of Hacknet Server.
    * @param upgTarget - Object to which upgrade applies. Required for certain upgrades.
    * @param count - Number of upgrades to buy at once. Must be a non-negative integer. Defaults to 1 if not specified.
    * For compatibility reasons, upgTarget must be specified, even if it is not used, in order to specify count.
    * @returns True if the upgrade is successfully purchased, and false otherwise.
    */
-  spendHashes(upgName: string, upgTarget?: string, count?: number): boolean;
+  spendHashes(upgName: HacknetServerHashUpgrade, upgTarget?: string, count?: number): boolean;
 
   /**
    * Get the list of hash upgrades
@@ -3124,7 +3175,7 @@ export interface Hacknet {
    * ```
    * @returns An array containing the available upgrades
    */
-  getHashUpgrades(): string[];
+  getHashUpgrades(): HacknetServerHashUpgrade[];
 
   /**
    * Get the level of a hash upgrade.
@@ -3135,7 +3186,7 @@ export interface Hacknet {
    *
    * @returns Level of the upgrade.
    */
-  getHashUpgradeLevel(upgName: string): number;
+  getHashUpgradeLevel(upgName: HacknetServerHashUpgrade): number;
 
   /**
    * Get the multiplier to study.
@@ -3311,8 +3362,8 @@ export type BladeburnerActionTypeForSleeve =
 /**
  * Bladeburner API
  * @remarks
- * You have to be employed in the Bladeburner division and be in BitNode-7
- * or have Source-File 7 in order to use this API.
+ * You have to be employed in the Bladeburner division and be in BitNode 6/7 or have Source-File 6/7 in order to use
+ * this API.
  * @public
  */
 export interface Bladeburner {
@@ -3993,7 +4044,7 @@ export interface CodingContract {
    * @param type - Type of contract to generate
    * @returns Filename of the contract.
    */
-  createDummyContract(type: string): string;
+  createDummyContract(type: CodingContractName): string;
 
   /**
    * List all contract types.
@@ -4023,7 +4074,7 @@ export interface Format {
    * - "Infinity" and "-Infinity" are returned as "∞" and "-∞", respectively.
    *
    * - If you disable the suffix form in the settings page or the absolute value is greater than or equal to 1e33, this
-   * function will use the exponential form. This means that, if Math.abs(n) >= 1e33, the returned value is always in
+   * function will use the exponential form. This means that, if Math.abs(n) \>= 1e33, the returned value is always in
    * the exponential form, regardless of the setting.
    *
    * Note that the behaviors listed above are "undocumented", in the sense that we don't make any guarantee about
@@ -4279,6 +4330,8 @@ export interface Gang {
    *
    * Get the amount of money it takes to purchase a piece of Equipment or an Augmentation.
    * If an invalid Equipment/Augmentation is specified, this function will return Infinity.
+   *
+   * This function already takes equipmentCostMult from {@link GangGenInfo | GangGenInfo} into account.
    *
    * @param equipName - Name of equipment.
    * @returns Cost to purchase the specified Equipment/Augmentation (number). Infinity for invalid arguments
@@ -4576,8 +4629,8 @@ export interface GoAnalysis {
    * The details are keyed by opponent name, in this structure:
    *
    * <pre lang="javascript">
-   * {
-   *   <OpponentName>: {
+   * \{
+   *   <OpponentName>: \{
    *     wins: number,
    *     losses: number,
    *     winStreak: number,
@@ -4585,8 +4638,8 @@ export interface GoAnalysis {
    *     favor: number,
    *     bonusPercent: number,
    *     bonusDescription: string,
-   *   }
-   * }
+   *   \}
+   * \}
    * </pre>
    *
    * @returns A dictionary of opponent stats keyed by opponent name.
@@ -4613,20 +4666,30 @@ export interface GoAnalysis {
 
   /**
    * Adds a colored circle indicator to the specified point. These indicators are removed once a move is played.
-   * @param x the x coordinate to highlight
-   * @param y the y coordinate to highlight
-   * @param color optional: the color to use for the circle. Can be given an RGB string like "#FFF000", or "none" to clear it, or one of
-   *    these color names from the selected theme: "hack" (green), "hp" (red), "money" (yellow), "int" (blue), "cha" (purple)
-   * @param text optional: text to add to the node (replaces the default A.1 or B5 seen on hover). Should be kept short to fit well.
+   *
+   * @remarks
+   * RAM cost: 0 GB
+   *
+   * @param x - The x coordinate to highlight
+   * @param y -  The y coordinate to highlight
+   * @param color -  The color to use for the circle. It can be any value accepted by
+   * {@link https://developer.mozilla.org/en-US/docs/Web/CSS/outline-color | outline-color CSS property} (e.g., an RGB
+   * string like "#FFF000"). You can also use "none" to clear it or one of 5 special values: "hack", "hp", "money",
+   * "int", "cha". The corresponding colors of 5 special values depend on your theme.
+   * @param text - Text to add to the node (replaces the default A.1 or B5 seen on hover). Should be kept short to fit well.
    */
-  highlightPoint(x, y, color, text): void;
+  highlightPoint(x: number, y: number, color?: string, text?: string): void;
 
   /**
    * Removes the highlight color and text from the specified node.
-   * @param x the x coordinate to remove highlight from
-   * @param y the y coordinate to remove highlight from
+   *
+   * @remarks
+   * RAM cost: 0 GB
+   *
+   * @param x - the x coordinate to remove highlight from
+   * @param y - the y coordinate to remove highlight from
    */
-  clearPointHighlight(x, y): void;
+  clearPointHighlight(x: number, y: number): void;
 
   /** Removes all highlights from the board. */
   clearAllPointHighlights(): void;
@@ -4898,7 +4961,7 @@ export interface Go {
   /**
    * Gets the status of the current game.
    * Shows the current player, current score, and the previous move coordinates.
-   * Previous move coordinates will be [-1, -1] for a pass, or if there are no prior moves.
+   * Previous move will be null for a pass, or if there are no prior moves.
    */
   getGameState(): {
     currentPlayer: "White" | "Black" | "None";
@@ -5579,7 +5642,7 @@ interface HacknetServersFormulas {
    * @param level - level of the upgrade
    * @returns The calculated hash cost.
    */
-  hashUpgradeCost(upgName: string, level: number): number;
+  hashUpgradeCost(upgName: HacknetServerHashUpgrade, level: number): number;
   /**
    * Calculate the cost of a hacknet server.
    * @param n - number of the hacknet server
@@ -5890,13 +5953,13 @@ interface UserInterface {
    * @example
    * ```js
    * //Open logs from foo.js on the current server that was run with no args
-   * ns.tail("foo.js");
+   * ns.ui.openTail("foo.js");
    *
    * //Get logs from foo.js on the foodnstuff server that was run with no args
-   * ns.tail("foo.js", "foodnstuff");
+   * ns.ui.openTail("foo.js", "foodnstuff");
    *
    * //Get logs from foo.js on the foodnstuff server that was run with the arguments [1, "test"]
-   * ns.tail("foo.js", "foodnstuff", 1, "test");
+   * ns.ui.openTail("foo.js", "foodnstuff", 1, "test");
    * ```
    * @param fn - Optional. Filename or PID of the script being tailed. If omitted, the current script is tailed.
    * @param host - Optional. Hostname/IP of the script being tailed. Defaults to the server this script is running on. If args are specified, this is not optional.
@@ -6027,7 +6090,6 @@ interface UserInterface {
    * @remarks
    * RAM cost: 0 GB
    * @example
-   * Usage example (NS2)
    * ```js
    * const theme = ns.ui.getTheme();
    * theme.primary = '#ff5500';
@@ -6057,7 +6119,6 @@ interface UserInterface {
    * @remarks
    * RAM cost: 0 GB
    * @example
-   * Usage example (NS2)
    * ```js
    * const styles = ns.ui.getStyles();
    * styles.fontFamily = 'Comic Sans Ms';
@@ -6106,91 +6167,91 @@ interface UserInterface {
  */
 export interface NS {
   /**
-   * Namespace for hacknet functions. Some of this API contains spoilers.
+   * Namespace for {@link Hacknet | hacknet} functions. Some of this API contains spoilers.
    * @remarks RAM cost: 4 GB.
    */
   readonly hacknet: Hacknet;
 
   /**
-   * Namespace for bladeburner functions. Contains spoilers.
+   * Namespace for {@link Bladeburner | Bladeburner} functions. Contains spoilers.
    * @remarks RAM cost: 0 GB
    */
   readonly bladeburner: Bladeburner;
 
   /**
-   * Namespace for codingcontract functions.
+   * Namespace for {@link CodingContract | coding contract} functions.
    * @remarks RAM cost: 0 GB
    */
   readonly codingcontract: CodingContract;
 
   /**
-   * Namespace for formatting functions.
+   * Namespace for {@link Format | formatting} functions.
    * @remarks RAM cost: 0 GB
    */
   readonly format: Format;
 
   /**
-   * Namespace for gang functions. Contains spoilers.
+   * Namespace for {@link Gang | gang} functions. Contains spoilers.
    * @remarks RAM cost: 0 GB
    */
   readonly gang: Gang;
 
   /**
-   * Namespace for Go functions.
+   * Namespace for {@link Go | Go} functions.
    * @remarks RAM cost: 0 GB
    */
   readonly go: Go;
 
   /**
-   * Namespace for sleeve functions. Contains spoilers.
+   * Namespace for {@link Sleeve | sleeve} functions. Contains spoilers.
    * @remarks RAM cost: 0 GB
    */
   readonly sleeve: Sleeve;
 
   /**
-   * Namespace for stock functions.
+   * Namespace for {@link TIX | stock} functions.
    * @remarks RAM cost: 0 GB
    */
   readonly stock: TIX;
 
   /**
-   * Namespace for formulas functions.
+   * Namespace for {@link Formulas | formulas} functions.
    * @remarks RAM cost: 0 GB
    */
   readonly formulas: Formulas;
 
   /**
-   * Namespace for stanek functions. Contains spoilers.
+   * Namespace for {@link Stanek | Stanek} functions. Contains spoilers.
    * @remarks RAM cost: 0 GB
    */
   readonly stanek: Stanek;
 
   /**
-   * Namespace for infiltration functions.
+   * Namespace for {@link Infiltration | infiltration} functions.
    * @remarks RAM cost: 0 GB
    */
   readonly infiltration: Infiltration;
 
   /**
-   * Namespace for corporation functions. Contains spoilers.
+   * Namespace for {@link Corporation | corporation} functions. Contains spoilers.
    * @remarks RAM cost: 0 GB
    */
   readonly corporation: Corporation;
 
   /**
-   * Namespace for user interface functions.
+   * Namespace for {@link UserInterface | user interface} functions.
    * @remarks RAM cost: 0 GB
    */
   readonly ui: UserInterface;
 
   /**
-   * Namespace for singularity functions. Contains spoilers.
+   * Namespace for {@link Singularity | singularity} functions. Contains spoilers.
    * @remarks RAM cost: 0 GB
    */
   readonly singularity: Singularity;
 
   /**
-   * Namespace for grafting functions. Contains spoilers.
+   * Namespace for {@link Grafting | grafting} functions. Contains spoilers.
    * @remarks RAM cost: 0 GB
    */
   readonly grafting: Grafting;
@@ -6476,7 +6537,10 @@ export interface NS {
    * @remarks
    * RAM cost: 0 GB
    *
-   * @param millis - Number of milliseconds to sleep.
+   * Note that the actual delay may be longer than intended. For more information, please check
+   * https://developer.mozilla.org/en-US/docs/Web/API/Window/setTimeout#delay.
+   *
+   * @param millis - Number of milliseconds to sleep. Default to 0.
    * @example
    * ```js
    * // This will count from 1 to 10 in your terminal, with one number every 5 seconds
@@ -6487,17 +6551,20 @@ export interface NS {
    * ```
    * @returns A promise that resolves to true when the sleep is completed.
    */
-  sleep(millis: number): Promise<true>;
+  sleep(millis?: number): Promise<true>;
 
   /**
    * Suspends the script for n milliseconds. Doesn't block with concurrent calls.
    * @remarks
    * RAM cost: 0 GB
    *
-   * @param millis - Number of milliseconds to sleep.
+   * Note that the actual delay may be longer than intended. For more information, please check
+   * https://developer.mozilla.org/en-US/docs/Web/API/Window/setTimeout#delay.
+   *
+   * @param millis - Number of milliseconds to sleep. Default to 0.
    * @returns A promise that resolves to true when the sleep is completed.
    */
-  asleep(millis: number): Promise<true>;
+  asleep(millis?: number): Promise<true>;
 
   /**
    * Prints one or more values or variables to the script’s logs.
@@ -6544,7 +6611,7 @@ export interface NS {
    * ns.print(`${red}Ugh! What a mess.${reset}`);
    * ns.print(`${green}Well done!${reset}`);
    * ns.print(`${cyan}ERROR Should this be in red?${reset}`);
-   * ns.tail();
+   * ns.ui.openTail();
    * ```
    *
    * @param args - Value(s) to be printed.
@@ -6579,7 +6646,7 @@ export interface NS {
    * ns.printf("My age in scientific notation is %e.", age);
    * ns.printf("In %d seconds, I'll be %s.", 6, "Byte");
    * ns.printf("Am I a nibble? %t", (4 === age));
-   * ns.tail();
+   * ns.ui.openTail();
    * ```
    *
    * @param format - Format of the message.
@@ -7682,6 +7749,19 @@ export interface NS {
   read(filename: string): string;
 
   /**
+   * Get the metadata of a file.
+   * @remarks
+   * RAM cost: 0 GB
+   *
+   * This function returns the metadata associated with the specified file.
+   *
+   * @param filename - Name of the file to read the metadata from. It must be a text file (.txt, .json) or a script
+   * (.js, .jsx, .ts, .tsx).
+   * @Returns The metadata of the file.
+   */
+  getFileMetadata(filename: string): FileMetadata;
+
+  /**
    * Get a copy of the data from a port without popping it.
    * @remarks
    * RAM cost: 0 GB
@@ -7754,8 +7834,6 @@ export interface NS {
    * RAM cost: 0 GB
    *
    * Get a handle to a Netscript Port.
-   *
-   * WARNING: Port Handles only work in NetscriptJS (Netscript 2.0). They will not work in Netscript 1.0.
    *
    * @param portNumber - Port number. Must be a positive integer.
    */
@@ -8054,17 +8132,6 @@ export interface NS {
    * Note that it will not be possible to download data from many websites because they
    * do not allow cross-origin resource sharing (CORS).
    *
-   * IMPORTANT: This is an asynchronous function that returns a Promise.
-   * The Promise’s resolved value will be a boolean indicating whether or not the data was
-   * successfully retrieved from the URL. Because the function is async and returns a Promise,
-   * it is recommended you use wget in NetscriptJS (Netscript 2.0).
-   *
-   * In NetscriptJS, you must preface any call to wget with the await keyword (like you would {@link NS.hack | hack} or {@link NS.sleep | sleep}).
-   * wget will still work in Netscript 1.0, but the function's execution will not be synchronous
-   * (i.e. it may not execute when you expect/want it to).
-   * Furthermore, since Promises are not supported in ES5,
-   * you will not be able to process the returned value of wget in Netscript 1.0.
-   *
    * @example
    * ```js
    * await ns.wget("https://raw.githubusercontent.com/bitburner-official/bitburner-src/master/README.md", "game_readme.txt");
@@ -8136,8 +8203,6 @@ export interface NS {
    * @remarks
    * RAM cost: 0 GB
    *
-   * NS2 exclusive
-   *
    * Each script can only register one callback per callback ID.
    * If another callback is registered with the same callback ID
    * the previous callback with that ID is forgotten and will not be executed when the script dies.
@@ -8154,10 +8219,12 @@ export interface NS {
    *
    * Move the source file to the specified destination on the target server.
    *
-   * This command only works for scripts and text files (.txt). It cannot, however,  be used
-   * to convert from script to text file, or vice versa.
+   * This command only works for scripts (.js, .jsx, .ts, .tsx) and text files (.txt, .json). It cannot, however, be
+   * used to convert from script to text file, or vice versa.
    *
    * This function can also be used to rename files.
+   *
+   * This function is not able to remove running scripts from their original locations. Make sure to stop any scripts before using this function on them.
    *
    * @param host - Hostname/IP of target server.
    * @param source - Filename of the source file.
@@ -8424,7 +8491,6 @@ type CorpEmployeePosition =
 
 /** @public */
 type CorpIndustryName =
-  | "Spring Water"
   | "Water Utilities"
   | "Agriculture"
   | "Fishing"
@@ -8620,7 +8686,7 @@ type FactionNameEnumType = {
   TheCovenant: "The Covenant";
   ECorp: "ECorp";
   MegaCorp: "MegaCorp";
-  BachmanAssociates: "Bachman & Associates";
+  BachmanAndAssociates: "Bachman & Associates";
   BladeIndustries: "Blade Industries";
   NWO: "NWO";
   ClarkeIncorporated: "Clarke Incorporated";
@@ -8654,6 +8720,7 @@ type FactionNameEnumType = {
 /** @public */
 type FactionName = _ValueOf<FactionNameEnumType>;
 
+/** @public */
 type CodingContractNameEnumType = {
   FindLargestPrimeFactor: "Find Largest Prime Factor";
   SubarrayWithMaximumSum: "Subarray with Maximum Sum";
@@ -8689,6 +8756,7 @@ type CodingContractNameEnumType = {
 /** @public */
 type CodingContractName = _ValueOf<CodingContractNameEnumType>;
 
+/** @public */
 export type CodingContractSignatures = {
   "Find Largest Prime Factor": [number, number];
   "Subarray with Maximum Sum": [number[], number];
@@ -8721,12 +8789,14 @@ export type CodingContractSignatures = {
   "Total Number of Primes": [number[], number];
 };
 
+/** @public */
 export type CodingContractObject = {
   [T in keyof CodingContractSignatures]: {
     type: T;
     data: CodingContractSignatures[T][0];
     submit: (answer: CodingContractSignatures[T][1] | string) => string;
     description: string;
+    difficulty: number;
     numTriesRemaining: () => number;
   };
 }[keyof CodingContractSignatures];
@@ -8745,6 +8815,10 @@ type NSEnums = {
   CompanyName: CompanyNameEnumType;
   FactionName: FactionNameEnumType;
   CodingContractName: CodingContractNameEnumType;
+  PositionType: PositionEnumType;
+  OrderType: OrderEnumType;
+  BladeburnerActionType: BladeburnerActionEnumType;
+  SpecialBladeburnerActionTypeForSleeve: SpecialBladeburnerActionEnumTypeForSleeve;
 };
 
 /**
@@ -8825,7 +8899,7 @@ export interface OfficeAPI {
    * @param divisionName - Name of the division
    * @param researchName - Name of the research
    */
-  research(divisionName: string, researchName: string): void;
+  research(divisionName: string, researchName: CorpResearchName): void;
 
   /**
    * Get data about an office.
@@ -8871,7 +8945,7 @@ export interface OfficeAPI {
    * @param researchName - Name of the research
    * @returns Cost
    */
-  getResearchCost(divisionName: string, researchName: string): number;
+  getResearchCost(divisionName: string, researchName: CorpResearchName): number;
 
   /**
    * Check if you unlocked a research.
@@ -8883,7 +8957,7 @@ export interface OfficeAPI {
    * @param researchName - Name of the research
    * @returns true is unlocked, false if not
    */
-  hasResearched(divisionName: string, researchName: string): boolean;
+  hasResearched(divisionName: string, researchName: CorpResearchName): boolean;
 
   /**
    * Set the job assignment for a job.
@@ -8893,11 +8967,16 @@ export interface OfficeAPI {
    *
    * @param divisionName - Name of the division
    * @param city - Name of the city
-   * @param job - Name of the job
+   * @param job - Name of the job. Passing "Unassigned" will cause this API to not do anything and just return false.
    * @param amount - Number of employees to assign to that job
    * @returns true if the employee count reached the target amount, false if not
    */
-  setAutoJobAssignment(divisionName: string, city: CityName, job: string, amount: number): boolean;
+  setJobAssignment(
+    divisionName: string,
+    city: CityName,
+    job: Exclude<CorpEmployeePosition, "Unassigned">,
+    amount: number,
+  ): boolean;
 
   /**
    * Get the cost to upgrade an office.
@@ -8934,7 +9013,7 @@ export interface WarehouseAPI {
    * @param amt - Amount to sell, can be "MAX"
    * @param price - Price to sell, can be "MP"
    */
-  sellMaterial(divisionName: string, city: CityName, materialName: string, amt: string, price: string): void;
+  sellMaterial(divisionName: string, city: CityName, materialName: CorpMaterialName, amt: string, price: string): void;
 
   /**
    * Set product sell data.
@@ -8992,7 +9071,12 @@ export interface WarehouseAPI {
    * @param materialName - Name of the material
    * @param option - Smart supply option. Set "leftovers" to use leftovers, "imports" to use only imported materials, and "none" to not use stored materials.
    */
-  setSmartSupplyOption(divisionName: string, city: CityName, materialName: string, option: CorpSmartSupplyOption): void;
+  setSmartSupplyOption(
+    divisionName: string,
+    city: CityName,
+    materialName: CorpMaterialName,
+    option: CorpSmartSupplyOption,
+  ): void;
 
   /**
    * Set material buy data.
@@ -9005,7 +9089,7 @@ export interface WarehouseAPI {
    * @param materialName - Name of the material
    * @param amt - Amount of material to buy
    */
-  buyMaterial(divisionName: string, city: CityName, materialName: string, amt: number): void;
+  buyMaterial(divisionName: string, city: CityName, materialName: CorpMaterialName, amt: number): void;
 
   /**
    * Set material to bulk-buy.
@@ -9018,7 +9102,7 @@ export interface WarehouseAPI {
    * @param materialName - Name of the material
    * @param amt - Amount of material to buy
    */
-  bulkPurchase(divisionName: string, city: CityName, materialName: string, amt: number): void;
+  bulkPurchase(divisionName: string, city: CityName, materialName: CorpMaterialName, amt: number): void;
 
   /**
    * Get warehouse data.
@@ -9056,7 +9140,7 @@ export interface WarehouseAPI {
    * @param materialName - Name of the material
    * @returns Material data
    */
-  getMaterial(divisionName: string, city: CityName, materialName: string): Material;
+  getMaterial(divisionName: string, city: CityName, materialName: CorpMaterialName): Material;
 
   /**
    * Set Market-TA1 for a material.
@@ -9069,7 +9153,7 @@ export interface WarehouseAPI {
    * @param materialName - Name of the material
    * @param on - Use true to enable, false otherwise.
    */
-  setMaterialMarketTA1(divisionName: string, city: CityName, materialName: string, on: boolean): void;
+  setMaterialMarketTA1(divisionName: string, city: CityName, materialName: CorpMaterialName, on: boolean): void;
 
   /**
    * Set Market-TA2 for a material.
@@ -9082,7 +9166,7 @@ export interface WarehouseAPI {
    * @param materialName - Name of the material
    * @param on - Use true to enable, false otherwise.
    */
-  setMaterialMarketTA2(divisionName: string, city: CityName, materialName: string, on: boolean): void;
+  setMaterialMarketTA2(divisionName: string, city: CityName, materialName: CorpMaterialName, on: boolean): void;
 
   /**
    * Set Market-TA1 for a product.
@@ -9126,7 +9210,7 @@ export interface WarehouseAPI {
     sourceCity: CityName,
     targetDivision: string,
     targetCity: CityName,
-    materialName: string,
+    materialName: CorpMaterialName,
     amt: number | string,
   ): void;
 
@@ -9147,7 +9231,7 @@ export interface WarehouseAPI {
     sourceCity: CityName,
     targetDivision: string,
     targetCity: CityName,
-    materialName: string,
+    materialName: CorpMaterialName,
   ): void;
 
   /**
@@ -9204,7 +9288,7 @@ export interface WarehouseAPI {
    * @param materialName - Name of the material.
    * @param qty - Amount to limit to. Pass a negative value to remove the limit instead.
    */
-  limitMaterialProduction(divisionName: string, city: CityName, materialName: string, qty: number): void;
+  limitMaterialProduction(divisionName: string, city: CityName, materialName: CorpMaterialName, qty: number): void;
 
   /**
    * Limit product production.
@@ -9298,7 +9382,7 @@ export interface Corporation extends WarehouseAPI, OfficeAPI {
    * @param selfFund - If you want to self-fund. Defaults to true, false will only work in BitNode 3.
    * @returns true if created and false if not
    */
-  createCorporation(corporationName: string, selfFund: boolean): boolean;
+  createCorporation(corporationName: string, selfFund?: boolean): boolean;
 
   /**
    * Check if you have a one-time unlockable upgrade.
@@ -9309,7 +9393,7 @@ export interface Corporation extends WarehouseAPI, OfficeAPI {
    * @param upgradeName - Name of the upgrade
    * @returns true if unlocked and false if not
    */
-  hasUnlock(upgradeName: string): boolean;
+  hasUnlock(upgradeName: CorpUnlockName): boolean;
 
   /**
    * Get the cost to unlock a one-time unlockable upgrade.
@@ -9320,7 +9404,7 @@ export interface Corporation extends WarehouseAPI, OfficeAPI {
    * @param upgradeName - Name of the upgrade
    * @returns Cost of the upgrade
    */
-  getUnlockCost(upgradeName: string): number;
+  getUnlockCost(upgradeName: CorpUnlockName): number;
 
   /**
    * Get the level of a levelable upgrade.
@@ -9331,7 +9415,7 @@ export interface Corporation extends WarehouseAPI, OfficeAPI {
    * @param upgradeName - Name of the upgrade
    * @returns The level of the upgrade
    */
-  getUpgradeLevel(upgradeName: string): number;
+  getUpgradeLevel(upgradeName: CorpUpgradeName): number;
 
   /**
    * Get the cost to unlock the next level of a levelable upgrade.
@@ -9342,7 +9426,7 @@ export interface Corporation extends WarehouseAPI, OfficeAPI {
    * @param upgradeName - Name of the upgrade
    * @returns Cost of the upgrade
    */
-  getUpgradeLevelCost(upgradeName: string): number;
+  getUpgradeLevelCost(upgradeName: CorpUpgradeName): number;
 
   /**
    * Get an offer for investment based on current corporation valuation.
@@ -9479,7 +9563,7 @@ export interface Corporation extends WarehouseAPI, OfficeAPI {
    *
    * @param upgradeName - Name of the upgrade
    */
-  purchaseUnlock(upgradeName: string): void;
+  purchaseUnlock(upgradeName: CorpUnlockName): void;
 
   /**
    * Level up an upgrade.
@@ -9489,7 +9573,7 @@ export interface Corporation extends WarehouseAPI, OfficeAPI {
    *
    * @param upgradeName - Name of the upgrade
    */
-  levelUpgrade(upgradeName: string): void;
+  levelUpgrade(upgradeName: CorpUpgradeName): void;
 
   /**
    * Issue dividends.
@@ -9660,8 +9744,8 @@ interface CorporationInfo {
   sharePrice: number;
   /** Fraction of profits issued as dividends */
   dividendRate: number;
-  /** Tax applied on your earnings as a shareholder */
-  dividendTax: number;
+  /** Your income from dividend is negatively affected by this penalty modifier */
+  tributeModifier: number;
   /** Your earnings as a shareholder per second this cycle */
   dividendEarnings: number;
   /** The next state to be processed.
@@ -9760,7 +9844,6 @@ type CorpUnlockName =
   | "Smart Supply"
   | "Market Research - Demand"
   | "Market Data - Competition"
-  | "VeChain"
   | "Shady Accounting"
   | "Government Partnership"
   | "Warehouse API"
@@ -9770,7 +9853,6 @@ type CorpUnlockName =
 type CorpUpgradeName =
   | "Smart Factories"
   | "Smart Storage"
-  | "DreamSense"
   | "Wilson Analytics"
   | "Nuoptimal Nootropic Injector Implants"
   | "Speech Processor Implants"
@@ -9800,8 +9882,7 @@ type CorpResearchName =
   | "uPgrade: Capacity.I"
   | "uPgrade: Capacity.II"
   | "uPgrade: Dashboard"
-  | "uPgrade: Fulcrum"
-  | "sudo.Assist";
+  | "uPgrade: Fulcrum";
 
 /**
  * Corporation material information
@@ -9986,8 +10067,8 @@ export interface Office {
 interface Division {
   /** Name of the division */
   name: string;
-  /** Type of division, like Agriculture */
-  type: CorpIndustryName;
+  /** Industry of division, like Agriculture */
+  industry: CorpIndustryName;
   /** Awareness of the division */
   awareness: number;
   /** Popularity of the division */
@@ -10090,9 +10171,18 @@ interface IStyleSettings {
  * @public
  */
 interface GameInfo {
+  /**
+   * Version as shown in release notes and in the UI. E.g.: "2.8.1"
+   *
+   * Note that this property does not have the prefix "v". For example, with v2.8.1, this property is "2.8.1".
+   */
   version: string;
+  /** Internal version number that increments during releases. E.g.: 43 */
+  versionNumber: number;
+  /** Git commit hash that the release was built from. E.g.: "d0d776700" */
   commit: string;
-  platform: string;
+  /** Platform that the game is running on */
+  platform: "Browser" | "Steam";
 }
 
 /**
