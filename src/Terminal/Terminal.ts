@@ -81,7 +81,7 @@ import { clear } from "./commands/clear";
 import { currentNodeMults } from "../BitNode/BitNodeMultipliers";
 import { Engine } from "../engine";
 import { Directory, resolveDirectory, root } from "../Paths/Directory";
-import { FilePath, isFilePath, resolveFilePath } from "../Paths/FilePath";
+import { FilePath, isBasicFilePath, resolveFilePath } from "../Paths/FilePath";
 import { hasTextExtension } from "../Paths/TextFilePath";
 import { ContractFilePath } from "../Paths/ContractFilePath";
 import { ServerConstants } from "../Server/data/Constants";
@@ -503,40 +503,51 @@ export class Terminal {
       return this.error("There's already a Coding Contract in Progress");
     }
 
-    const serv = Player.getCurrentServer();
-    const contract = serv.getContract(contractPath);
-    if (!contract) return this.error("No such contract");
+    const server = Player.getCurrentServer();
+    const contract = server.getContract(contractPath);
+    if (!contract) {
+      return this.error("No such contract");
+    }
 
     this.contractOpen = true;
-    const res = await contract.prompt();
+    const promptResult = await contract.prompt();
 
     //Check if the contract still exists by the time the promise is fulfilled
-    if (serv.getContract(contractPath) == null) {
+    if (server.getContract(contractPath) == null) {
       this.contractOpen = false;
       return this.error("Contract no longer exists (Was it solved by a script?)");
     }
 
-    switch (res) {
+    switch (promptResult.result) {
       case CodingContractResult.Success:
         if (contract.reward !== null) {
           const reward = Player.gainCodingContractReward(contract.reward, contract.getDifficulty());
           this.print(`Contract SUCCESS - ${reward}`);
         }
-        serv.removeContract(contract);
+        server.removeContract(contract);
+        break;
+      case CodingContractResult.InvalidFormat:
+        this.error(
+          `Contract FAILED - ${
+            promptResult.message ?? `The answer is not in the right format for contract '${contract.type}'`
+          }`,
+        );
         break;
       case CodingContractResult.Failure:
         ++contract.tries;
         if (contract.tries >= contract.getMaxNumTries()) {
           this.error("Contract FAILED - Contract is now self-destructing");
-          serv.removeContract(contract);
+          server.removeContract(contract);
         } else {
           this.error(`Contract FAILED - ${contract.getMaxNumTries() - contract.tries} tries remaining`);
         }
         break;
       case CodingContractResult.Cancelled:
-      default:
         this.print("Contract cancelled");
         break;
+      default: {
+        const __: never = promptResult.result;
+      }
     }
     this.contractOpen = false;
   }
@@ -788,7 +799,7 @@ export class Terminal {
     const commandName = commandArray[0];
     if (typeof commandName !== "string") return this.error(`${commandName} is not a valid command.`);
     // run by path command
-    if (isFilePath(commandName)) return run(commandArray, currentServer);
+    if (isBasicFilePath(commandName)) return run(commandArray, currentServer);
 
     // Aside from the run-by-path command, we don't need the first entry once we've stored it in commandName.
     commandArray.shift();
