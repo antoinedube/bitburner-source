@@ -1,6 +1,6 @@
 import React from "react";
 import { Player } from "@player";
-import { AugmentationName, CityName, FactionName } from "@enums";
+import { AugmentationName, CityName, CompletedProgramName, FactionName } from "@enums";
 import { BitNodeMultipliers, replaceCurrentNodeMults } from "./BitNodeMultipliers";
 
 class BitNode {
@@ -22,18 +22,8 @@ class BitNode {
   // BitNode number
   number: number;
 
-  difficulty: 0 | 1 | 2;
-
-  constructor(
-    n: number,
-    difficulty: 0 | 1 | 2,
-    name: string,
-    tagline = "",
-    description: JSX.Element,
-    sfDescription: JSX.Element,
-  ) {
+  constructor(n: number, name: string, tagline = "", description: JSX.Element, sfDescription: JSX.Element) {
     this.number = n;
-    this.difficulty = difficulty;
     this.name = name;
     this.tagline = tagline;
     this.description = description;
@@ -50,7 +40,6 @@ export const BitNodes: Record<string, BitNode> = {};
 export function initBitNodes() {
   BitNodes.BitNode1 = new BitNode(
     1,
-    0,
     "Source Genesis",
     "The original BitNode",
     (
@@ -80,7 +69,6 @@ export function initBitNodes() {
   );
   BitNodes.BitNode2 = new BitNode(
     2,
-    0,
     "Rise of the Underworld",
     "From the shadows, they rose",
     (
@@ -115,7 +103,6 @@ export function initBitNodes() {
   );
   BitNodes.BitNode3 = new BitNode(
     3,
-    2,
     "Corporatocracy",
     "The Price of Civilization",
     (
@@ -151,7 +138,6 @@ export function initBitNodes() {
   );
   BitNodes.BitNode4 = new BitNode(
     4,
-    1,
     "The Singularity",
     "The Man and the Machine",
     (
@@ -171,8 +157,8 @@ export function initBitNodes() {
     ),
     (
       <>
-        This Source-File lets you access and use the Singularity functions in other BitNodes. Each level of this
-        Source-File reduces the RAM cost of singularity functions:
+        This Source-File lets you access and use the Singularity functions outside of this BitNode. Each level of this
+        Source-File reduces the RAM cost of singularity functions in other BitNodes:
         <ul>
           <li>Level 1: 16x</li>
           <li>Level 2: 4x</li>
@@ -183,7 +169,6 @@ export function initBitNodes() {
   );
   BitNodes.BitNode5 = new BitNode(
     5,
-    1,
     "Artificial Intelligence",
     "Posthuman",
     (
@@ -209,7 +194,7 @@ export function initBitNodes() {
           <li>
             <code>getBitNodeMultipliers()</code> Netscript function
           </li>
-          <li>Permanent access to Formulas.exe</li>
+          <li>Permanent access to {CompletedProgramName.formulas}</li>
           <li>
             Access to BitNode multiplier information on the <b>Stats</b> page
           </li>
@@ -225,7 +210,6 @@ export function initBitNodes() {
   );
   BitNodes.BitNode6 = new BitNode(
     6,
-    1,
     FactionName.Bladeburners,
     "Like Tears in Rain",
     (
@@ -259,7 +243,6 @@ export function initBitNodes() {
   );
   BitNodes.BitNode7 = new BitNode(
     7,
-    2,
     `${FactionName.Bladeburners} 2079`,
     "More human than humans",
     (
@@ -296,7 +279,6 @@ export function initBitNodes() {
   );
   BitNodes.BitNode8 = new BitNode(
     8,
-    2,
     "Ghost of Wall Street",
     "Money never sleeps",
     (
@@ -306,7 +288,7 @@ export function initBitNodes() {
         <br />
         In this BitNode:
         <ul>
-          <li>You start with $250 million.</li>
+          <li>Your starting money is 250e6.</li>
           <li>You start with a WSE membership and access to the TIX API.</li>
           <li>You can short stocks and place different types of orders (limit/stop).</li>
         </ul>
@@ -333,7 +315,6 @@ export function initBitNodes() {
   );
   BitNodes.BitNode9 = new BitNode(
     9,
-    2,
     "Hacktocracy",
     "Hacknet Unleashed",
     (
@@ -375,7 +356,6 @@ export function initBitNodes() {
   );
   BitNodes.BitNode10 = new BitNode(
     10,
-    2,
     "Digital Carbon",
     "Your body is not who you are",
     (
@@ -410,7 +390,6 @@ export function initBitNodes() {
   );
   BitNodes.BitNode11 = new BitNode(
     11,
-    1,
     "The Big Crash",
     "Okay. Sell it all.",
     (
@@ -452,7 +431,6 @@ export function initBitNodes() {
   );
   BitNodes.BitNode12 = new BitNode(
     12,
-    0,
     "The Recursion",
     "Repeat.",
     (
@@ -469,7 +447,6 @@ export function initBitNodes() {
   );
   BitNodes.BitNode13 = new BitNode(
     13,
-    2,
     "They're lunatics",
     "1 step back, 2 steps forward",
     (
@@ -501,7 +478,6 @@ export function initBitNodes() {
   );
   BitNodes.BitNode14 = new BitNode(
     14,
-    1,
     "IPvGO Subnet Takeover",
     "Territory exists only in the 'net",
     (
@@ -540,6 +516,52 @@ export function initBitNodes() {
       </>
     ),
   );
+  BitNodes.BitNode15 = new BitNode(
+    15,
+    "The Secrets of the Dark Net",
+    "The rules have changed",
+    (
+      <>
+        <br />
+        Delving into the uncharted and secretive parts of the internet comes with the promise of freedom from oppressive
+        authority and surveillance. Leaving stability behind and turning to the dark web comes with risks... but also
+        rewards.
+        <br />
+        <br />
+        Unlike the traditional network of servers, the "dark" net is a constantly shifting, complex, unreliable place
+        where servers can move or disappear at any moment. Long-distance communication is often impossible, requiring
+        scripts to be self-sufficient and durable, and spread themselves to stay alive. If you can take advantage of the
+        darknet servers' weak passwords and leaky logs, you will be able to gain access to the deepest parts of the
+        darknet and its secrets.
+        <br />
+        <br />
+        In this Bitnode, the Daedalus faction has not yet found and monopolized the fabled Red Pill augmentation.
+        Legends say it can be found somewhere, out there in the dark...
+        <br />
+        <br />
+        Destroying this BitNode will give you Source-File 15, or if you already have this Source-File, it will upgrade
+        its level up to a maximum of 3.
+      </>
+    ),
+    (
+      <>
+        This Source-File grants the following benefits:
+        <ul>
+          <li>
+            Level 1: Permanently start with the TOR router and {CompletedProgramName.darkscape}, and unlock the full
+            dark web on all Bitnodes.
+          </li>
+          <li>
+            Level 2: Your charisma level increases job salary and rep gain. Also increases authentication speed by 20%
+          </li>
+          <li>
+            Level 3: Your charisma level increases faction work rep gain. Also increases the xp and money gained from
+            .cache files by 50%.
+          </li>
+        </ul>
+      </>
+    ),
+  );
 }
 
 export const defaultMultipliers = new BitNodeMultipliers();
@@ -558,7 +580,7 @@ export function getBitNodeMultipliers(n: number, lvl: number): BitNodeMultiplier
         ServerMaxMoney: 0.08,
         ServerStartingMoney: 0.4,
 
-        PurchasedServerSoftcap: 1.3,
+        CloudServerSoftcap: 1.3,
 
         CrimeMoney: 3,
 
@@ -584,8 +606,8 @@ export function getBitNodeMultipliers(n: number, lvl: number): BitNodeMultiplier
 
         HomeComputerRamCost: 1.5,
 
-        PurchasedServerCost: 2,
-        PurchasedServerSoftcap: 1.3,
+        CloudServerCost: 2,
+        CloudServerSoftcap: 1.3,
 
         CompanyWorkMoney: 0.25,
         CrimeMoney: 0.25,
@@ -611,7 +633,7 @@ export function getBitNodeMultipliers(n: number, lvl: number): BitNodeMultiplier
         ServerMaxMoney: 0.1125,
         ServerStartingMoney: 0.75,
 
-        PurchasedServerSoftcap: 1.2,
+        CloudServerSoftcap: 1.2,
 
         CompanyWorkMoney: 0.1,
         CrimeMoney: 0.2,
@@ -639,7 +661,7 @@ export function getBitNodeMultipliers(n: number, lvl: number): BitNodeMultiplier
         ServerStartingSecurity: 2,
         ServerStartingMoney: 0.5,
 
-        PurchasedServerSoftcap: 1.2,
+        CloudServerSoftcap: 1.2,
 
         CrimeMoney: 0.5,
         HacknetNodeMoney: 0.2,
@@ -671,7 +693,7 @@ export function getBitNodeMultipliers(n: number, lvl: number): BitNodeMultiplier
         ServerStartingMoney: 0.5,
         ServerStartingSecurity: 1.5,
 
-        PurchasedServerSoftcap: 2,
+        CloudServerSoftcap: 2,
 
         CompanyWorkMoney: 0.5,
         CrimeMoney: 0.75,
@@ -705,7 +727,7 @@ export function getBitNodeMultipliers(n: number, lvl: number): BitNodeMultiplier
         ServerStartingMoney: 0.5,
         ServerStartingSecurity: 1.5,
 
-        PurchasedServerSoftcap: 2,
+        CloudServerSoftcap: 2,
 
         CompanyWorkMoney: 0.5,
         CrimeMoney: 0.75,
@@ -741,7 +763,7 @@ export function getBitNodeMultipliers(n: number, lvl: number): BitNodeMultiplier
     }
     case 8: {
       return new BitNodeMultipliers({
-        PurchasedServerSoftcap: 4,
+        CloudServerSoftcap: 4,
 
         CompanyWorkMoney: 0,
         CrimeMoney: 0,
@@ -760,6 +782,9 @@ export function getBitNodeMultipliers(n: number, lvl: number): BitNodeMultiplier
         CorporationDivisions: 0,
 
         BladeburnerRank: 0,
+
+        DarknetLabyrinthRewardsTheRedPill: 0,
+        DarknetMoneyMultiplier: 0,
 
         GangSoftcap: 0,
         GangUniqueAugs: 0,
@@ -782,7 +807,7 @@ export function getBitNodeMultipliers(n: number, lvl: number): BitNodeMultiplier
 
         HomeComputerRamCost: 5,
 
-        PurchasedServerLimit: 0,
+        CloudServerLimit: 0,
 
         CrimeMoney: 0.5,
         ScriptHackMoney: 0.1,
@@ -819,10 +844,10 @@ export function getBitNodeMultipliers(n: number, lvl: number): BitNodeMultiplier
 
         HomeComputerRamCost: 1.5,
 
-        PurchasedServerCost: 5,
-        PurchasedServerSoftcap: 1.1,
-        PurchasedServerLimit: 0.6,
-        PurchasedServerMaxRam: 0.5,
+        CloudServerCost: 5,
+        CloudServerSoftcap: 1.1,
+        CloudServerLimit: 0.6,
+        CloudServerMaxRam: 0.5,
 
         CompanyWorkMoney: 0.5,
         CrimeMoney: 0.5,
@@ -860,7 +885,7 @@ export function getBitNodeMultipliers(n: number, lvl: number): BitNodeMultiplier
         ServerStartingMoney: 0.1,
         ServerWeakenRate: 2,
 
-        PurchasedServerSoftcap: 2,
+        CloudServerSoftcap: 2,
 
         CompanyWorkMoney: 0.5,
         CrimeMoney: 3,
@@ -910,10 +935,10 @@ export function getBitNodeMultipliers(n: number, lvl: number): BitNodeMultiplier
 
         HomeComputerRamCost: inc,
 
-        PurchasedServerCost: inc,
-        PurchasedServerSoftcap: inc,
-        PurchasedServerLimit: dec,
-        PurchasedServerMaxRam: dec,
+        CloudServerCost: inc,
+        CloudServerSoftcap: inc,
+        CloudServerLimit: dec,
+        CloudServerMaxRam: dec,
 
         CompanyWorkMoney: dec,
         CrimeMoney: dec,
@@ -965,7 +990,7 @@ export function getBitNodeMultipliers(n: number, lvl: number): BitNodeMultiplier
         DexterityLevelMultiplier: 0.7,
         AgilityLevelMultiplier: 0.7,
 
-        PurchasedServerSoftcap: 1.6,
+        CloudServerSoftcap: 1.6,
 
         ServerMaxMoney: 0.3375,
         ServerStartingMoney: 0.75,
@@ -1046,6 +1071,41 @@ export function getBitNodeMultipliers(n: number, lvl: number): BitNodeMultiplier
         StaneksGiftExtraSize: -1,
 
         WorldDaemonDifficulty: 5,
+      });
+    }
+
+    case 15: {
+      return new BitNodeMultipliers({
+        HackingLevelMultiplier: 0.6,
+        HackingSpeedMultiplier: 0.6,
+
+        StrengthLevelMultiplier: 0.7,
+        DefenseLevelMultiplier: 0.7,
+        DexterityLevelMultiplier: 0.7,
+        AgilityLevelMultiplier: 0.7,
+        CharismaLevelMultiplier: 1.1,
+
+        ServerMaxMoney: 0.8,
+        ServerStartingMoney: 0.5,
+        ServerStartingSecurity: 1.5,
+
+        AugmentationMoneyCost: 3,
+
+        CorporationValuation: 0.2,
+        CorporationSoftcap: 0.4,
+        CorporationDivisions: 0.4,
+
+        DaedalusAugsRequirement: 20,
+
+        BladeburnerRank: 0.2,
+        BladeburnerSkillCost: 3,
+
+        GangUniqueAugs: 0.3,
+
+        StaneksGiftPowerMultiplier: 0.7,
+        StaneksGiftExtraSize: -2,
+
+        WorldDaemonDifficulty: 2,
       });
     }
     default: {

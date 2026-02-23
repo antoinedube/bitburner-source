@@ -1,10 +1,10 @@
 import { OwnedAugmentationsOrderSetting, PurchaseAugmentationsOrderSetting } from "./SettingEnums";
 import { defaultTheme } from "../Themes/Themes";
 import { defaultStyles } from "../Themes/Styles";
-import { CursorStyle, CursorBlinking, WordWrapOptions } from "../ScriptEditor/ui/Options";
+import type { CursorStyle, CursorBlinking, WordWrapOptions, StickyScroll, Minimap } from "../ScriptEditor/ui/Options";
 import { defaultMonacoTheme } from "../ScriptEditor/ui/themes";
 import { assertObject } from "../utils/TypeAssertion";
-import { Result } from "../types";
+import type { Result } from "@nsdefs";
 import {
   assertAndSanitizeEditorTheme,
   assertAndSanitizeKeyBindings,
@@ -114,6 +114,8 @@ export const Settings = {
   RemoteFileApiAddress: "localhost",
   /** Port the Remote File API client will try to connect to. 0 to disable. */
   RemoteFileApiPort: 0,
+  /** Automatically reconnect to the Remote File API client after this delay. Set it 0 to disable. */
+  RemoteFileApiReconnectionDelay: 0,
   /** Use wss instead of ws when connecting to RFA clients */
   UseWssForRemoteFileApi: false,
   /** Whether to save the game when the player saves any file. */
@@ -176,10 +178,16 @@ export const Settings = {
   MonacoDefaultToVim: false,
   /** Word wrap setting for Script Editor. */
   MonacoWordWrap: "off" as WordWrapOptions,
+  /** Whether to run Beautify code formatter on save */
+  MonacoBeautifyOnSave: false,
   /** Control the cursor style*/
   MonacoCursorStyle: "line" as CursorStyle,
   /** Control the cursor animation style */
   MonacoCursorBlinking: "blink" as CursorBlinking,
+  /** Toggle use of Sticky Scroll in the Script Editor */
+  MonacoStickyScroll: { enabled: false } as StickyScroll,
+  /** Whether to show minimap in the script editor */
+  MonacoMinimap: { enabled: true } as Minimap,
   /** Whether to hide trailing zeroes on fractional part of decimal */
   hideTrailingDecimalZeros: false,
   /** Whether to hide thousands separators. */
@@ -188,6 +196,12 @@ export const Settings = {
   useEngineeringNotation: false,
   /** Whether to disable suffixes and always use exponential form (scientific or engineering). */
   disableSuffixes: false,
+  /** The default amount of digits displayed after the decimal separator. */
+  fractionalDigits: 3,
+  /** Currency symbol used for displaying money. */
+  CurrencySymbol: "$",
+  /** Whether to show the currency symbol after the money value. */
+  CurrencySymbolAfterValue: false,
   /**
    * Player-defined key bindings. Don't use this property directly. It must be merged with DefaultKeyBindings in
    * src\utils\KeyBindingUtils.ts.

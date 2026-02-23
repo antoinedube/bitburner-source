@@ -22,10 +22,10 @@ import { checkForMessagesToSend } from "./Message/MessageHelpers";
 import { loadAllRunningScripts, updateOnlineScriptTimes } from "./NetscriptWorker";
 import { Player } from "@player";
 import { saveObject, loadGame } from "./SaveObject";
-import { GetAllServers, initForeignServers } from "./Server/AllServers";
+import { GetAllServers } from "./Server/AllServers";
 import { Settings } from "./Settings/Settings";
 import { FormatsNeedToChange } from "./ui/formatNumber";
-import { initSymbolToStockMap, processStockPrices } from "./StockMarket/StockMarket";
+import { canAccessStockMarket, initSymbolToStockMap, processStockPrices } from "./StockMarket/StockMarket";
 import { Terminal } from "./Terminal";
 
 import { Money } from "./ui/React/Money";
@@ -49,6 +49,11 @@ import { EventEmitter } from "./utils/EventEmitter";
 import { Companies } from "./Company/Companies";
 import { resetGoPromises } from "./Go/boardAnalysis/goAI";
 import { getRecordEntries } from "./Types/Record";
+import { storeDarknetCycles } from "./DarkNet/models/DarknetState";
+import { processDarknet } from "./DarkNet/controllers/NetworkMovement";
+import { hasDarknetAccess } from "./DarkNet/utils/darknetAuthUtils";
+import { initForeignServers } from "./Server/ServerHelpers";
+import { apr1 } from "./Terminal/commands/apr1";
 
 declare global {
   // This property is only available in the dev build
@@ -63,6 +68,8 @@ declare global {
       loadGame: typeof loadGame;
     };
   };
+  // eslint-disable-next-line no-var
+  var openDevMenu: () => void;
 }
 
 export const GameCycleEvents = new EventEmitter<[]>();
@@ -92,7 +99,7 @@ const Engine = {
     Player.processWork(numCycles);
 
     // Update stock prices
-    if (Player.hasWseAccount) {
+    if (canAccessStockMarket()) {
       processStockPrices(numCycles);
     }
 
@@ -113,6 +120,11 @@ const Engine = {
 
     // Sleeves
     Player.sleeves.forEach((sleeve) => sleeve.process(numCycles));
+
+    // Darknet
+    if (hasDarknetAccess()) {
+      processDarknet(numCycles);
+    }
 
     // Update the running time of all active scripts
     updateOnlineScriptTimes(numCycles);
@@ -236,7 +248,7 @@ const Engine = {
     if (await loadGame(saveData)) {
       FormatsNeedToChange.emit();
       initBitNodeMultipliers();
-      if (Player.hasWseAccount) {
+      if (canAccessStockMarket()) {
         initSymbolToStockMap();
       }
 
@@ -307,7 +319,7 @@ const Engine = {
       processPassiveFactionRepGain(numCyclesOffline);
 
       // Stock Market offline progress
-      if (Player.hasWseAccount) {
+      if (canAccessStockMarket()) {
         processStockPrices(numCyclesOffline);
       }
 
@@ -321,6 +333,8 @@ const Engine = {
       if (Player.bladeburner) Player.bladeburner.storeCycles(numCyclesOffline);
 
       Go.storeCycles(numCyclesOffline);
+
+      storeDarknetCycles(numCyclesOffline);
 
       staneksGift.process(numCyclesOffline);
 
@@ -396,6 +410,7 @@ const Engine = {
         },
       };
     }
+    globalThis.openDevMenu = () => apr1();
   },
 
   start: function () {

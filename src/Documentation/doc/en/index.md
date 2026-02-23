@@ -43,16 +43,19 @@
 - [Grafting](advanced/grafting.md)
 - [Stanek's Gift](advanced/stanek.md)
 - [IPvGO](programming/go_algorithms.md)
+- [Darkweb Network](programming/darknet.md)
 
 ## Resources
 
-- [NS API documentation](https://github.com/bitburner-official/bitburner-src/blob/stable/markdown/bitburner.ns.md)
+- [NS API documentation](../../../../markdown/bitburner.ns.md)
 - [Learn to program](programming/learn.md)
 - [Remote API](programming/remote_api.md)
 - [Game frozen or stuck?](programming/game_frozen.md)
 - [TypeScript and React](programming/typescript_react.md)
 - [Tools & Resources](help/tools_and_resources.md)
+- [FAQ](help/faq.md)
 - [Changelog](changelog.md)
+- [Changelog - Legacy v2](changelog-v2.md)
 - [Changelog - Legacy v1](changelog-v1.md)
 - [Changelog - Legacy v0](changelog-v0.md)
 

@@ -86,6 +86,8 @@ import { hasTextExtension } from "../Paths/TextFilePath";
 import { ContractFilePath } from "../Paths/ContractFilePath";
 import { ServerConstants } from "../Server/data/Constants";
 import { isIPAddress } from "../Types/strings";
+import { getRewardFromCache } from "../DarkNet/effects/cacheFiles";
+import { DarknetServer } from "../Server/DarknetServer";
 
 export const TerminalCommands: Record<string, (args: (string | number | boolean)[], server: BaseServer) => void> = {
   "scan-analyze": scananalyze,
@@ -226,7 +228,8 @@ export class Terminal {
       this.error("Cannot backdoor this kind of server");
       return;
     }
-    if (!(server instanceof Server)) throw new Error("server should be normal server");
+    if (!(server instanceof Server || server instanceof DarknetServer))
+      throw new Error("server should be normal server");
     this.startAction(calculateHackingTime(server, Player) / 4, "b", server);
   }
 
@@ -236,7 +239,7 @@ export class Terminal {
     this.startAction(1, "a", server);
   }
 
-  startAction(n: number, action: "h" | "b" | "a" | "g" | "w", server?: BaseServer): void {
+  startAction(n: number, action: "h" | "b" | "a" | "g" | "w" | "c", server?: BaseServer): void {
     this.action = new TTimer(n, action, server);
   }
 
@@ -253,7 +256,7 @@ export class Terminal {
     // Calculate whether hack was successful
     const hackChance = calculateHackingChance(server, Player);
     const rand = Math.random();
-    const expGainedOnSuccess = calculateHackingExpGain(server, Player);
+    let expGainedOnSuccess = calculateHackingExpGain(server, Player);
     const expGainedOnFailure = expGainedOnSuccess / 4;
     if (rand < hackChance) {
       // Success!
@@ -266,11 +269,19 @@ export class Terminal {
       Engine.Counters.checkFactionInvitations = 0;
       Engine.checkCounters();
 
-      let moneyDrained = Math.floor(server.moneyAvailable * calculatePercentMoneyHacked(server, Player));
+      let moneyDrained = server.moneyAvailable * calculatePercentMoneyHacked(server, Player);
 
-      if (moneyDrained <= 0) {
+      // Over-the-top safety checks
+      if (moneyDrained < 0) {
         moneyDrained = 0;
-      } // Safety check
+      }
+      if (moneyDrained > server.moneyAvailable) {
+        moneyDrained = server.moneyAvailable;
+      }
+
+      if (moneyDrained === 0) {
+        expGainedOnSuccess = expGainedOnFailure;
+      }
 
       server.moneyAvailable -= moneyDrained;
       if (server.moneyAvailable < 0) {
@@ -289,7 +300,7 @@ export class Terminal {
       const newSec = server.hackDifficulty;
 
       this.print(
-        `Hack successful on '${server.hostname}'! Gained ${formatMoney(moneyGained)} and ${formatExp(
+        `Hack successful on '${server.hostname}'! Gained ${formatMoney(moneyGained, true)} and ${formatExp(
           expGainedOnSuccess,
         )} hacking exp`,
       );
@@ -356,7 +367,8 @@ export class Terminal {
         this.error("Cannot hack this kind of server");
         return;
       }
-      if (!(server instanceof Server)) throw new Error("server should be normal server");
+      if (!(server instanceof Server || server instanceof DarknetServer))
+        throw new Error("server should be normal server");
       server.backdoorInstalled = true;
       if (SpecialServers.WorldDaemon === server.hostname) {
         if (Player.bitNodeN == null) {
@@ -384,6 +396,11 @@ export class Terminal {
       const canRunScripts = hasAdminRights && currServ.maxRam > 0;
       this.print("Can run scripts on this host: " + (canRunScripts ? "YES" : "NO"));
       this.print("RAM: " + formatRam(currServ.maxRam));
+      if (currServ instanceof DarknetServer && currServ.blockedRam) {
+        this.print("RAM blocked by owner: " + formatRam(currServ.blockedRam));
+        this.print("Stasis link: " + (currServ.hasStasisLink ? "YES" : "NO"));
+        this.print("Backdoor: " + (currServ.backdoorInstalled ? "YES" : "NO"));
+      }
       if (currServ instanceof Server) {
         this.print("Backdoor: " + (currServ.backdoorInstalled ? "YES" : "NO"));
         const hackingSkill = currServ.requiredHackingSkill;
@@ -396,7 +413,9 @@ export class Terminal {
         this.print("Time to hack: " + (!isHacknet ? convertTimeMsToTimeElapsedString(hackingTime, true) : "N/A"));
       }
       this.print(
-        `Total money available on server: ${currServ instanceof Server ? formatMoney(currServ.moneyAvailable) : "N/A"}`,
+        `Total money available on server: ${
+          currServ instanceof Server ? formatMoney(currServ.moneyAvailable, true) : "N/A"
+        }`,
       );
       if (currServ instanceof Server) {
         const numPort = currServ.numOpenPortsRequired;
@@ -429,6 +448,14 @@ export class Terminal {
       this.finishBackdoor(this.action.server, cancelled);
     } else if (this.action.action === "a") {
       this.finishAnalyze(this.action.server, cancelled);
+    } else if (this.action.action === "c" && this.action.server instanceof DarknetServer) {
+      const cache = this.action.server.caches.pop();
+      if (!cache) {
+        this.print("No cache files found.");
+      } else {
+        const result = getRewardFromCache(this.action.server, cache, true);
+        this.print(result.message);
+      }
     }
 
     if (cancelled) {
@@ -512,8 +539,11 @@ export class Terminal {
     this.contractOpen = true;
     const promptResult = await contract.prompt();
 
-    //Check if the contract still exists by the time the promise is fulfilled
-    if (server.getContract(contractPath) == null) {
+    // Get a new copy of the server, in case it changed while the prompt was open
+    const postPromptServer = GetServer(server.hostname);
+
+    // Check if the contract still exists by the time the promise is fulfilled
+    if (postPromptServer?.getContract(contractPath) == null) {
       this.contractOpen = false;
       return this.error("Contract no longer exists (Was it solved by a script?)");
     }
@@ -537,6 +567,10 @@ export class Terminal {
         ++contract.tries;
         if (contract.tries >= contract.getMaxNumTries()) {
           this.error("Contract FAILED - Contract is now self-destructing");
+          const solution = contract.getAnswer();
+          if (solution !== null) {
+            this.error(`Coding Contract solution was: ${solution}`);
+          }
           server.removeContract(contract);
         } else {
           this.error(`Contract FAILED - ${contract.getMaxNumTries() - contract.tries} tries remaining`);
@@ -559,19 +593,30 @@ export class Terminal {
     }
 
     const ignoreServer = (s: BaseServer, d: number): boolean =>
-      (!all && s.purchasedByPlayer && s.hostname != "home") || d > depth || (!all && s instanceof HacknetServer);
+      (!all && s.purchasedByPlayer && s.hostname != "home") ||
+      d > depth ||
+      (!all && s instanceof HacknetServer) ||
+      (!all && s instanceof DarknetServer && s.hostname !== SpecialServers.DarkWeb);
 
-    const makeNode = (parent: string, s: BaseServer, d = 1): Node => ({
-      hostname: s.hostname,
-      children: s.serversOnNetwork
-        .filter((h) => h != parent)
-        .map((s) => GetServer(s))
-        .filter((v): v is BaseServer => !!v)
-        .filter((v) => !ignoreServer(v, d))
-        .map((h) => makeNode(s.hostname, h, d + 1)),
-    });
+    const makeNode = (root: BaseServer = Player.getCurrentServer()) => {
+      // Keep track of previously seen servers to prevent backtracking (since darknet can be cyclical)
+      const seenServers = [root.hostname];
+      const populateNode = (s: BaseServer, d = 1): Node => {
+        seenServers.push(s.hostname);
+        return {
+          hostname: s.hostname,
+          children: s.serversOnNetwork
+            .filter((h) => !seenServers.includes(h))
+            .map((s) => GetServer(s))
+            .filter((v): v is BaseServer => !!v)
+            .filter((v) => !ignoreServer(v, d))
+            .map((h) => populateNode(h, d + 1)),
+        };
+      };
+      return populateNode(root);
+    };
 
-    const root = makeNode(Player.getCurrentServer().hostname, Player.getCurrentServer());
+    const root = makeNode();
 
     const printOutput = (node: Node, prefix = ["  "], last = true) => {
       const titlePrefix = prefix.slice(0, prefix.length - 1).join("") + (last ? "┗ " : "┣ ");
@@ -584,12 +629,14 @@ export class Terminal {
 
       const server = GetServer(node.hostname);
       if (!server) return;
+      const hasRoot = server.hasAdminRights ? "YES" : "NO";
       if (server instanceof Server) {
-        const hasRoot = server.hasAdminRights ? "YES" : "NO";
         this.print(
           `${infoPrefix}Root Access: ${hasRoot}, Required hacking skill: ${server.requiredHackingSkill}` + "\n",
         );
         this.print(`${infoPrefix}Number of open ports required to NUKE: ${server.numOpenPortsRequired}` + "\n");
+      } else {
+        this.print(`${infoPrefix}Root Access: ${hasRoot}` + "\n");
       }
       this.print(`${infoPrefix}RAM: ${formatRam(server.maxRam)}` + "\n");
       node.children.forEach((n, i) =>

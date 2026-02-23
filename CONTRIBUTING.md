@@ -48,8 +48,8 @@ already been reported as an [Issue](https://github.com/bitburner-official/bitbur
 ## As a Developer
 
 Anyone is welcome to contribute to Bitburner code. However, please read
-the [license](https://github.com/bitburner-official/bitburner-src/blob/dev/license.txt)
-and the [readme](https://github.com/bitburner-official/bitburner-src/blob/dev/README.md)
+the [license](./license.txt)
+and the [readme](./README.md)
 before doing so.
 
 To contribute to Bitburner code, you will need to have
@@ -151,17 +151,11 @@ upstream/master
   - Keep code-changes on a branch as small as possible. This makes it easier for code review. Each branch should be its own independent feature.
   - Regularly rebase your branch against `dev` to make sure you have the latest updates pulled.
 
-### Special Exceptions
-
-- In `src/ScriptEditor/NetscriptDefinitions.d.ts`, there are two specially-formatted go boards with two trailing whitespaces.
-  Make sure your editor does not automatically format those examples.
-  You can look for changes to that part using `git diff` to make sure the whitespaces are still present.
-
 ## Running locally
 
 Install
 
-- `npm` (maybe via `nvm`)
+- NodeJS (maybe via `nvm`). When installing NodeJS, you also get a tool called `npm`. You can update `npm` to the latest version by running `npm install -g npm@latest`.
 - Github Desktop (Windows only)
 - Visual Studio Code (optional)
 
@@ -175,7 +169,7 @@ Saving a file will reload the game automatically.
 
 ### How to build the electron app
 
-Tested on Node v20.11.1 (LTS) on Windows.
+Tested on Node 24.13.0 (LTS) on Windows.
 These steps only work in a Bash-like environment, like MinGW for Windows.
 
 ```sh
@@ -221,6 +215,22 @@ the following rules:
   and relate to the kind of change being implemented. Possible examples
   are UI, BUGFIX, SERVERS, NETSCRIPT... You get the idea.
 
+## Troubleshooting common issues
+
+### Unrelated changes in `package-lock.json`
+
+After running `npm install`, if you do not change anything in `package.json` and `package-lock.json` is still changed, you need to update `npm` to the latest version. After that, discard the changes in `package-lock.json`, delete the `node_modules` folder, and run `npm install` again.
+
+### Lots of `peer: true` lines added in `package-lock.json`
+
+npm version 11.6.2 has a bug that causes this. Unfortunately, this is the current LTS (stable) release as of this writing. Use a newer or older npm version, and re-run `npm install`.
+
+See https://github.com/npm/cli/pull/8671 and https://github.com/npm/cli/issues/8690 for details.
+
+### Unrelated failed Jest tests
+
+Some Jest tests fail to run in Node versions older than v24. On those versions, these tests show a small difference between the expected value ("Snapshot") and the actual value ("Received"). You need to use Node v24+ to run these tests.
+
 ## As a Documenter
 
 To contribute to and view your changes to the BitBurner documentation in-game, you will
@@ -250,3 +260,17 @@ Update the following:
 - `doc/source/changelog.rst`
 - post to Discord
 - post to reddit.com/r/Bitburner
+
+## Adding a BN guidelines
+
+Promote:
+
+- New mechanic.
+- Coding problems based on NP problems. This makes solutions that are easy to implement inefficient and solutions that are hard to implement efficient. (e.g., Stanek)
+- Inter-mechanic synergy.
+- Simplicity (e.g., Stanek, Hashnet. Bad example: Corp)
+
+Avoid:
+
+- Failure conditions. It's very frustrating to lose several days' worth of progress.
+- Making existing mechanics harder. This makes it hard to port the content to other BNs.
