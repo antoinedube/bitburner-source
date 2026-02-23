@@ -50,12 +50,13 @@ import { PlayerObject } from "../PersonObjects/Player/PlayerObject";
 import { Sleeve } from "../PersonObjects/Sleeve/Sleeve";
 import { autoCompleteTypeShorthand } from "./utils/terminalShorthands";
 import { resolveTeamCasualties, type OperationTeam } from "./Actions/TeamCasualties";
-import { shuffleArray } from "../Infiltration/ui/BribeGame";
+import { shuffle } from "lodash";
 import { assertObject } from "../utils/TypeAssertion";
 import { throwIfReachable } from "../utils/helpers/throwIfReachable";
 import { loadActionIdentifier } from "./utils/loadActionIdentifier";
 import { pluralize } from "../utils/I18nUtils";
 import { calculateActionRankGain, calculateActionReputationGain } from "./Formulas";
+import { processWorkStats } from "../Work/Formulas";
 
 export const BladeburnerPromise: PromisePair<number> = { promise: null, resolve: null };
 
@@ -749,8 +750,7 @@ export class Bladeburner implements OperationTeam {
   }
 
   killRandomSupportingSleeves(n: number) {
-    const sup = [...Player.sleevesSupportingBladeburner()]; // Explicit shallow copy
-    shuffleArray(sup);
+    const sup = shuffle(Player.sleevesSupportingBladeburner()); // Makes a copy
     sup.slice(0, Math.min(sup.length, n)).forEach((sleeve) => sleeve.kill());
   }
 
@@ -1163,9 +1163,9 @@ export class Bladeburner implements OperationTeam {
             this.stamina = Math.min(this.maxStamina, this.stamina + staminaGain);
             if (this.logging.general) {
               let extraLog = "";
-              if (Player.hp.current > currentHp) {
+              if (person.hp.current > currentHp) {
                 extraLog += ` Restored ${formatHp(BladeburnerConstants.HrcHpGain)} HP. Current HP is ${formatHp(
-                  Player.hp.current,
+                  person.hp.current,
                 )}.`;
               }
               if (this.stamina > currentStamina) {
@@ -1205,7 +1205,8 @@ export class Bladeburner implements OperationTeam {
         const __a: never = action;
       }
     }
-    return retValue;
+
+    return processWorkStats(person, retValue);
   }
 
   infiltrateSynthoidCommunities(): void {

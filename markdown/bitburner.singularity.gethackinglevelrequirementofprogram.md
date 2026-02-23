@@ -9,14 +9,44 @@ Get the hacking level requirement of a program.
 **Signature:**
 
 ```typescript
-getHackingLevelRequirementOfProgram(program: string): number;
+getHackingLevelRequirementOfProgram(programName: ProgramName): number;
 ```
 
 ## Parameters
 
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  program | string | Name of program to create. |
+<table><thead><tr><th>
+
+Parameter
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+programName
+
+
+</td><td>
+
+[ProgramName](./bitburner.programname.md)
+
+
+</td><td>
+
+Name of program to create.
+
+
+</td></tr>
+</tbody></table>
 
 **Returns:**
 

@@ -33,7 +33,7 @@ To summarize, here is a list of everything you will **LOSE** when you install an
 - Stats/Skills
 - Money
 - [Scripts](scripts.md) on all [servers](servers.md) EXCEPT your home computer
-- Purchased [servers](servers.md)
+- Cloud [servers](servers.md)
 - [Hacknet Nodes](hacknet_nodes.md)
 - [Company](companies.md) / [Faction](factions.md) [Reputation](reputation.md), but you gain [Favor](reputation.md).
 - Jobs and [Faction](factions.md) memberships
@@ -46,7 +46,7 @@ Here is everything you will **KEEP** when you install an Augmentation:
 - Every Augmentation you have previously installed
 - [Scripts](scripts.md) on your home computer
 - [RAM](ram.md) / Core Upgrades on your home computer
-- [World Stock Exchange account](stockmarket.md) and [TIX API](https://github.com/bitburner-official/bitburner-src/blob/stable/markdown/bitburner.tix.md) Access
+- [World Stock Exchange account](stockmarket.md) and [TIX API](../../../../../markdown/bitburner.stock.md) Access
 
 ## Purchasing Multiple Augmentations
 

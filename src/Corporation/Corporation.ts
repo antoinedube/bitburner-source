@@ -1,6 +1,6 @@
 import type { PromisePair } from "../Types/Promises";
 import { Player } from "@player";
-import { CorpStateName, InvestmentOffer } from "@nsdefs";
+import type { CorpStateName, InvestmentOffer, Result } from "@nsdefs";
 import { CorpUnlockName, CorpUpgradeName, LiteratureName } from "@enums";
 import { CorporationState } from "./CorporationState";
 import { CorpUnlocks } from "./data/CorporationUnlocks";
@@ -17,7 +17,7 @@ import { dialogBoxCreate } from "../ui/React/DialogBox";
 import { constructorsForReviver, Generic_toJSON, Generic_fromJSON, IReviverValue } from "../utils/JSONReviver";
 import { JSONMap, JSONSet } from "../Types/Jsonable";
 import { formatMoney } from "../ui/formatNumber";
-import { isPositiveInteger, type Result } from "../types";
+import { isPositiveInteger } from "../types";
 import { createEnumKeyedRecord, getRecordValues } from "../Types/Record";
 import { getKeyList } from "../utils/helpers/getKeyList";
 import { assertObject } from "../utils/TypeAssertion";
@@ -150,7 +150,7 @@ export class Corporation {
           dialogBoxCreate(
             "There was an error calculating your Corporations funds and they got reset to 0. " +
               "This is a bug. Please report to game developer.\n\n" +
-              "(Your funds have been set to $150b for the inconvenience)",
+              `(Your funds have been set to ${formatMoney(150e9)} for the inconvenience)`,
           );
           this.funds = 150e9;
         }

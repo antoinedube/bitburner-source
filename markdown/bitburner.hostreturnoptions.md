@@ -4,7 +4,7 @@
 
 ## HostReturnOptions interface
 
-Options to control how a server identifier (hostname or IP address) is returned. Affects the behavior of [scan](./bitburner.ns.scan.md)<!-- -->, [getPurchasedServers](./bitburner.ns.getpurchasedservers.md)<!-- -->, and [getCurrentServer](./bitburner.singularity.getcurrentserver.md)
+Options to control how a server identifier (hostname or IP address) is returned. Affects the behavior of [scan](./bitburner.ns.scan.md)<!-- -->, [getServerNames](./bitburner.cloud.getservernames.md)<!-- -->, and [getCurrentServer](./bitburner.singularity.getcurrentserver.md)
 
 **Signature:**
 
@@ -14,7 +14,45 @@ interface HostReturnOptions
 
 ## Properties
 
-|  Property | Modifiers | Type | Description |
-|  --- | --- | --- | --- |
-|  [returnByIP?](./bitburner.hostreturnoptions.returnbyip.md) |  | boolean | _(Optional)_ If set to <code>true</code>, returns IP addresses instead of hostnames. Defaults to <code>false</code>. |
+<table><thead><tr><th>
+
+Property
+
+
+</th><th>
+
+Modifiers
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+[returnByIP?](./bitburner.hostreturnoptions.returnbyip.md)
+
+
+</td><td>
+
+
+</td><td>
+
+boolean
+
+
+</td><td>
+
+_(Optional)_ If set to `true`<!-- -->, returns IP addresses instead of hostnames. Defaults to `false`<!-- -->.
+
+
+</td></tr>
+</tbody></table>
 

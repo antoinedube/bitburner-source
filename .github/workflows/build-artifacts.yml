@@ -1,8 +1,8 @@
 name: Build artifacts
 
 on:
-  release:
-    types: [published]
+  workflow_dispatch:
+  workflow_call:
 
 env:
   GH_TOKEN: ${{ github.token }}
@@ -13,10 +13,10 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Use Node.js 20
+      - name: Use Node.js 24
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: "npm"
       - name: Install npm dependencies
         run: npm ci
@@ -26,15 +26,19 @@ jobs:
       - name: Build the Electron app
         shell: bash
         run: npm run electron-win
-      - name: Zip
-        shell: bash
-        run: cd .build; for i in bitburner-*; do 7z a "$i.zip" "$i"; done; cd ../;
-      - name: Upload artifact
+      - name: Upload x64 artifact
         uses: actions/upload-artifact@v4
         with:
-          name: build-artifacts-win
+          name: bitburner-win32-x64
           include-hidden-files: true
-          path: .build/*.zip
+          path: .build/bitburner-win32-x64/*
+          if-no-files-found: error
+      - name: Upload arm64 artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: bitburner-win32-arm64
+          include-hidden-files: true
+          path: .build/bitburner-win32-arm64/*
           if-no-files-found: error
 
   build-linux:
@@ -42,10 +46,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Use Node.js 20
+      - name: Use Node.js 24
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: "npm"
       - name: Install npm dependencies
         run: npm ci
@@ -53,14 +57,19 @@ jobs:
         run: npm run build
       - name: Build the Electron app
         run: npm run electron-linux
-      - name: Zip
-        run: cd .build; for i in bitburner-*; do zip -r "$i.zip" "$i"; done; cd ../;
-      - name: Upload artifact
+      - name: Upload x64 artifact
         uses: actions/upload-artifact@v4
         with:
-          name: build-artifacts-linux
+          name: bitburner-linux-x64
           include-hidden-files: true
-          path: .build/*.zip
+          path: .build/bitburner-linux-x64/*
+          if-no-files-found: error
+      - name: Upload arm64 artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: bitburner-linux-arm64
+          include-hidden-files: true
+          path: .build/bitburner-linux-arm64/*
           if-no-files-found: error
 
   build-mac:
@@ -68,10 +77,10 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Use Node.js 20
+      - name: Use Node.js 24
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: "npm"
       - name: Install npm dependencies
         run: npm ci
@@ -79,37 +88,10 @@ jobs:
         run: npm run build
       - name: Build the Electron app
         run: npm run electron-mac
-      - name: Zip
-        run: cd .build; for i in bitburner-*; do zip -r "$i.zip" "$i"; done; cd ../;
-      - name: Upload artifact
+      - name: Upload darwin-universal artifact
         uses: actions/upload-artifact@v4
         with:
-          name: build-artifacts-mac
+          name: bitburner-darwin-universal
           include-hidden-files: true
-          path: .build/*.zip
+          path: .build/bitburner-darwin-universal/*
           if-no-files-found: error
-
-  upload:
-    name: Upload
-    runs-on: ubuntu-latest
-    needs: [build-windows, build-linux, build-mac]
-    steps:
-      - uses: actions/checkout@v4
-      - name: Use Node.js 20
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: "npm"
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: .build
-          pattern: build-artifacts-*
-          merge-multiple: true
-      - name: List files
-        run: ls -la .build
-      - name: Upload to release
-        env:
-          GH_REF_NAME: ${{ github.ref_name }}
-        run: |
-          for i in .build/*.zip; do gh release upload "$GH_REF_NAME" "$i" --clobber; done;

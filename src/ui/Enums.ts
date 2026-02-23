@@ -20,11 +20,13 @@ export enum SimplePage {
   City = "City",
   Corporation = "Corporation",
   CreateProgram = "Create Program",
+  DarkNet = "Dark Net",
   DevMenu = "Dev",
   Factions = "Factions",
   Gang = "Gang",
   Go = "IPvGO Subnet",
   Hacknet = "Hacknet",
+  Infiltration = "Infiltration",
   Milestones = "Milestones",
   Options = "Options",
   Grafting = "Grafting",
@@ -45,7 +47,6 @@ export enum SimplePage {
 
 export enum ComplexPage {
   BitVerse = "BitVerse",
-  Infiltration = "Infiltration",
   Faction = "Faction",
   FactionAugmentations = "Faction Augmentations",
   ScriptEditor = "Script Editor",

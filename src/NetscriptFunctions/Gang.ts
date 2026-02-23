@@ -13,6 +13,7 @@ import { GangMemberTasks } from "../Gang/GangMemberTasks";
 import { GangMemberUpgrades } from "../Gang/GangMemberUpgrades";
 import { helpers } from "../Netscript/NetscriptHelpers";
 import { getEnumHelper } from "../utils/EnumHelper";
+import { CONSTANTS } from "../Constants";
 
 export function NetscriptGang(): InternalAPI<IGang> {
   /** Functions as an API check and also returns the gang object */
@@ -276,7 +277,10 @@ export function NetscriptGang(): InternalAPI<IGang> {
       getGang(ctx);
       const member = getGangMember(ctx, memberName);
       const equipment = GangMemberUpgrades[equipName];
-      if (!equipment) return false;
+      if (!equipment) {
+        ctx.workerScript.log("gang.purchaseEquipment", () => `'${equipName}' is not a valid equipment`);
+        return false;
+      }
       const res = member.buyUpgrade(equipment);
       if (res) {
         ctx.workerScript.log(
@@ -350,7 +354,7 @@ export function NetscriptGang(): InternalAPI<IGang> {
     },
     getBonusTime: (ctx) => () => {
       const gang = getGang(ctx);
-      return gang.storedCycles * 200;
+      return gang.storedCycles * CONSTANTS.MilliPerCycle;
     },
     nextUpdate: (ctx) => () => {
       getGang(ctx);
