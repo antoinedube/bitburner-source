@@ -1,5 +1,5 @@
 import { Player } from "@player";
-import { CorpResearchName, CorpSmartSupplyOption } from "@nsdefs";
+import type { CorpResearchName, CorpSmartSupplyOption, Result } from "@nsdefs";
 
 import { MaterialInfo } from "./MaterialInfo";
 import { Corporation } from "./Corporation";
@@ -25,7 +25,7 @@ import {
   canCreateCorporation,
   convertCreatingCorporationCheckResultToMessage,
 } from "./helpers";
-import { PositiveInteger, Result } from "../types";
+import type { PositiveInteger } from "../types";
 import { Factions } from "../Faction/Factions";
 import { throwIfReachable } from "../utils/helpers/throwIfReachable";
 import { formatMoney, formatNumber } from "../ui/formatNumber";
@@ -505,7 +505,10 @@ export function research(researchingDivision: Division, researchName: CorpResear
   if (researchTree === undefined) throw new Error(`No research tree for industry '${researchingDivision.industry}'`);
   const research = ResearchMap[researchName];
   const researchNode = researchTree.findNode(researchName);
-  const researchPreReq = researchNode?.parent?.researchName;
+  if (!researchNode) {
+    return;
+  }
+  const researchPreReq = researchNode.parent?.researchName;
   //Check to see if the research request has any pre-reqs that need to be researched first.
   if (researchPreReq) {
     if (!researchingDivision.researched?.has(researchPreReq)) {

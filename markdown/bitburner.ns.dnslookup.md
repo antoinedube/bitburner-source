@@ -9,14 +9,44 @@ Given a hostname, returns its IP address; or given an IP address, returns its ho
 **Signature:**
 
 ```typescript
-dnsLookup(host: string): string;
+dnsLookup(host?: string): string;
 ```
 
 ## Parameters
 
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  host | string | Hostname/IP of target server. |
+<table><thead><tr><th>
+
+Parameter
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+host
+
+
+</td><td>
+
+string
+
+
+</td><td>
+
+_(Optional)_ Hostname/IP of the target server. Optional. Defaults to current server if not provided.
+
+
+</td></tr>
+</tbody></table>
 
 **Returns:**
 
