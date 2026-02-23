@@ -33,15 +33,15 @@ import { GangConstants } from "../../Gang/data/Constants";
 import { Factions } from "../../Faction/Factions";
 import { StatsProgressBar } from "./StatsProgressBar";
 
-import { isClassWork } from "../../Work/ClassWork";
 import { CONSTANTS } from "../../Constants";
-import { isCreateProgramWork } from "../../Work/CreateProgramWork";
-import { isGraftingWork } from "../../Work/GraftingWork";
-import { isFactionWork } from "../../Work/FactionWork";
-import { ReputationRate } from "./ReputationRate";
-import { isCompanyWork } from "../../Work/CompanyWork";
-import { isCrimeWork } from "../../Work/CrimeWork";
 import { EventEmitter } from "../../utils/EventEmitter";
+import { ReputationRate } from "./ReputationRate";
+import { isClassWork } from "../../Work/ClassWork";
+import { isCompanyWork } from "../../Work/CompanyWork";
+import { isCreateProgramWork } from "../../Work/CreateProgramWork";
+import { isCrimeWork } from "../../Work/CrimeWork";
+import { isFactionWork } from "../../Work/FactionWork";
+import { isGraftingWork } from "../../Work/GraftingWork";
 import { useRerender } from "./hooks";
 
 export const OverviewEventEmitter = new EventEmitter();
