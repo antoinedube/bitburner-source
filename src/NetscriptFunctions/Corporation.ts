@@ -72,6 +72,7 @@ import {
 import { PositiveInteger } from "../types";
 import { getRecordKeys } from "../Types/Record";
 import { setDeprecatedProperties } from "../utils/DeprecationHelper";
+import { CONSTANTS } from "../Constants";
 
 export function NetscriptCorporation(): InternalAPI<NSCorporation> {
   function hasUnlock(unlockName: CorpUnlockName): boolean {
@@ -247,6 +248,7 @@ export function NetscriptCorporation(): InternalAPI<NSCorporation> {
         importAmount: material.importAmount,
         actualSellAmount: material.actualSellAmount,
         exports: exports,
+        productionLimit: material.productionLimit,
       };
     },
     getProduct: (ctx) => (_divisionName, _cityName, _productName) => {
@@ -274,6 +276,7 @@ export function NetscriptCorporation(): InternalAPI<NSCorporation> {
         advertisingInvestment: product.advertisingInvestment,
         designInvestment: product.designInvestment,
         size: product.size,
+        productionLimit: cityData.productionLimit,
       };
     },
     purchaseWarehouse: (ctx) => (_divisionName, _cityName) => {
@@ -800,7 +803,7 @@ export function NetscriptCorporation(): InternalAPI<NSCorporation> {
     },
     getBonusTime: (ctx) => () => {
       checkAccess(ctx);
-      return getCorporation().storedCycles * 200;
+      return getCorporation().storedCycles * CONSTANTS.MilliPerCycle;
     },
     nextUpdate: (ctx) => () => {
       checkAccess(ctx);

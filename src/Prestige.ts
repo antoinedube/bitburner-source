@@ -11,10 +11,10 @@ import { Player } from "@player";
 import { recentScripts } from "./Netscript/RecentScripts";
 import { resetPidCounter } from "./Netscript/Pid";
 
-import { GetServer, AddToAllServers, initForeignServers, prestigeAllServers } from "./Server/AllServers";
-import { prestigeHomeComputer } from "./Server/ServerHelpers";
+import { GetServer, AddToAllServers, prestigeAllServers } from "./Server/AllServers";
+import { initForeignServers, prestigeHomeComputer } from "./Server/ServerHelpers";
 import { SpecialServers } from "./Server/data/SpecialServers";
-import { deleteStockMarket, initStockMarket } from "./StockMarket/StockMarket";
+import { canAccessStockMarket, deleteStockMarket, initStockMarket } from "./StockMarket/StockMarket";
 import { Terminal } from "./Terminal";
 
 import { dialogBoxCreate } from "./ui/React/DialogBox";
@@ -30,6 +30,10 @@ import { calculateExp } from "./PersonObjects/formulas/skill";
 import { currentNodeMults } from "./BitNode/BitNodeMultipliers";
 import { canAccessBitNodeFeature } from "./BitNode/BitNodeUtils";
 import { pendingUIShareJobIds } from "./NetworkShare/Share";
+import { getDarkscapeNavigator } from "./DarkNet/effects/effects";
+import { CodingContractEventEmitter } from "./CodingContract/CodingContractEventEmitter";
+import { showLiterature } from "./Literature/LiteratureHelpers";
+import { prestigeDarknetState } from "./DarkNet/models/DarknetState";
 
 const BitNode8StartingMoney = 250e6;
 function delayedDialog(message: string, canBeDismissedEasily = true) {
@@ -72,6 +76,8 @@ export function prestigeAugmentation(): void {
   // Delete all servers except home computer
   prestigeAllServers();
 
+  prestigeDarknetState(false);
+
   // Reset home computer (only the programs) and add to AllServers
   AddToAllServers(homeComp);
   prestigeHomeComputer(homeComp);
@@ -94,6 +100,10 @@ export function prestigeAugmentation(): void {
   // Re-create foreign servers
   initForeignServers(Player.getHomeComputer());
 
+  if (canAccessBitNodeFeature(15)) {
+    getDarkscapeNavigator();
+  }
+
   // Gain favor for Companies and Factions
   for (const company of Object.values(Companies)) company.prestigeAugmentation();
   for (const faction of Object.values(Factions)) faction.prestigeAugmentation();
@@ -104,6 +114,9 @@ export function prestigeAugmentation(): void {
   }
   Terminal.clear();
   LogBoxClearEvents.emit();
+
+  // Close coding contract modal
+  CodingContractEventEmitter.emit({ type: "close" });
 
   // Recalculate the bonus for circadian modulator aug
   initCircadianModulator();
@@ -157,7 +170,7 @@ export function prestigeAugmentation(): void {
   }
 
   // Reset Stock market
-  if (Player.hasWseAccount) {
+  if (canAccessStockMarket()) {
     initStockMarket();
   }
 
@@ -209,8 +222,13 @@ export function prestigeSourceFile(isFlume: boolean): void {
   Terminal.clear();
   LogBoxClearEvents.emit();
 
+  // Close coding contract modal
+  CodingContractEventEmitter.emit({ type: "close" });
+
   // Delete all servers except home computer
   prestigeAllServers(); // Must be done before initForeignServers()
+
+  prestigeDarknetState(true);
 
   // Reset home computer (only the programs) and add to AllServers
   AddToAllServers(homeComp);
@@ -284,7 +302,7 @@ export function prestigeSourceFile(isFlume: boolean): void {
   if (Player.bitNodeN === 8) {
     Player.money = BitNode8StartingMoney;
   }
-  if (Player.bitNodeN === 8 || Player.activeSourceFileLvl(8) > 0) {
+  if (canAccessBitNodeFeature(8)) {
     Player.hasWseAccount = true;
     Player.hasTixApiAccess = true;
   }
@@ -307,7 +325,7 @@ export function prestigeSourceFile(isFlume: boolean): void {
   }
 
   // Reset Stock market, gang, and corporation
-  if (Player.hasWseAccount) {
+  if (canAccessStockMarket()) {
     initStockMarket();
   } else {
     deleteStockMarket();
@@ -333,6 +351,13 @@ export function prestigeSourceFile(isFlume: boolean): void {
     Player.money = CONSTANTS.TravelCost;
   }
   staneksGift.prestigeSourceFile();
+
+  if (Player.bitNodeN === 15 && !homeComp.messages.includes(LiteratureName.DarknetHandbook)) {
+    homeComp.messages.push(LiteratureName.DarknetHandbook);
+  }
+  if (Player.bitNodeN === 15 && Player.sourceFileLvl(15) === 0) {
+    showLiterature(LiteratureName.DarknetHandbook);
+  }
 
   // Gain int exp
   if (Player.activeSourceFileLvl(5) !== 0 && !isFlume) {

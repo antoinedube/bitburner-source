@@ -2,6 +2,7 @@ import { CityName, FactionName, CompanyName, LiteratureName } from "@enums";
 import { Literature } from "./Literature";
 import { Typography } from "@mui/material";
 import React from "react";
+import { defaultSettingsDictionary, dogNameDictionary } from "../DarkNet/models/dictionaryData";
 
 export const Literatures: Record<LiteratureName, Literature> = {
   [LiteratureName.HackersStartingHandbook]: new Literature({
@@ -27,8 +28,8 @@ export const Literatures: Record<LiteratureName, Literature> = {
         this are getServerSecurityLevel() and getServerMinSecurityLevel()
         <br />
         <br />
-        -Purchase additional servers by visiting "Alpha Enterprises" in the city. They are relatively cheap and give you
-        valuable RAM to run more scripts early in the game
+        -Purchase additional cloud servers by visiting "Alpha Enterprises" in the city. They are relatively cheap and
+        give you valuable RAM to run more scripts early in the game
         <br />
         <br />
         -Prioritize upgrading the RAM on your home computer. This can also be done at "Alpha Enterprises"
@@ -50,8 +51,8 @@ export const Literatures: Record<LiteratureName, Literature> = {
         <br />
         <u>Getting Started with Corporation</u>
         <br />
-        To get started, visit the city hall in Sector-12 in order to create a corporation. This requires $150b of your
-        own money, but this $150b will get put into your corporation's funds. If you're in BitNode 3, you also have the
+        To get started, visit the city hall in Sector-12 in order to create a corporation. This requires 150e9 of your
+        own money, but this money will get put into your corporation's funds. If you're in BitNode 3, you also have the
         option to get seed money from the government in exchange for 500m shares. Your corporation can have many
         different divisions, each in a different industry. There are many different types of industries, each with
         different properties. To create your first division, click the "Expand" button at the top of the management UI.
@@ -671,5 +672,166 @@ export const Literatures: Record<LiteratureName, Literature> = {
     title: "The Secret War",
     filename: LiteratureName.TheSecretWar,
     text: <Typography></Typography>,
+  }),
+  [LiteratureName.ABriefHistoryOfTranshumanism]: new Literature({
+    title: "A Brief History of Transhumanism",
+    filename: LiteratureName.ABriefHistoryOfTranshumanism,
+    text: (
+      <Typography>
+        Human augmentation has come a long way since the first prosthetics and implants. Now any and all parts of the
+        human body are able to be improved by technology: strength, speed, perception, intelligence. A large variety of
+        powerful augmentations have been developed, but for most they may as well not exist. How did things end up like
+        this?
+        <br />
+        <br />
+        Part of the answer is, unfortunately, that the exact technology that has allowed us to come so far in human
+        augmentation is also responsible for its great expense and exclusivity.
+        <br />
+        The early days of human augmentation were plagued with issues. Immunosuppressants were needed to keep people's
+        bodies from rejecting the foreign bodies being implanted, with the body constantly trying to "restore" itself to
+        its natural state. On top of that, with the messy nature of biology any replacement for a natural organ would
+        fall short of full functionality. The skeleton doesn't just provide structural support and anchors for muscles;
+        it also helps produce the blood in your body in the marrow. Even the fat in the body is a living organ that
+        produces hormones helping to regulate its activity.
+        <br />
+        <br />
+        Thus, the process was limited by the capacity of the human body to accept and deal with these changes. Biology
+        is redundant and flexible, so replacing a few bones won't impact the body's functioning too badly. But every
+        addition and change would add up, ultimately severely limiting the body's capacity for augmentation.
+        <br />
+        <br />
+        Ultimately it was {CompanyName.VitaLife} who found a way around this limitation, though only at great expense...
+        They discovered that by using a radical new form of gene therapy to reshape a person's body to not only
+        accommodate but integrate the augmentations into their body at a cellular level, they could completely eliminate
+        the side-effects of augmenting.
+        <br />
+        <br />
+        The downside, of course, is the extreme expense and complexity of the process. Not only must each augment be
+        tailored for its intended recipient and a custom genetic therapy program developed, but to truly avoid any
+        side-effects this program must take into account the interactions between augmentations when multiple are
+        installed. The combinatoric explosion in complexity leads to exponentially increasing costs when more than one
+        augment is installed at the same time. Despite this most still prefer to install as many as possible at once,
+        because in addition the radical transformation their body undergoes leaves them relearning to use their body for
+        weeks or even months afterward.
+        <br />
+        <br />
+        In the end humanity is left with the theoretical capacity to transform themselves to the limits of their
+        imagininations, but the practical reality that the expense of even basic augmentations is beyond 95% of the
+        population.
+      </Typography>
+    ),
+  }),
+  [LiteratureName.DarknetHandbook]: new Literature({
+    title: LiteratureName.DarknetHandbook,
+    filename: LiteratureName.DarknetHandbook,
+    text: (
+      <Typography>
+        There is a legend of a powerful augment, known as the <span style={{ color: "red" }}>"Red Pill"</span>, that can
+        only be found deep within the darknet. The mysterious faction {FactionName.Daedalus} has been searching for it
+        for years, hoping to monopolize it one day.
+        <br />
+        <br />
+        However, the legendary augment is hidden in the depths of a labyrinth. You will need to delve far into the dark
+        in order to find these mysterious servers, and defeat their protections to gain their secret augments.
+        <br />
+        <br />
+        The darknet itself is an extremely unstable network of servers. They will continually shift locations, restart,
+        or even go offline. Some parts of the net are islands that can only be reached by riding on a moving server. In
+        addition, these darknet servers cannot be accessed from a distance: you must build a script that can copy itself
+        - or bring code along from home - in order to progress into the deeper layers of the 'net.
+        <br />
+        <br />
+        You now have permanent access to the Darknet Navigator, allowing exploration of the 'net manually via the UI.
+        But beware: the labyrinths further into the deep are said to only be accessible via script! Do you have the
+        charisma and the scripting skills needed to conquer the dark?
+        <br />
+        <br />
+        For more details on the darknet and its API, see the Darknet page under Documentation {">"} Advanced.
+      </Typography>
+    ),
+  }),
+  [LiteratureName.CacheHint1]: new Literature({
+    title: "eGeoCacheing?",
+    filename: LiteratureName.CacheHint1,
+    text: <Typography>I've heard there are valuable .cache files to find out in the dark net.</Typography>,
+  }),
+  [LiteratureName.CacheHint2]: new Literature({
+    title: "Cache the Flag",
+    filename: LiteratureName.CacheHint2,
+    text: <Typography>I ran this .cache file I found and it had crazy stuff in it!</Typography>,
+  }),
+  [LiteratureName.ServerOfflineHint]: new Literature({
+    title: "Server offline again",
+    filename: LiteratureName.ServerOfflineHint,
+    text: (
+      <Typography>
+        My scripts went down again when their server went offline. I'll have to do something about that.
+      </Typography>
+    ),
+  }),
+  [LiteratureName.DarkWebRebootHint]: new Literature({
+    title: "Darkweb server rebooted",
+    filename: LiteratureName.DarkWebRebootHint,
+    text: <Typography>Darkweb servers are known to reboot sometimes, requiring scripts to be restarted.</Typography>,
+  }),
+  [LiteratureName.PasswordServerHint]: new Literature({
+    title: "Partial Password Jutsu",
+    filename: LiteratureName.PasswordServerHint,
+    text: (
+      <Typography>
+        There is a type of server that will tell you if you get some parts of the password correct.
+      </Typography>
+    ),
+  }),
+  [LiteratureName.TimingServerHint]: new Literature({
+    title: "Timing Attack",
+    filename: LiteratureName.TimingServerHint,
+    text: (
+      <Typography>
+        I found a server that takes much longer to respond if you get some characters in the password correct.
+      </Typography>
+    ),
+  }),
+  [LiteratureName.BinaryServerHint]: new Literature({
+    title: "Raw Data?",
+    filename: LiteratureName.BinaryServerHint,
+    text: <Typography>Some servers only respond with raw binary data. I wonder what each bit represents?</Typography>,
+  }),
+  [LiteratureName.DogNameHint]: new Literature({
+    title: "Dog Name Ideas",
+    filename: LiteratureName.DogNameHint,
+    text: <Typography>What should I name my dog? Maybe {dogNameDictionary.join(", ")}?</Typography>,
+  }),
+  [LiteratureName.FactoryDefaultHint]: new Literature({
+    title: "Factory Default",
+    filename: LiteratureName.FactoryDefaultHint,
+    text: <Typography>The factory default is usually one of {defaultSettingsDictionary.join(", ")}.</Typography>,
+  }),
+  [LiteratureName.StasisLinkHint]: new Literature({
+    title: "Try the best new thing in web surfing: the Stasis Link!",
+    filename: LiteratureName.StasisLinkHint,
+    text: (
+      <Typography>
+        Tired of the server you are on restarting or moving? You need to try our latest networking tool, the Stasis
+        Link! <br />
+        With the click of a `ns.dnet.setStasisLink()`, you, too, can sleep soundly knowing that that server is not gonna
+        go anywhere. <br />
+        <br />
+        Limited time only! While `ns.dnet.getStasisLinkLimit()` lasts!
+      </Typography>
+    ),
+  }),
+  [LiteratureName.LabHint]: new Literature({
+    title: "There's something out there",
+    filename: LiteratureName.LabHint,
+    text: (
+      <Typography>
+        If you go deep enough into the dark net, they say there's a lost server out there with special files on it. I
+        wonder how you can get there? It may even be deeper than the airgaps around this IP block...
+        <br />
+        <br />
+        If I ever find it, I'll set down a stasis link next to it and charge tickets for admission!
+      </Typography>
+    ),
   }),
 };

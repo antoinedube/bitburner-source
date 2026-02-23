@@ -1,5 +1,32 @@
 import type { VersionBreakingChange } from "./APIBreak";
 
+export function convertV2GangEquipmentNames(name: string): string {
+  switch (name) {
+    case "Glock 18C":
+      return "Malorian-3516";
+    case "P90C":
+      return "Hansen-HA7";
+    case "Steyr AUG":
+      return "Arasaka-HJSH18";
+    case "AK-47":
+      return "Militech-M251s";
+    case "M15A10 Assault Rifle":
+      return "Nokota-D5";
+    case "AWM Sniper Rifle":
+      return "Techtronika-SPT32";
+    case "Ford Flex V20":
+      return "Herrera Outlaw GTS";
+    case "ATX1070 Superbike":
+      return "Yaiba ASM-R250 Muramasa";
+    case "Mercedes-Benz S9001":
+      return "Rayfield Caliburn";
+    case "White Ferrari":
+      return "Quadra Sport R-7";
+    default:
+      return name;
+  }
+}
+
 export const breakingChanges300: VersionBreakingChange = {
   additionalText: "For more information, please check https://github.com/bitburner-official/bitburner-src/issues/2148.",
   apiBreakingChanges: [
@@ -291,10 +318,256 @@ export const breakingChanges300: VersionBreakingChange = {
         "- ns.getServerMaxMoney\n" +
         "- ns.getServerGrowth\n" +
         "- ns.getServerNumPortsRequired\n" +
-        "- ns.deleteServer\n" +
+        "- ns.cloud.deleteServer\n" +
         "- ns.getHackTime\n" +
         "- ns.getGrowTime\n" +
         "- ns.getWeakenTime\n",
+      showWarning: false,
+    },
+    {
+      brokenAPIs: [
+        {
+          name: "Glock 18C",
+          migration: { searchValue: "Glock 18C", replaceValue: convertV2GangEquipmentNames("Glock 18C") },
+        },
+        { name: "P90C", migration: { searchValue: "P90C", replaceValue: convertV2GangEquipmentNames("P90C") } },
+        {
+          name: "Steyr AUG",
+          migration: { searchValue: "Steyr AUG", replaceValue: convertV2GangEquipmentNames("Steyr AUG") },
+        },
+        { name: "AK-47", migration: { searchValue: "AK-47", replaceValue: convertV2GangEquipmentNames("AK-47") } },
+        {
+          name: "M15A10 Assault Rifle",
+          migration: {
+            searchValue: "M15A10 Assault Rifle",
+            replaceValue: convertV2GangEquipmentNames("M15A10 Assault Rifle"),
+          },
+        },
+        {
+          name: "AWM Sniper Rifle",
+          migration: { searchValue: "AWM Sniper Rifle", replaceValue: convertV2GangEquipmentNames("AWM Sniper Rifle") },
+        },
+        {
+          name: "Ford Flex V20",
+          migration: { searchValue: "Ford Flex V20", replaceValue: convertV2GangEquipmentNames("Ford Flex V20") },
+        },
+        {
+          name: "ATX1070 Superbike",
+          migration: {
+            searchValue: "ATX1070 Superbike",
+            replaceValue: convertV2GangEquipmentNames("ATX1070 Superbike"),
+          },
+        },
+        {
+          name: "Mercedes-Benz S9001",
+          migration: {
+            searchValue: "Mercedes-Benz S9001",
+            replaceValue: convertV2GangEquipmentNames("Mercedes-Benz S9001"),
+          },
+        },
+        {
+          name: "White Ferrari",
+          migration: { searchValue: "White Ferrari", replaceValue: convertV2GangEquipmentNames("White Ferrari") },
+        },
+      ],
+      info:
+        "Some gang equipments were renamed.\n" +
+        `- "Glock 18C" was renamed to "${convertV2GangEquipmentNames("Glock 18C")}".\n` +
+        `- "P90C" was renamed to "${convertV2GangEquipmentNames("P90C")}".\n` +
+        `- "Steyr AUG" was renamed to "${convertV2GangEquipmentNames("Steyr AUG")}".\n` +
+        `- "AK-47" was renamed to "${convertV2GangEquipmentNames("AK-47")}".\n` +
+        `- "M15A10 Assault Rifle" was renamed to "${convertV2GangEquipmentNames("M15A10 Assault Rifle")}".\n` +
+        `- "AWM Sniper Rifle" was renamed to "${convertV2GangEquipmentNames("AWM Sniper Rifle")}".\n` +
+        `- "Ford Flex V20" was renamed to "${convertV2GangEquipmentNames("Ford Flex V20")}".\n` +
+        `- "ATX1070 Superbike" was renamed to "${convertV2GangEquipmentNames("ATX1070 Superbike")}".\n` +
+        `- "Mercedes-Benz S9001" was renamed to "${convertV2GangEquipmentNames("Mercedes-Benz S9001")}".\n` +
+        `- "White Ferrari" was renamed to "${convertV2GangEquipmentNames("White Ferrari")}".\n`,
+      showWarning: false,
+    },
+    {
+      brokenAPIs: [{ name: "purchase4SMarketData" }],
+      info:
+        "You have to purchase a WSE account before purchasing 4S Market Data UI access via ns.stock.purchase4SMarketData().\n" +
+        "Note that this change does not affect 4S Market Data TIX API access (ns.stock.purchase4SMarketDataTixApi()).",
+      showWarning: false,
+    },
+    {
+      brokenAPIs: [
+        {
+          name: "ns.getPurchasedServerCost",
+          migration: { searchValue: "ns.getPurchasedServerCost", replaceValue: "ns.cloud.getServerCost" },
+        },
+        {
+          name: "ns.purchaseServer",
+          migration: { searchValue: "ns.purchaseServer", replaceValue: "ns.cloud.purchaseServer" },
+        },
+        {
+          name: "ns.getPurchasedServerUpgradeCost",
+          migration: {
+            searchValue: "ns.getPurchasedServerUpgradeCost",
+            replaceValue: "ns.cloud.getServerUpgradeCost",
+          },
+        },
+        {
+          name: "ns.upgradePurchasedServer",
+          migration: { searchValue: "ns.upgradePurchasedServer", replaceValue: "ns.cloud.upgradeServer" },
+        },
+        {
+          name: "ns.renamePurchasedServer",
+          migration: { searchValue: "ns.renamePurchasedServer", replaceValue: "ns.cloud.renameServer" },
+        },
+        {
+          name: "ns.deleteServer",
+          migration: { searchValue: "ns.deleteServer", replaceValue: "ns.cloud.deleteServer" },
+        },
+        {
+          name: "ns.getPurchasedServers",
+          migration: { searchValue: "ns.getPurchasedServers", replaceValue: "ns.cloud.getServerNames" },
+        },
+        {
+          name: "ns.getPurchasedServerLimit",
+          migration: { searchValue: "ns.getPurchasedServerLimit", replaceValue: "ns.cloud.getServerLimit" },
+        },
+        {
+          name: "ns.getPurchasedServerMaxRam",
+          migration: { searchValue: "ns.getPurchasedServerMaxRam", replaceValue: "ns.cloud.getRamLimit" },
+        },
+      ],
+      info:
+        "The cloud server (purchased server) functions have been moved to their own interface, ns.cloud.\n" +
+        '"ns.getPurchasedServerCost()" was removed.\n' +
+        'It has been automatically replaced with "ns.cloud.getServerCost()"\n\n' +
+        '"ns.purchaseServer()" was removed.\n' +
+        'It has been automatically replaced with "ns.cloud.purchaseServer()"\n\n' +
+        '"ns.getPurchasedServerUpgradeCost()" was removed.\n' +
+        'It has been automatically replaced with "ns.cloud.getServerUpgradeCost()"\n\n' +
+        '"ns.upgradePurchasedServer()" was removed.\n' +
+        'It has been automatically replaced with "ns.cloud.upgradeServer()"\n\n' +
+        '"ns.renamePurchasedServer()" was removed.\n' +
+        'It has been automatically replaced with "ns.cloud.renameServer()"\n\n' +
+        '"ns.deleteServer()" was removed.\n' +
+        'It has been automatically replaced with "ns.cloud.deleteServer()"\n\n' +
+        '"ns.getPurchasedServers()" was removed.\n' +
+        'It has been automatically replaced with "ns.cloud.getServerNames()"\n\n' +
+        '"ns.getPurchasedServerLimit()" was removed.\n' +
+        'It has been automatically replaced with "ns.cloud.getServerLimit()"\n\n' +
+        '"ns.getPurchasedServerMaxRam()" was removed.\n' +
+        'It has been automatically replaced with "ns.cloud.getRamLimit()"',
+      showWarning: false,
+    },
+    {
+      brokenAPIs: [
+        {
+          name: "ns.getBitNodeMultipliers().PurchasedServerCost",
+          migration: {
+            searchValue: "PurchasedServerCost",
+            replaceValue: "CloudServerCost",
+          },
+        },
+        {
+          name: "ns.getBitNodeMultipliers().PurchasedServerSoftcap",
+          migration: {
+            searchValue: "PurchasedServerSoftcap",
+            replaceValue: "CloudServerSoftcap",
+          },
+        },
+        {
+          name: "ns.getBitNodeMultipliers().PurchasedServerLimit",
+          migration: {
+            searchValue: "PurchasedServerLimit",
+            replaceValue: "CloudServerLimit",
+          },
+        },
+        {
+          name: "ns.getBitNodeMultipliers().PurchasedServerMaxRam",
+          migration: {
+            searchValue: "PurchasedServerMaxRam",
+            replaceValue: "CloudServerMaxRam",
+          },
+        },
+      ],
+      info:
+        "ns.getBitNodeMultipliers() Purchased Server properties have been renamed to CloudServers with the creation of the cloud API.\n" +
+        '"ns.getBitNodeMultipliers().PurchasedServerCost" was removed.\n' +
+        'It has been automatically replaced with "ns.getBitNodeMultipliers().CloudServerCost".\n\n' +
+        '"ns.getBitNodeMultipliers().PurchasedServerSoftcap" was removed.\n' +
+        'It has been automatically replaced with "ns.getBitNodeMultipliers().CloudServerSoftcap".\n\n' +
+        '"ns.getBitNodeMultipliers().PurchasedServerLimit" was removed.\n' +
+        'It has been automatically replaced with "ns.getBitNodeMultipliers().CloudServerLimit".\n\n' +
+        '"ns.getBitNodeMultipliers().PurchasedServerMaxRam" was removed.\n' +
+        'It has been automatically replaced with "ns.getBitNodeMultipliers().CloudServerMaxRam".',
+      showWarning: false,
+    },
+    {
+      brokenAPIs: [
+        {
+          name: "createDummyContract",
+          migration: {
+            searchValue: "createDummyContract",
+            migrator: (line: string) => {
+              for (const match of line.matchAll(/createDummyContract\([^,]*?\)/g)) {
+                line = line.replace(match[0], match[0].slice(0, match[0].length - 1) + `, "home")`);
+              }
+              return line;
+            },
+          },
+        },
+      ],
+      info:
+        "ns.codingcontract.createDummyContract might generate a contract with the same name of another contract.\n" +
+        "This bug was fixed. Now this function will return null and not generate a contract if the randomized contract " +
+        "name is the same as another contract's name.\n\n" +
+        "ns.codingcontract.createDummyContract generated a dummy contract on home. Now you can specify the host that \n" +
+        'gets the generated contract with a new optional parameter. Your code was migrated to specify "home" as the host.',
+      showWarning: false,
+    },
+    {
+      brokenAPIs: [
+        { name: "ns.go.analysis.getValidMoves" },
+        { name: "ns.go.analysis.getChains" },
+        { name: "ns.go.analysis.getLiberties" },
+        { name: "ns.go.analysis.getControlledEmptyNodes" },
+      ],
+      info: "ns.go.analysis methods no longer apply captures to custom board states passed to them, and instead evaluate the given board exactly as-is.",
+      showWarning: false,
+    },
+    {
+      brokenAPIs: [],
+      info:
+        `We added a new feature called Dark Net. The "darkweb" server is a darknet server now.\n` +
+        "Some APIs that require the target host to be a normal server do not work with darkweb. This should not be a \n" +
+        `problem with most scripts. The most potentially affected API is "ns.scan()". Darkweb does not appear in the \n` +
+        `result of this API anymore. If you want to find darknet servers, you need to use "ns.dnet.probe()".`,
+      showWarning: false,
+      doNotSkip: true,
+    },
+    {
+      brokenAPIs: [
+        { name: "ns.hacknet.numNodes" },
+        { name: "ns.hacknet.purchaseNode" },
+        { name: "ns.hacknet.getPurchaseNodeCost" },
+        { name: "ns.hacknet.getNodeStats" },
+        { name: "ns.hacknet.upgradeLevel" },
+        { name: "ns.hacknet.upgradeRam" },
+        { name: "ns.hacknet.upgradeCore" },
+        { name: "ns.hacknet.upgradeCache" },
+        { name: "ns.hacknet.getLevelUpgradeCost" },
+        { name: "ns.hacknet.getRamUpgradeCost" },
+        { name: "ns.hacknet.getCoreUpgradeCost" },
+        { name: "ns.hacknet.getCacheUpgradeCost" },
+        { name: "ns.hacknet.numHashes" },
+        { name: "ns.hacknet.hashCost" },
+        { name: "ns.hacknet.spendHashes" },
+        { name: "ns.hacknet.maxNumNodes" },
+        { name: "ns.hacknet.hashCapacity" },
+        { name: "ns.hacknet.getHashUpgrades" },
+        { name: "ns.hacknet.getHashUpgradeLevel" },
+        { name: "ns.hacknet.getStudyMult" },
+        { name: "ns.hacknet.getTrainingMult" },
+      ],
+      info:
+        "Accessing the hacknet namespace incurred a one-time cost of 4 GB of RAM, and each hacknet API did not incur \n" +
+        "RAM cost. Now the hacknet namespace does not incur RAM cost, but each hacknet API incurs a 0.5GB RAM cost.",
       showWarning: false,
     },
   ],

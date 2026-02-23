@@ -64,12 +64,11 @@ import { ActivateRecoveryMode, RecoveryMode, RecoveryRoot } from "./React/Recove
 import { AchievementsRoot } from "../Achievements/AchievementsRoot";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { ThemeBrowser } from "../Themes/ui/ThemeBrowser";
-import { ImportSave } from "./React/ImportSave";
+import { ImportSaveComparison } from "./React/ImportSaveComparison";
 import { BypassWrapper } from "./React/BypassWrapper";
 
 import { Apr1 } from "./Apr1";
 import { V2Modal } from "../utils/V2Modal";
-import { MathJaxContext } from "better-react-mathjax";
 import { useRerender } from "./React/hooks";
 import { HistoryProvider } from "./React/Documentation";
 import { GoRoot } from "../Go/ui/GoRoot";
@@ -79,6 +78,7 @@ import { UIEventEmitter, UIEventType } from "./UIEventEmitter";
 import { exceptionAlert } from "../utils/helpers/exceptionAlert";
 import { SpecialServers } from "../Server/data/SpecialServers";
 import { ErrorModal } from "../ErrorHandling/ErrorModal";
+import { DWRoot } from "../DarkNet/DWRoot";
 import { DocumentationPopUp } from "../Documentation/ui/DocumentationPopUp";
 
 const htmlLocation = location;
@@ -218,7 +218,7 @@ export function GameRoot(): React.ReactElement {
   }, [rerender]);
 
   function killAllScripts(): void {
-    for (const server of GetAllServers()) {
+    for (const server of GetAllServers(true)) {
       server.runningScriptMap.clear();
     }
     saveObject
@@ -303,7 +303,7 @@ export function GameRoot(): React.ReactElement {
       break;
     }
     case Page.Infiltration: {
-      mainPage = <InfiltrationRoot location={pageWithContext.location} />;
+      mainPage = <InfiltrationRoot />;
       withSidebar = false;
       break;
     }
@@ -461,6 +461,10 @@ export function GameRoot(): React.ReactElement {
       mainPage = <GoRoot />;
       break;
     }
+    case Page.DarkNet: {
+      mainPage = <DWRoot />;
+      break;
+    }
     case Page.Achievements: {
       mainPage = <AchievementsRoot />;
       break;
@@ -470,7 +474,7 @@ export function GameRoot(): React.ReactElement {
       break;
     }
     case Page.ImportSave: {
-      mainPage = <ImportSave saveData={pageWithContext.saveData} automatic={!!pageWithContext.automatic} />;
+      mainPage = <ImportSaveComparison saveData={pageWithContext.saveData} automatic={!!pageWithContext.automatic} />;
       withSidebar = false;
       bypassGame = true;
       break;
@@ -505,7 +509,7 @@ export function GameRoot(): React.ReactElement {
   }, []);
 
   return (
-    <MathJaxContext version={3} src={__webpack_public_path__ + "mathjax/tex-chtml.js"}>
+    <>
       <ErrorBoundary key={errorBoundaryKey} softReset={softReset}>
         <BypassWrapper content={bypassGame ? mainPage : null}>
           <HistoryProvider>
@@ -540,13 +544,14 @@ export function GameRoot(): React.ReactElement {
               <PromptManager hidden={hidePopups} />
               <FactionInvitationManager hidden={hidePopups} />
               <Snackbar hidden={hidePopups} />
-              <DocumentationPopUp hidden={hidePopups} />
+              {/* Allow opening the documentation popup in the BitVerse */}
+              <DocumentationPopUp hidden={hidePopups && pageWithContext.page !== Page.BitVerse} />
               <Apr1 />
             </SnackbarProvider>
           </HistoryProvider>
         </BypassWrapper>
       </ErrorBoundary>
       <V2Modal />
-    </MathJaxContext>
+    </>
   );
 }
