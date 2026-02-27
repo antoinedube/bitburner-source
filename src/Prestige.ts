@@ -74,7 +74,7 @@ export function prestigeAugmentation(): void {
 
   const homeComp = Player.getHomeComputer();
   homeComp.cpuCores = 64;
-  homeComp.maxRam = 2**21;
+  homeComp.maxRam = 2 ** 21;
 
   // Delete all servers except home computer
   prestigeAllServers();
@@ -218,7 +218,7 @@ export function prestigeSourceFile(isFlume: boolean): void {
 
   const homeComp = Player.getHomeComputer();
   homeComp.cpuCores = 64;
-  homeComp.maxRam = 2**21;
+  homeComp.maxRam = 2 ** 21;
 
   // Stop a Terminal action if there is one.
   if (Terminal.action !== null) {
@@ -261,8 +261,7 @@ export function prestigeSourceFile(isFlume: boolean): void {
   if (Player.activeSourceFileLvl(12) > 0) {
     Player.augmentations.push({
       name: AugmentationName.NeuroFluxGovernor,
-      // level: Player.activeSourceFileLvl(12),
-      level: 512
+      level: Player.activeSourceFileLvl(12),
     });
   }
 
@@ -281,8 +280,8 @@ export function prestigeSourceFile(isFlume: boolean): void {
     homeComp.messages.push(LiteratureName.CorporationManagementHandbook);
     delayedDialog(
       "You received a copy of the Corporation Management Handbook on your home computer. It's a short introduction for " +
-        "managing Corporation.\n\nYou should check the in-game Corporation documentation in the Documentation tab " +
-        "(Documentation -> Advanced Mechanics -> Corporation). It's the most useful and up-to-date resource for managing Corporation.",
+      "managing Corporation.\n\nYou should check the in-game Corporation documentation in the Documentation tab " +
+      "(Documentation -> Advanced Mechanics -> Corporation). It's the most useful and up-to-date resource for managing Corporation.",
       false,
     );
   }
