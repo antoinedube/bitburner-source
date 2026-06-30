@@ -8,7 +8,6 @@ import { Factions } from "./Faction/Factions";
 import { staneksGift } from "./CotMG/Helper";
 import { processPassiveFactionRepGain, inviteToFaction } from "./Faction/FactionHelpers";
 import { Router } from "./ui/GameRoot";
-import "./utils/Protections"; // Side-effect: Protect against certain unrecoverable errors
 import "./PersonObjects/Player/PlayerObject"; // For side-effect of creating Player
 
 import {
@@ -21,12 +20,11 @@ import { iTutorialStart } from "./InteractiveTutorial";
 import { checkForMessagesToSend } from "./Message/MessageHelpers";
 import { loadAllRunningScripts, updateOnlineScriptTimes } from "./NetscriptWorker";
 import { Player } from "@player";
-import { saveObject, loadGame } from "./SaveObject";
+import { saveGame, loadGame } from "./SaveObject";
 import { GetAllServers } from "./Server/AllServers";
 import { Settings } from "./Settings/Settings";
 import { FormatsNeedToChange } from "./ui/formatNumber";
 import { canAccessStockMarket, initSymbolToStockMap, processStockPrices } from "./StockMarket/StockMarket";
-import { Terminal } from "./Terminal";
 
 import { Money } from "./ui/React/Money";
 import { Hashes } from "./ui/React/Hashes";
@@ -63,10 +61,6 @@ declare global {
     GetAllServers: typeof GetAllServers;
     Factions: typeof Factions;
     Companies: typeof Companies;
-    SaveObject: {
-      saveObject: typeof saveObject;
-      loadGame: typeof loadGame;
-    };
   };
   // eslint-disable-next-line no-var
   var openDevMenu: () => void;
@@ -93,8 +87,6 @@ const Engine = {
     Player.totalPlaytime += time;
     Player.playtimeSinceLastAug += time;
     Player.playtimeSinceLastBitnode += time;
-
-    Terminal.process(numCycles);
 
     Player.processWork(numCycles);
 
@@ -157,7 +149,7 @@ const Engine = {
     messages: 150,
     mechanicProcess: 5, // Process Bladeburner
     contractGeneration: 3000, // Generate Coding Contracts
-    achievementsCounter: 60, // Check if we have new achievements
+    achievementsCounter: 5, // Check if we have new achievements
   },
 
   decrementAllCounters: function (numCycles = 1) {
@@ -209,13 +201,13 @@ const Engine = {
     }
 
     if (Engine.Counters.contractGeneration <= 0) {
-      tryGeneratingRandomContract(1);
+      tryGeneratingRandomContract(3);
       Engine.Counters.contractGeneration = 3000;
     }
 
     if (Engine.Counters.achievementsCounter <= 0) {
       calculateAchievements();
-      Engine.Counters.achievementsCounter = 300;
+      Engine.Counters.achievementsCounter = 5;
     }
 
     // This **MUST** remain the last block in the function!
@@ -232,12 +224,12 @@ const Engine = {
         Engine.Counters.autoSaveCounter = 60 * 5; // Let's check back in a bit
       } else {
         Engine.Counters.autoSaveCounter = Settings.AutosaveInterval * 5;
-        saveObject.saveGame(!Settings.SuppressSavedGameToast).catch((error) => console.error(error));
+        saveGame(!Settings.SuppressSavedGameToast).catch((error) => console.error(error));
       }
     }
   },
 
-  load: async function (saveData: SaveData) {
+  load: async function (saveData?: SaveData) {
     startExploits();
     setupUncaughtPromiseHandler();
     // Source files must be initialized early because save-game translation in
@@ -245,7 +237,7 @@ const Engine = {
     initSourceFiles();
     // Load game from save or create new game
 
-    if (await loadGame(saveData)) {
+    if (saveData !== undefined && (await loadGame(saveData))) {
       FormatsNeedToChange.emit();
       initBitNodeMultipliers();
       if (canAccessStockMarket()) {
@@ -265,7 +257,7 @@ const Engine = {
       const numCyclesOffline = Math.floor(timeOffline / CONSTANTS.MilliPerCycle);
 
       // Generate bonus CCTs
-      tryGeneratingRandomContract(timeOffline / CONSTANTS.MillisecondsPerTenMinutes);
+      tryGeneratingRandomContract((timeOffline * 3) / CONSTANTS.MillisecondsPerTenMinutes);
 
       let offlineReputation = 0;
       let offlineHackingIncome =
@@ -403,11 +395,6 @@ const Engine = {
         // Manipulate data of Factions and Companies
         Factions: Factions,
         Companies: Companies,
-        // saveObject and loadGame can be used to create a custom save/load tool
-        SaveObject: {
-          saveObject: saveObject,
-          loadGame: loadGame,
-        },
       };
     }
     globalThis.openDevMenu = () => apr1();

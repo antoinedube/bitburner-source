@@ -110,7 +110,6 @@ export function prestigeAugmentation(this: PlayerObject): void {
 
   this.factions = [];
   this.factionInvitations = [];
-  this.factionRumors.clear();
   // Clear any pending invitation modals
   FactionInvitationEvents.emit({ type: "ClearAll" });
 
@@ -136,6 +135,9 @@ export function prestigeAugmentation(this: PlayerObject): void {
   this.hp.current = this.hp.max;
 
   this.finishWork(true, true);
+  // We need to call overrideIntelligence here instead of prestigeSourceFile to reset intelligence data when installing
+  // augmentations.
+  this.overrideIntelligence();
 }
 
 export function prestigeSourceFile(this: PlayerObject): void {
@@ -174,17 +176,22 @@ export function prestigeSourceFile(this: PlayerObject): void {
 
 export function receiveInvite(this: PlayerObject, factionName: FactionName): void {
   const faction = Factions[factionName];
-  if (this.factionInvitations.includes(factionName) || faction.alreadyInvited || faction.isMember || faction.isBanned)
+  if (this.factionInvitations.includes(factionName) || faction.alreadyInvited || faction.isMember || faction.isBanned) {
     return;
+  }
   this.factionInvitations.push(factionName);
-  this.factionRumors.delete(factionName);
   faction.discovery = FactionDiscovery.known;
 }
 
 export function receiveRumor(this: PlayerObject, factionName: FactionName): void {
   const faction = Factions[factionName];
-  if (faction.discovery === FactionDiscovery.unknown) faction.discovery = FactionDiscovery.rumored;
-  if (this.factionRumors.has(factionName) || faction.isMember || faction.isBanned || faction.alreadyInvited) return;
+  if (faction.discovery === FactionDiscovery.unknown) {
+    faction.discovery = FactionDiscovery.rumored;
+  }
+  if (this.factionRumors.has(factionName) || faction.isMember || faction.alreadyInvited) {
+    return;
+  }
+
   this.factionRumors.add(factionName);
 }
 
@@ -446,12 +453,11 @@ export function reapplyAllSourceFiles(this: PlayerObject): void {
 export function checkForFactionInvitations(this: PlayerObject): Faction[] {
   const invitedFactions = [];
   for (const faction of Object.values(Factions)) {
-    if (faction.isBanned) continue;
     if (faction.isMember) continue;
     if (faction.alreadyInvited) continue;
     // Handle invites
     const { inviteReqs, rumorReqs } = faction.getInfo();
-    if (inviteReqs.isSatisfied(this)) invitedFactions.push(faction);
+    if (!faction.isBanned && inviteReqs.isSatisfied(this)) invitedFactions.push(faction);
     // Handle rumors
     if (this.factionRumors.has(faction.name)) continue;
     if (rumorReqs.isSatisfied(this)) this.receiveRumor(faction.name);
@@ -495,30 +501,33 @@ export function queueAugmentation(this: PlayerObject, name: AugmentationName): v
 export function gainCodingContractReward(
   this: PlayerObject,
   reward: ICodingContractReward | null,
-  difficulty = 1,
+  difficulty: number,
+  rewardScaling: number,
 ): string {
   if (!reward) {
     return `No reward for this contract`;
   }
+  // The new standard is smaller, more frequent rewards - a third of the reward size of the previous
+  const adjustedScaling = rewardScaling / 3;
 
   switch (reward.type) {
     case CodingContractRewardType.FactionReputation: {
       const factionsThatAllowHacking = Player.factions.filter((fac) => Factions[fac].getInfo().offerHackingWork);
       if (factionsThatAllowHacking.length === 0) {
-        return this.gainCodingContractReward({ type: CodingContractRewardType.Money }, difficulty);
+        return this.gainCodingContractReward({ type: CodingContractRewardType.Money }, difficulty, adjustedScaling);
       }
       const randomFaction = factionsThatAllowHacking[getRandomIntInclusive(0, factionsThatAllowHacking.length - 1)];
-      const repGain = CONSTANTS.CodingContractBaseFactionRepGain * difficulty;
+      const repGain = CONSTANTS.CodingContractBaseFactionRepGain * difficulty * adjustedScaling;
       Factions[randomFaction].playerReputation += repGain;
       return `Gained ${repGain} faction reputation for ${randomFaction}`;
     }
     case CodingContractRewardType.FactionReputationAll: {
       const factionsThatAllowHacking = Player.factions.filter((fac) => Factions[fac].getInfo().offerHackingWork);
       if (factionsThatAllowHacking.length === 0) {
-        return this.gainCodingContractReward({ type: CodingContractRewardType.Money }, difficulty);
+        return this.gainCodingContractReward({ type: CodingContractRewardType.Money }, difficulty, adjustedScaling);
       }
 
-      const totalGain = CONSTANTS.CodingContractBaseFactionRepGain * difficulty;
+      const totalGain = CONSTANTS.CodingContractBaseFactionRepGain * difficulty * adjustedScaling;
       const gainPerFaction = Math.floor(totalGain / factionsThatAllowHacking.length);
       for (const facName of factionsThatAllowHacking) {
         Factions[facName].playerReputation += gainPerFaction;
@@ -538,15 +547,17 @@ export function gainCodingContractReward(
                 : CodingContractRewardType.FactionReputationAll,
           },
           difficulty,
+          adjustedScaling,
         );
       }
       const randomCompany = companies[getRandomIntInclusive(0, companies.length - 1)];
-      const repGain = CONSTANTS.CodingContractBaseCompanyRepGain * difficulty;
+      const repGain = CONSTANTS.CodingContractBaseCompanyRepGain * difficulty * adjustedScaling;
       Companies[randomCompany].playerReputation += repGain;
       return `Gained ${repGain} company reputation for ${randomCompany}`;
     }
     case CodingContractRewardType.Money: {
-      const moneyGain = CONSTANTS.CodingContractBaseMoneyGain * difficulty * currentNodeMults.CodingContractMoney;
+      const moneyGain =
+        CONSTANTS.CodingContractBaseMoneyGain * difficulty * currentNodeMults.CodingContractMoney * adjustedScaling;
       this.gainMoney(moneyGain, "codingcontract");
       return `Gained ${formatMoney(moneyGain)}`;
     }
@@ -593,6 +604,10 @@ export function canAccessCotMG(this: PlayerObject): boolean {
   return canAccessBitNodeFeature(13);
 }
 
+/**
+ * To ensure the "SF override" option work properly, this function should only be used in special cases. In most cases,
+ * activeSourceFileLvl should be used instead.
+ */
 export function sourceFileLvl(this: PlayerObject, n: number): number {
   return this.sourceFiles.get(n) ?? 0;
 }

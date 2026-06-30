@@ -58,14 +58,11 @@ export function prestigeAugmentation(): void {
 
   initBitNodeMultipliers();
 
-  // Maintain invites to factions with the 'keepOnInstall' flag, and rumors about others
+  // Maintain invites to factions with the 'keepOnInstall' flag
   const maintainInvites = new Set<FactionName>();
-  const maintainRumors = new Set<FactionName>();
   for (const facName of [...Player.factions, ...Player.factionInvitations]) {
     if (Factions[facName].getInfo().keep) {
       maintainInvites.add(facName);
-    } else {
-      maintainRumors.add(facName);
     }
   }
 
@@ -74,7 +71,7 @@ export function prestigeAugmentation(): void {
 
   const homeComp = Player.getHomeComputer();
   homeComp.cpuCores = 8;
-  homeComp.maxRam = 2**24;
+  homeComp.maxRam = 2 ** 24;
 
   // Delete all servers except home computer
   prestigeAllServers();
@@ -112,10 +109,7 @@ export function prestigeAugmentation(): void {
   for (const faction of Object.values(Factions)) faction.prestigeAugmentation();
 
   // Stop a Terminal action if there is one.
-  if (Terminal.action !== null) {
-    Terminal.finishAction(true);
-  }
-  Terminal.clear();
+  Terminal.prestige();
   LogBoxClearEvents.emit();
 
   // Close coding contract modal
@@ -196,9 +190,8 @@ export function prestigeAugmentation(): void {
     }
   }
 
-  // Hear rumors after all invites/bans
-  for (const factionName of maintainRumors) Player.receiveRumor(factionName);
-
+  // clear recent scripts
+  recentScripts.splice(0);
   resetPidCounter();
   ProgramsSeen.clear();
   InvitationsSeen.clear();
@@ -218,13 +211,10 @@ export function prestigeSourceFile(isFlume: boolean): void {
 
   const homeComp = Player.getHomeComputer();
   homeComp.cpuCores = 8;
-  homeComp.maxRam = 2**24;
+  homeComp.maxRam = 2 ** 24;
 
   // Stop a Terminal action if there is one.
-  if (Terminal.action !== null) {
-    Terminal.finishAction(true);
-  }
-  Terminal.clear();
+  Terminal.prestige();
   LogBoxClearEvents.emit();
 
   // Close coding contract modal
@@ -249,7 +239,10 @@ export function prestigeSourceFile(isFlume: boolean): void {
   initForeignServers(Player.getHomeComputer());
 
   if (Player.sourceFileLvl(9) >= 2) {
-    homeComp.setMaxRam(128);
+    if (canAccessBitNodeFeature(15)) {
+      getDarkscapeNavigator();
+    }
+    homeComp.setMaxRam(512);
   } else if (Player.sourceFileLvl(1) > 0) {
     homeComp.setMaxRam(32);
   } else {
@@ -260,11 +253,6 @@ export function prestigeSourceFile(isFlume: boolean): void {
   // Reset favor for Companies and Factions
   for (const company of Object.values(Companies)) company.prestigeSourceFile();
   for (const faction of Object.values(Factions)) faction.prestigeSourceFile();
-
-  // Stop a Terminal action if there is one
-  if (Terminal.action !== null) {
-    Terminal.finishAction(true);
-  }
 
   // Give levels of NeuroFluxGovernor for Source-File 12. Must be done here before Augmentations are recalculated
   if (Player.activeSourceFileLvl(12) > 0) {
@@ -289,8 +277,8 @@ export function prestigeSourceFile(isFlume: boolean): void {
     homeComp.messages.push(LiteratureName.CorporationManagementHandbook);
     delayedDialog(
       "You received a copy of the Corporation Management Handbook on your home computer. It's a short introduction for " +
-        "managing Corporation.\n\nYou should check the in-game Corporation documentation in the Documentation tab " +
-        "(Documentation -> Advanced Mechanics -> Corporation). It's the most useful and up-to-date resource for managing Corporation.",
+      "managing Corporation.\n\nYou should check the in-game Corporation documentation in the Documentation tab " +
+      "(Documentation -> Advanced Mechanics -> Corporation). It's the most useful and up-to-date resource for managing Corporation.",
       false,
     );
   }
@@ -321,7 +309,7 @@ export function prestigeSourceFile(isFlume: boolean): void {
   }
 
   // BitNode 12: The Recursion
-  if (Player.bitNodeN === 12 && Player.activeSourceFileLvl(12) > 100) {
+  if (Player.bitNodeN === 12 && Player.sourceFileLvl(12) > 100) {
     delayedDialog("Saynt_Garmo is watching you");
   }
 

@@ -18,7 +18,7 @@ import { drawOnCanvas, getPixelPosition } from "./networkCanvas";
 import { dnetStyles, DWServerLogStyles } from "./dnetStyles";
 import { getLabyrinthDetails, isLabyrinthServer } from "../effects/labyrinth";
 import { DarknetServer } from "../../Server/DarknetServer";
-import { getAllDarknetServers } from "../utils/darknetNetworkUtils";
+import { getAllDarknetServers, getAllMovableDarknetServers } from "../utils/darknetNetworkUtils";
 import { ServerDetailsModal } from "./ServerDetailsModal";
 import { AutoCompleteSearchBox } from "../../ui/AutoCompleteSearchBox";
 import { getDarknetServerOrThrow } from "../utils/darknetServerUtils";
@@ -43,6 +43,10 @@ export function NetworkDisplayWrapper(): React.ReactElement {
   const { classes } = dnetStyles({});
   const instability = getTimeoutChance();
   const instabilityText = instability > 0.01 ? `${(instability * 100).toFixed(1)}%` : "< 1%";
+  const darkWebRoot = getDarknetServerOrThrow(SpecialServers.DarkWeb);
+  const labDetails = getLabyrinthDetails();
+  const labyrinth = labDetails.lab;
+  const labDepth = labDetails.depth;
 
   const scrollTo = useCallback(
     (top: number, left: number) => {
@@ -70,14 +74,13 @@ export function NetworkDisplayWrapper(): React.ReactElement {
       startingDepth,
     );
     setNetDisplayDepth(deepestServerDepth + visibilityMargin);
-
     rerender();
-    drawOnCanvas(canvas.current);
-  }, [rerender]);
+    drawOnCanvas(canvas.current, deepestServerDepth + visibilityMargin, labDepth);
+  }, [rerender, labDepth]);
 
   useEffect(() => {
     const clearSubscription = DarknetEvents.subscribe(() => updateDisplay());
-    draggableBackground.current?.addEventListener("wheel", (e) => e.preventDefault());
+    draggableBackground.current?.addEventListener("wheel", (e) => e.preventDefault(), { passive: false });
     scrollTo(DarknetState.netViewTopScroll, DarknetState.netViewLeftScroll);
     updateDisplay();
 
@@ -90,11 +93,6 @@ export function NetworkDisplayWrapper(): React.ReactElement {
     !!server &&
     (server.hasAdminRights ||
       server.serversOnNetwork.some((neighbor) => getDarknetServerOrThrow(neighbor).hasAdminRights));
-
-  const darkWebRoot = getDarknetServerOrThrow(SpecialServers.DarkWeb);
-  const labDetails = getLabyrinthDetails();
-  const labyrinth = labDetails.lab;
-  const depth = labDetails.depth;
 
   const handleDragStart: PointerEventHandler<HTMLDivElement> = (pointerEvent) => {
     const target = pointerEvent.target as HTMLDivElement;
@@ -120,51 +118,35 @@ export function NetworkDisplayWrapper(): React.ReactElement {
     }
   };
 
-  const zoomIn = useCallback(() => {
-    if (zoomIndex >= zoomOptions.length - 1) {
-      return;
-    }
-    DarknetState.zoomIndex = Math.max(zoomIndex + 1, 0);
-    setZoomIndex(DarknetState.zoomIndex);
-    const zoom = zoomOptions[zoomIndex];
-    const background = draggableBackground.current;
-    scrollTo(
-      (background?.scrollTop ?? 0) + ((background?.clientHeight ?? 0) / 4) * zoom,
-      (background?.scrollLeft ?? 0) + ((background?.clientWidth ?? 0) / 4) * zoom,
-    );
-  }, [zoomIndex, setZoomIndex, zoomOptions, scrollTo]);
-
-  const zoomOut = useCallback(() => {
-    if (zoomIndex <= 0) {
-      return;
-    }
-    DarknetState.zoomIndex = Math.min(zoomIndex - 1, zoomOptions.length - 1);
-    setZoomIndex(DarknetState.zoomIndex);
-    const zoom = zoomOptions[zoomIndex];
-    const background = draggableBackground.current;
-    scrollTo(
-      (background?.scrollTop ?? 0) - ((background?.clientHeight ?? 0) / 4) * zoom,
-      (background?.scrollLeft ?? 0) - ((background?.clientWidth ?? 0) / 4) * zoom,
-    );
-  }, [zoomIndex, setZoomIndex, zoomOptions, scrollTo]);
+  const changeZoom = useCallback(
+    (out = true, mouseX?: number, mouseY?: number) => {
+      if (out && zoomIndex <= 0) return;
+      if (!out && zoomIndex >= zoomOptions.length - 1) return;
+      const newZoomIndex = out ? zoomIndex - 1 : zoomIndex + 1;
+      const oldZoom = zoomOptions[zoomIndex];
+      const newZoom = zoomOptions[newZoomIndex];
+      DarknetState.zoomIndex = newZoomIndex;
+      setZoomIndex(newZoomIndex);
+      const background = draggableBackground.current;
+      const mx = mouseX ?? (background?.clientWidth ?? 0) / 2;
+      const my = mouseY ?? (background?.clientHeight ?? 0) / 2;
+      scrollTo(
+        (((background?.scrollTop ?? 0) + my) / oldZoom) * newZoom - my,
+        (((background?.scrollLeft ?? 0) + mx) / oldZoom) * newZoom - mx,
+      );
+    },
+    [zoomIndex, setZoomIndex, zoomOptions, scrollTo],
+  );
 
   const zoom = useCallback(
     (wheelEvent: WheelEvent) => {
-      const target = wheelEvent.target as HTMLDivElement;
-      if (!draggableBackground.current || DarknetState.openServer) {
-        return;
-      }
-      if (wheelEvent.deltaY < 0) {
-        zoomIn();
-      } else {
-        zoomOut();
-      }
-
-      if (!target?.parentElement?.getBoundingClientRect()) {
-        return;
-      }
+      if (!draggableBackground.current || DarknetState.openServer) return;
+      const rect = draggableBackground.current.getBoundingClientRect();
+      const mouseX = wheelEvent.clientX - rect.left;
+      const mouseY = wheelEvent.clientY - rect.top;
+      changeZoom(wheelEvent.deltaY > 0, mouseX, mouseY);
     },
-    [draggableBackground, zoomOut, zoomIn],
+    [draggableBackground, changeZoom],
   );
 
   const zoomRef = useRef(zoom);
@@ -187,9 +169,10 @@ export function NetworkDisplayWrapper(): React.ReactElement {
   };
 
   const search = (selection: string, options: string[], searchTerm: string) => {
+    // Ignore single character searches
     if (searchTerm.length === 1) {
       return;
-    } // Ignore single character searches
+    }
     if (!searchTerm) {
       setSearchLabel(initialSearchLabel);
       return;
@@ -199,12 +182,11 @@ export function NetworkDisplayWrapper(): React.ReactElement {
       servers.find((s) => s.hostname.toLowerCase() === selection.toLowerCase()) ||
       servers.find((s) => s.hostname.toLowerCase() === options[0]?.toLowerCase());
 
-    if (!foundServer) {
+    if (!foundServer || foundServer.depth >= netDisplayDepth) {
       setSearchLabel(`(No results)`);
       return;
-    } else {
-      setSearchLabel(initialSearchLabel);
     }
+    setSearchLabel(initialSearchLabel);
 
     const position = getPixelPosition(foundServer, true);
 
@@ -224,7 +206,7 @@ export function NetworkDisplayWrapper(): React.ReactElement {
       .filter((s) => s.depth < netDisplayDepth && !isLabyrinthServer(s.hostname))
       .map((s) => s.hostname);
 
-    if (labyrinth && netDisplayDepth > depth) {
+    if (labyrinth && netDisplayDepth > labDepth) {
       return [...servers, labyrinth.hostname];
     }
 
@@ -243,18 +225,27 @@ export function NetworkDisplayWrapper(): React.ReactElement {
       ) : (
         ""
       )}
-      {DarknetState.allowMutating ? (
+      {DarknetState.mutationLock ? (
+        <Typography variant={"h6"} className={classes.gold}>
+          [WEBSTORM WARNING]
+        </Typography>
+      ) : (
         <Box className={`${classes.inlineFlexBox}`}>
           <Typography variant={"h5"} sx={{ fontWeight: "bold" }}>
             Dark Net
           </Typography>
-          {instability && (
+          {instability > 0 && (
             <Tooltip
               title={
                 <>
-                  If too many darknet servers are backdoored, it will increase the chance that authentication <br />
+                  If too many darknet servers are backdoored or frozen, it will increase the chance that authentication{" "}
+                  <br />
                   attempts will return a 408 Request Timeout error (even if the password is correct). <br />
                   Most servers will eventually restart or go offline, which removes backdoors over time.
+                  <br />
+                  Current backdoored servers: {getAllMovableDarknetServers().filter((s) => s.backdoorInstalled).length}
+                  <br />
+                  Current frozen servers: {getAllDarknetServers().filter((s) => !s.maxRam).length}
                 </>
               }
             >
@@ -265,10 +256,6 @@ export function NetworkDisplayWrapper(): React.ReactElement {
             </Tooltip>
           )}
         </Box>
-      ) : (
-        <Typography variant={"h6"} className={classes.gold}>
-          [WEBSTORM WARNING]
-        </Typography>
       )}
 
       <div
@@ -299,22 +286,22 @@ export function NetworkDisplayWrapper(): React.ReactElement {
           {DarknetState.Network.slice(0, netDisplayDepth).map((row) =>
             row.map(
               (server) =>
-                server && (
+                !!server && (
                   <ServerStatusBox server={server} key={server.ip} enableAuth={allowAuth(server)} classes={classes} />
                 ),
             ),
           )}
 
-          {labyrinth && netDisplayDepth > depth && (
+          {labyrinth && netDisplayDepth > labDepth && (
             <ServerStatusBox server={labyrinth} enableAuth={allowAuth(labyrinth)} classes={classes} />
           )}
         </div>
       </div>
       <div className={classes.zoomContainer}>
-        <Button className={classes.button} onClick={() => zoomIn()}>
+        <Button className={classes.button} onClick={() => changeZoom(false)}>
           <ZoomIn />
         </Button>
-        <Button className={classes.button} onClick={() => zoomOut()}>
+        <Button className={classes.button} onClick={() => changeZoom()}>
           <ZoomOut />
         </Button>
       </div>

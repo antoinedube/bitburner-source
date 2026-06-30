@@ -64,6 +64,17 @@ Create a gang.
 </td></tr>
 <tr><td>
 
+[getAllGangInformation()](./bitburner.gang.getallganginformation.md)
+
+
+</td><td>
+
+Get information about all gangs.
+
+
+</td></tr>
+<tr><td>
+
 [getAscensionResult(memberName)](./bitburner.gang.getascensionresult.md)
 
 
@@ -185,17 +196,6 @@ List all gang members.
 </td></tr>
 <tr><td>
 
-[getOtherGangInformation()](./bitburner.gang.getotherganginformation.md)
-
-
-</td><td>
-
-Get information about all gangs.
-
-
-</td></tr>
-<tr><td>
-
 [getRecruitsAvailable()](./bitburner.gang.getrecruitsavailable.md)
 
 
@@ -234,7 +234,7 @@ Get stats of a task.
 
 </td><td>
 
-Check if you're in a gang.
+Check if you're in a gang. Does not require API access.
 
 
 </td></tr>

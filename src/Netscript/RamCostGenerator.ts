@@ -42,7 +42,6 @@ export const RamCostConstants = {
   GetStock: 2.0,
   BuySellStock: 2.5,
   Round: 0.05,
-  ReadWrite: 1.0,
   ArbScript: 1.0,
   GetScript: 0.1,
   GetRunningScript: 0.3,
@@ -77,7 +76,7 @@ export const RamCostConstants = {
   InfiltrationCalculateRewards: 2.5,
   InfiltrationGetInfiltrations: 15,
 
-  CycleTiming: 1,
+  CycleTiming: 0,
 } as const;
 
 function SF4Cost(cost: number): () => number {
@@ -238,6 +237,7 @@ const cloud = {
 const dnet = {
   authenticate: 0.4,
   connectToSession: 0.05,
+  freezeServer: 2,
   heartbleed: 0.6,
   openCache: 2,
   probe: RamCostConstants.Scan,
@@ -245,8 +245,7 @@ const dnet = {
   getStasisLinkLimit: 0,
   getStasisLinkedServers: 0,
   getServer: 2,
-  getServerAuthDetails: RamCostConstants.GetServer,
-  packetCapture: 6,
+  getServerDetails: RamCostConstants.GetServer,
   induceServerMigration: 4,
   unleashStormSeed: 0.1,
   isDarknetServer: RamCostConstants.GetServer,
@@ -267,16 +266,17 @@ const format = {
   ram: 0,
   percent: 0,
   time: 0,
+  money: 0,
 } as const;
 
 // Gang API
 const gang = {
   createGang: RamCostConstants.GangApiBase / 4,
-  inGang: RamCostConstants.GangApiBase / 4,
+  inGang: 0,
   getMemberNames: RamCostConstants.GangApiBase / 4,
   renameMember: 0,
   getGangInformation: RamCostConstants.GangApiBase / 2,
-  getOtherGangInformation: RamCostConstants.GangApiBase / 2,
+  getAllGangInformation: RamCostConstants.GangApiBase / 2,
   getMemberInformation: RamCostConstants.GangApiBase / 2,
   canRecruitMember: RamCostConstants.GangApiBase / 4,
   getRecruitsAvailable: RamCostConstants.GangApiBase / 4,
@@ -334,7 +334,7 @@ const go = {
 
 // Bladeburner API
 const bladeburner = {
-  inBladeburner: RamCostConstants.BladeburnerApiBase / 4,
+  inBladeburner: 0,
   getContractNames: 0,
   getOperationNames: 0,
   getBlackOpNames: 0,
@@ -349,6 +349,8 @@ const bladeburner = {
   getActionCurrentTime: RamCostConstants.BladeburnerApiBase,
   getActionEstimatedSuccessChance: RamCostConstants.BladeburnerApiBase,
   getActionRepGain: RamCostConstants.BladeburnerApiBase,
+  getActionRankGain: RamCostConstants.BladeburnerApiBase,
+  getActionRankLoss: RamCostConstants.BladeburnerApiBase,
   getActionCountRemaining: RamCostConstants.BladeburnerApiBase,
   getActionMaxLevel: RamCostConstants.BladeburnerApiBase,
   getActionCurrentLevel: RamCostConstants.BladeburnerApiBase,
@@ -442,6 +444,7 @@ const ui = {
   closeTail: 0,
   setTailTitle: 0,
   setTailFontSize: 0,
+  setTailMinimized: 0,
   getTheme: 0,
   setTheme: 0,
   resetTheme: 0,
@@ -450,7 +453,12 @@ const ui = {
   resetStyles: 0,
   getGameInfo: 0,
   clearTerminal: 0,
+  openCodeEditor: 0,
   windowSize: 0,
+  alias: 0,
+  unalias: 0,
+  getAllAliases: 0,
+  renderPage: 0,
 } as const;
 
 // Grafting API
@@ -459,7 +467,7 @@ const grafting = {
   getAugmentationGraftTime: 3.75,
   getGraftableAugmentations: 5,
   graftAugmentation: 7.5,
-  waitForOngoingGrafting: 1,
+  waitForOngoingGrafting: 0,
 } as const;
 
 const corporation = {
@@ -628,8 +636,10 @@ export const RamCosts: RamCostTree<NSFull> = {
   writePort: 0,
   nextPortWrite: 0,
   readPort: 0,
+  isFullPort: 0,
+  isEmptyPort: 0,
   getPortHandle: 0,
-  rm: RamCostConstants.ReadWrite,
+  rm: RamCostConstants.Scp,
   scriptRunning: RamCostConstants.ArbScript,
   scriptKill: RamCostConstants.ArbScript,
   getScriptName: 0,
@@ -690,6 +700,7 @@ export const RamCosts: RamCostTree<NSFull> = {
       hackTime: 0,
       growTime: 0,
       weakenTime: 0,
+      weakenEffect: 0,
     },
     hacknetNodes: {
       moneyGainRate: 0,

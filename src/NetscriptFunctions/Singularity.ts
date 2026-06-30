@@ -5,7 +5,7 @@ import { CityName, CompletedProgramName, FactionWorkType, LocationName } from "@
 import { purchaseAugmentation, joinFaction, getFactionAugmentationsFiltered } from "../Faction/FactionHelpers";
 import { startWorkerScript } from "../NetscriptWorker";
 import { Augmentations } from "../Augmentation/Augmentations";
-import { getAugCost, installAugmentations } from "../Augmentation/AugmentationHelpers";
+import { getAugCost, installAugmentations, soaAugmentationNames } from "../Augmentation/AugmentationHelpers";
 import { CONSTANTS } from "../Constants";
 import { RunningScript } from "../Script/RunningScript";
 import { calculateAchievements } from "../Achievements/Achievements";
@@ -37,15 +37,15 @@ import { CreateProgramWork, isCreateProgramWork } from "../Work/CreateProgramWor
 import { FactionWork } from "../Work/FactionWork";
 import { CompanyWork } from "../Work/CompanyWork";
 import { canGetBonus } from "../ExportBonus";
-import { saveObject } from "../SaveObject";
-import { calculateCrimeWorkStats } from "../Work/Formulas";
+import { getSaveData, exportGame } from "../SaveObject";
+import { calculateCompanyWorkStats, calculateCrimeWorkStats } from "../Work/Formulas";
 import { Engine } from "../engine";
 import { getEnumHelper } from "../utils/EnumHelper";
 import { ScriptFilePath, resolveScriptFilePath } from "../Paths/ScriptFilePath";
 import { getRecordEntries } from "../Types/Record";
 import { JobTracks } from "../Company/data/JobTracks";
 import { ServerConstants } from "../Server/data/Constants";
-import { blackOpsArray } from "../Bladeburner/data/BlackOperations";
+import { numberOfBlackOperations } from "../Bladeburner/data/BlackOperations";
 import { calculateEffectiveRequiredReputation } from "../Company/utils";
 import { addRepToFavor } from "../Faction/formulas/favor";
 import { validBitNodes } from "../BitNode/Constants";
@@ -141,6 +141,11 @@ export function NetscriptSingularity(): InternalAPI<ISingularity> {
       helpers.checkSingularityAccess(ctx);
       const augName = getEnumHelper("AugmentationName").nsGetMember(ctx, _augName);
       const aug = Augmentations[augName];
+      // SoA augmentations don't use the bitnode AugmentationMoneyCost multiplier;
+      // their cost only scales with the number of SoA augs already owned.
+      if (soaAugmentationNames.includes(augName)) {
+        return aug.baseCost;
+      }
       return aug.baseCost * currentNodeMults.AugmentationMoneyCost;
     },
     getAugmentationPrice: (ctx) => (_augName) => {
@@ -283,7 +288,6 @@ export function NetscriptSingularity(): InternalAPI<ISingularity> {
           Player.startFocusing();
           Router.toPage(Page.Work);
         } else if (wasFocusing) {
-          Player.stopFocusing();
           Router.toPage(Page.Terminal);
         }
         helpers.log(ctx, () => `Started ${classType} at ${universityName}`);
@@ -365,7 +369,6 @@ export function NetscriptSingularity(): InternalAPI<ISingularity> {
           Player.startFocusing();
           Router.toPage(Page.Work);
         } else if (wasFocusing) {
-          Player.stopFocusing();
           Router.toPage(Page.Terminal);
         }
         helpers.log(ctx, () => `Started training ${classType} at ${gymName}`);
@@ -570,7 +573,6 @@ export function NetscriptSingularity(): InternalAPI<ISingularity> {
         Router.toPage(Page.Work);
         return true;
       } else if (Player.focus && !focus) {
-        Player.stopFocusing();
         Router.toPage(Page.Terminal);
         return true;
       }
@@ -678,7 +680,7 @@ export function NetscriptSingularity(): InternalAPI<ISingularity> {
         name: job.name,
         field: job.field,
         nextPosition: job.nextPosition,
-        salary: job.baseSalary * company.salaryMultiplier,
+        salary: calculateCompanyWorkStats(Player, company, job, company.favor).money,
         requiredReputation: calculateEffectiveRequiredReputation(companyName, job.requiredReputation),
         requiredSkills: job.requiredSkills(company.jobStatReqOffset),
       };
@@ -709,7 +711,6 @@ export function NetscriptSingularity(): InternalAPI<ISingularity> {
           Player.startFocusing();
           Router.toPage(Page.Work);
         } else if (wasFocused) {
-          Player.stopFocusing();
           Router.toPage(Page.Terminal);
         }
         helpers.log(ctx, () => `Began working at '${companyName}' with position '${jobName}'`);
@@ -779,6 +780,11 @@ export function NetscriptSingularity(): InternalAPI<ISingularity> {
       helpers.checkSingularityAccess(ctx);
       const facName = getEnumHelper("FactionName").nsGetMember(ctx, _facName);
 
+      if (Player.factions.includes(facName)) {
+        helpers.log(ctx, () => `You are already a member of faction '${facName}'`);
+        return false;
+      }
+
       if (!Player.factionInvitations.includes(facName)) {
         helpers.log(ctx, () => `You have not been invited by faction '${facName}'`);
         return false;
@@ -829,7 +835,6 @@ export function NetscriptSingularity(): InternalAPI<ISingularity> {
               Player.startFocusing();
               Router.toPage(Page.Work);
             } else if (wasFocusing) {
-              Player.stopFocusing();
               Router.toPage(Page.Terminal);
             }
             helpers.log(ctx, () => `Started carrying out hacking contracts for '${faction.name}'`);
@@ -850,7 +855,6 @@ export function NetscriptSingularity(): InternalAPI<ISingularity> {
               Player.startFocusing();
               Router.toPage(Page.Work);
             } else if (wasFocusing) {
-              Player.stopFocusing();
               Router.toPage(Page.Terminal);
             }
             helpers.log(ctx, () => `Started carrying out field missions for '${faction.name}'`);
@@ -871,7 +875,6 @@ export function NetscriptSingularity(): InternalAPI<ISingularity> {
               Player.startFocusing();
               Router.toPage(Page.Work);
             } else if (wasFocusing) {
-              Player.stopFocusing();
               Router.toPage(Page.Terminal);
             }
             helpers.log(ctx, () => `Started carrying out security work for '${faction.name}'`);
@@ -1004,7 +1007,6 @@ export function NetscriptSingularity(): InternalAPI<ISingularity> {
           Player.startFocusing();
           Router.toPage(Page.Work);
         } else if (wasFocusing) {
-          Player.stopFocusing();
           Router.toPage(Page.Terminal);
         }
         helpers.log(ctx, () => `Began creating program: '${programName}'`);
@@ -1054,7 +1056,6 @@ export function NetscriptSingularity(): InternalAPI<ISingularity> {
         Player.startFocusing();
         Router.toPage(Page.Work);
       } else if (wasFocusing) {
-        Player.stopFocusing();
         Router.toPage(Page.Terminal);
       }
       return crimeTime;
@@ -1138,20 +1139,6 @@ export function NetscriptSingularity(): InternalAPI<ISingularity> {
     b1tflum3: (ctx) => (_nextBN, _cbScript, _bitNodeOptions) => {
       helpers.checkSingularityAccess(ctx);
       const nextBN = helpers.number(ctx, "nextBN", _nextBN);
-      const cbScript = _cbScript
-        ? resolveScriptFilePath(helpers.string(ctx, "cbScript", _cbScript), ctx.workerScript.name)
-        : false;
-      if (cbScript === null) {
-        throw helpers.errorMessage(ctx, `Could not resolve file path. callbackScript is null.`);
-      }
-      enterBitNode(true, Player.bitNodeN, nextBN, helpers.validateBitNodeOptions(ctx, _bitNodeOptions));
-      if (cbScript) {
-        setTimeout(() => runAfterReset(cbScript), 500);
-      }
-    },
-    destroyW0r1dD43m0n: (ctx) => (_nextBN, _cbScript, _bitNodeOptions) => {
-      helpers.checkSingularityAccess(ctx);
-      const nextBN = helpers.number(ctx, "nextBN", _nextBN);
       if (!validBitNodes.includes(nextBN)) {
         throw new Error(`Invalid BitNode: ${_nextBN}.`);
       }
@@ -1161,6 +1148,31 @@ export function NetscriptSingularity(): InternalAPI<ISingularity> {
       if (cbScript === null) {
         throw helpers.errorMessage(ctx, `Could not resolve file path. callbackScript is null.`);
       }
+      const bitNodeOptions = helpers.validateBitNodeOptions(ctx, _bitNodeOptions);
+      enterBitNode(true, Player.bitNodeN, nextBN, bitNodeOptions);
+      if (cbScript) {
+        setTimeout(() => runAfterReset(cbScript), 500);
+      }
+    },
+    destroyW0r1dD43m0n: (ctx) => (_nextBN, _cbScript, _bitNodeOptions) => {
+      helpers.checkSingularityAccess(ctx);
+      const nextBN = _nextBN != null ? helpers.number(ctx, "nextBN", _nextBN) : null;
+      if (nextBN !== null) {
+        // If _nextBN was provided, check that it is a valid BitNode.
+        if (!validBitNodes.includes(nextBN)) {
+          throw new Error(`Invalid BitNode: ${_nextBN}.`);
+        }
+      } else if (_cbScript != null || _bitNodeOptions != null) {
+        // If _nextBN was not provided, the other parameters must also be nullish.
+        throw helpers.errorMessage(ctx, `When nextBN is nullish, other parameters must be nullish.`);
+      }
+      const cbScript = _cbScript
+        ? resolveScriptFilePath(helpers.string(ctx, "cbScript", _cbScript), ctx.workerScript.name)
+        : false;
+      if (cbScript === null) {
+        throw helpers.errorMessage(ctx, `Could not resolve file path. callbackScript is null.`);
+      }
+      const bitNodeOptions = helpers.validateBitNodeOptions(ctx, _bitNodeOptions);
 
       const wd = GetServer(SpecialServers.WorldDaemon);
       if (!(wd instanceof Server)) {
@@ -1176,7 +1188,7 @@ export function NetscriptSingularity(): InternalAPI<ISingularity> {
         if (!Player.bladeburner) {
           return false;
         }
-        return Player.bladeburner.numBlackOpsComplete >= blackOpsArray.length;
+        return Player.bladeburner.numBlackOpsComplete >= numberOfBlackOperations;
       };
 
       if (!hackingRequirements() && !bladeburnerRequirements()) {
@@ -1186,7 +1198,11 @@ export function NetscriptSingularity(): InternalAPI<ISingularity> {
 
       wd.backdoorInstalled = true;
       calculateAchievements();
-      enterBitNode(false, Player.bitNodeN, nextBN, helpers.validateBitNodeOptions(ctx, _bitNodeOptions));
+      if (nextBN === null) {
+        Router.toPage(Page.BitVerse, { flume: false, quick: false });
+        return;
+      }
+      enterBitNode(false, Player.bitNodeN, nextBN, bitNodeOptions);
       if (cbScript) {
         setTimeout(() => runAfterReset(cbScript), 500);
       }
@@ -1198,7 +1214,7 @@ export function NetscriptSingularity(): InternalAPI<ISingularity> {
     },
     getSaveData: (ctx) => async () => {
       helpers.checkSingularityAccess(ctx);
-      const saveData = await saveObject.getSaveData();
+      const saveData = await getSaveData();
       if (typeof saveData === "string") {
         // saveData is the base64-encoded json save string. A base64-encoded string only uses ASCII characters, so it's
         // fine to use new TextEncoder().encode() to encode it to a Uint8Array.
@@ -1209,7 +1225,7 @@ export function NetscriptSingularity(): InternalAPI<ISingularity> {
     },
     exportGame: (ctx) => () => {
       helpers.checkSingularityAccess(ctx);
-      return saveObject.exportGame();
+      return exportGame();
     },
     exportGameBonus: (ctx) => () => {
       helpers.checkSingularityAccess(ctx);
