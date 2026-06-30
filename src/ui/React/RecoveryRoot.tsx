@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 
 import { Typography, Link, Button, ButtonGroup, Tooltip, Box, Paper, TextField } from "@mui/material";
 import { Settings } from "../../Settings/Settings";
-import { load } from "../../db";
+import { IndexedDBVersionError, load } from "../../db";
 import { Router } from "../GameRoot";
 import { Page } from "../Router";
 import { type CrashReport, newIssueUrl, getCrashReport, isSaveDataFromNewerVersions } from "../../utils/ErrorHelper";
@@ -35,11 +35,15 @@ interface IProps {
 }
 
 function exportSaveFile(): void {
-  load()
-    .then((content) => {
-      const extension = isBinaryFormat(content) ? "json.gz" : "json";
+  load(true)
+    .then((saveData) => {
+      if (saveData === undefined) {
+        console.error("There is no save data, but the recovery mode was activated.");
+        return;
+      }
+      const extension = isBinaryFormat(saveData) ? "json.gz" : "json";
       const filename = `RECOVERY_BITBURNER_${Date.now()}.${extension}`;
-      downloadContentAsFile(content, filename);
+      downloadContentAsFile(saveData, filename);
     })
     .catch((err) => {
       console.error(err);
@@ -100,31 +104,42 @@ export function RecoveryRoot({ softReset, crashReport, resetError }: IProps): Re
 
   let instructions;
   if (sourceError instanceof UnsupportedSaveData) {
+    // This specifically is thrown only from needing CompressionStream and not having it.
     instructions = (
       <Typography variant="h4" color={Settings.theme.warning}>
         Please update your browser.
       </Typography>
     );
-  } else if (sourceError instanceof InvalidSaveData) {
+  } else if (
+    isSaveDataFromNewerVersions(loadedSaveObjectMiniDump.VersionSave) ||
+    sourceError instanceof IndexedDBVersionError
+  ) {
+    // We check broadly for the version being mismatched. If the version is
+    // newer than we expect, an unknown/unanticipated change to the save
+    // format may have occured, which could result in almost any error type.
+    instructions = (
+      <Typography variant="h5" color={Settings.theme.warning}>
+        {loadedSaveObjectMiniDump.VersionSave !== undefined && (
+          <>
+            Your save data is from a newer version (Version number: {loadedSaveObjectMiniDump.VersionSave}). The current
+            version number is {CONSTANTS.VersionNumber}.
+            <br />
+          </>
+        )}
+        Please check if you are using the correct build. This may happen when you load the save data of the dev build
+        (Steam Beta or https://bitburner-official.github.io/bitburner-src) on the stable build.
+      </Typography>
+    );
+  } else if (sourceError instanceof InvalidSaveData || sourceError instanceof JSONReviverError) {
+    // These error types are mostly already covered by the version check above.
+    // If they occur while on the same version, it indicates bad save editing.
     instructions = (
       <Typography variant="h4" color={Settings.theme.warning}>
         Your save data is invalid. Please import a valid backup save file.
       </Typography>
     );
-  } else if (
-    sourceError instanceof JSONReviverError &&
-    isSaveDataFromNewerVersions(loadedSaveObjectMiniDump.VersionSave)
-  ) {
-    instructions = (
-      <Typography variant="h5" color={Settings.theme.warning}>
-        Your save data is from a newer version (Version number: {loadedSaveObjectMiniDump.VersionSave}). The current
-        version number is {CONSTANTS.VersionNumber}.
-        <br />
-        Please check if you are using the correct build. This may happen when you load the save data of the dev build
-        (Steam Beta or https://bitburner-official.github.io/bitburner-src) on the stable build.
-      </Typography>
-    );
   } else {
+    // If we get this far, we don't know what's going on.
     instructions = (
       <Box>
         <Typography>It is recommended to alert a developer.</Typography>

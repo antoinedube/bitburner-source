@@ -35,6 +35,7 @@ import { officeInitialCost, officeInitialSize, warehouseInitialCost } from "../C
 import { load } from "../db";
 import { downloadContentAsFile } from "./FileUtils";
 import { initDarkwebServer } from "../DarkNet/controllers/NetworkGenerator";
+import { breakingChanges301 } from "./APIBreaks/3.0.1";
 
 /** Function for performing a series of defined replacements. See 0.58.0 for usage */
 function convert(code: string, changes: [RegExp, string][]): string {
@@ -537,8 +538,12 @@ Error: ${e}`,
        * Backup pre-v3 save data. We must use the data in IndexedDB instead of calling saveObject.getSaveData().
        * getSaveData() returns data in v3 format, so the exported data will not be importable in pre-v3.
        */
-      const saveData = await load();
-      downloadContentAsFile(saveData, `bitburnerSave_backup_2.8.1_${Math.round(Player.lastUpdate / 1000)}.json.gz`);
+      const saveData = await load(true);
+      if (saveData !== undefined) {
+        downloadContentAsFile(saveData, `bitburnerSave_backup_2.8.1_${Math.round(Player.lastUpdate / 1000)}.json.gz`);
+      } else {
+        console.error("Cannot back up save data before migrating to v3. The save data is somehow undefined.");
+      }
     } catch (error) {
       console.error("Cannot export pre-v3 save data", error);
     }
@@ -621,7 +626,26 @@ Error: ${e}`,
   if (ver < 45) {
     initDarkwebServer();
   }
-  if (ver < 46) {
+  if (ver < 47) {
+    for (const faction of [...Player.factions, ...Player.factionInvitations]) {
+      Player.factionRumors.add(faction);
+    }
+    for (const person of [Player, ...Player.sleeves]) {
+      person.persistentIntelligenceData.exp = person.exp.intelligence;
+      person.overrideIntelligence();
+    }
+  }
+  if (ver < 49) {
+    if (Player.sourceFileLvl(5) === 0 && Player.bitNodeN !== 5) {
+      for (const person of [Player, ...Player.sleeves]) {
+        person.persistentIntelligenceData.exp = 0;
+        person.exp.intelligence = 0;
+        person.skills.intelligence = 0;
+      }
+    }
     showAPIBreaks("3.0.0", breakingChanges300);
+  }
+  if (ver < 51) {
+    showAPIBreaks("3.0.1", breakingChanges301);
   }
 }

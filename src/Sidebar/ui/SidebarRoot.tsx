@@ -157,6 +157,7 @@ export function SidebarRoot(props: { page: Page }): React.ReactElement {
   const canOpenFactions =
     Player.factionInvitations.length > 0 ||
     Player.factions.length > 0 ||
+    Player.factionRumors.size > 0 ||
     Player.augmentations.length > 0 ||
     Player.queuedAugmentations.length > 0 ||
     knowAboutBitverse();
@@ -181,7 +182,12 @@ export function SidebarRoot(props: { page: Page }): React.ReactElement {
 
   const clickPage = useCallback(
     (page: Page) => {
-      if (page == Page.ScriptEditor || page == Page.Documentation) {
+      if (page == Page.ScriptEditor) {
+        Router.toPage(page, {
+          files: new Map(),
+          options: { vim: Settings.MonacoDefaultToVim, hostname: Player.currentServer },
+        });
+      } else if (page === Page.Documentation || page === Page.Options || page === Page.ActiveScripts) {
         Router.toPage(page, {});
       } else if (isSimplePage(page)) {
         Router.toPage(page);
@@ -203,7 +209,7 @@ export function SidebarRoot(props: { page: Page }): React.ReactElement {
       switch (keyBindingType) {
         case SimplePage.Terminal:
         case ComplexPage.ScriptEditor:
-        case SimplePage.ActiveScripts:
+        case ComplexPage.ActiveScripts:
         case SimplePage.CreateProgram:
         case SimplePage.Stats:
         case SimplePage.Hacknet:
@@ -212,7 +218,7 @@ export function SidebarRoot(props: { page: Page }): React.ReactElement {
         case SimplePage.Milestones:
         case ComplexPage.Documentation:
         case SimplePage.Achievements:
-        case SimplePage.Options:
+        case ComplexPage.Options:
           return true;
         case SimplePage.StaneksGift:
           return canStaneksGift;
@@ -358,6 +364,7 @@ export function SidebarRoot(props: { page: Page }): React.ReactElement {
             canStaneksGift && { key_: Page.StaneksGift, icon: DeveloperBoardIcon },
           ]}
         />
+        <Typography component="div" id="sidebar-extra-hook-0"></Typography>
         <Divider />
         <SidebarAccordion
           key_="Character"
@@ -385,6 +392,7 @@ export function SidebarRoot(props: { page: Page }): React.ReactElement {
             canOpenGrafting && { key_: Page.Grafting, icon: BiotechIcon },
           ]}
         />
+        <Typography component="div" id="sidebar-extra-hook-1"></Typography>
         <Divider />
         <SidebarAccordion
           key_="World"
@@ -410,6 +418,7 @@ export function SidebarRoot(props: { page: Page }): React.ReactElement {
             canDarkNet && { key_: Page.DarkNet, icon: ShareIcon },
           ]}
         />
+        <Typography component="div" id="sidebar-extra-hook-2"></Typography>
         <Divider />
         <SidebarAccordion
           key_="Help"
@@ -427,6 +436,7 @@ export function SidebarRoot(props: { page: Page }): React.ReactElement {
             process.env.NODE_ENV === "development" && { key_: Page.DevMenu, icon: DeveloperBoardIcon },
           ]}
         />
+        <Typography component="div" id="sidebar-extra-hook-3"></Typography>
       </List>
     </Drawer>
   );

@@ -43,6 +43,7 @@ import { isCrimeWork } from "../../Work/CrimeWork";
 import { isFactionWork } from "../../Work/FactionWork";
 import { isGraftingWork } from "../../Work/GraftingWork";
 import { useRerender } from "./hooks";
+import { RemoteFileApiConnectionStatus } from "../../GameOptions/ui/RemoteFileApiConnectionStatus";
 
 export const OverviewEventEmitter = new EventEmitter();
 
@@ -84,15 +85,15 @@ export function Val({ name, color }: ValProps): React.ReactElement {
     return clearSubscription;
   }, [name]);
 
-  if (
-    name === "Int" &&
-    Player.bitNodeOptions.intelligenceOverride !== undefined &&
-    Player.bitNodeOptions.intelligenceOverride < Player.skills.intelligence
-  ) {
+  if (name === "Int" && Player.bitNodeOptions.intelligenceOverride !== undefined) {
     return (
-      <Tooltip title={`Intelligence: ${formatSkill(Player.skills.intelligence)}`}>
+      <Tooltip
+        title={`Persistent Intelligence: ${formatSkill(
+          Player.calculateSkill(Player.persistentIntelligenceData.exp, 1),
+        )}`}
+      >
         <Typography color={color}>
-          {formatSkill(Player.bitNodeOptions.intelligenceOverride)}
+          {formatSkill(Player.skills.intelligence)}
           <sup>*</sup>
         </Typography>
       </Tooltip>
@@ -153,7 +154,7 @@ export function CharacterOverview({ parentOpen, save, killScripts }: OverviewPro
   const theme = useTheme();
   return (
     <>
-      <Table sx={{ display: "block", m: 1 }}>
+      <Table sx={{ display: "block", p: 1 }}>
         <TableBody>
           <DataRow name="HP" showBar={false} color={theme.colors.hp} cellType={"cellNone"} />
           <DataRow name="Money" showBar={false} color={theme.colors.money} cellType={"cell"} />
@@ -201,6 +202,7 @@ export function CharacterOverview({ parentOpen, save, killScripts }: OverviewPro
             </Tooltip>
           </IconButton>
         </Box>
+        <RemoteFileApiConnectionStatus showIcon={true} />
         <Box sx={{ display: "flex", flex: 1, justifyContent: "flex-end", alignItems: "center" }}>
           <IconButton aria-label="kill all scripts" onClick={() => setKillOpen(true)}>
             <Tooltip title="Kill all running scripts">
@@ -544,7 +546,7 @@ function Work(): React.ReactElement {
     const perc = (Player.currentWork.unitCompleted / crime.time) * 100;
 
     details = <>{Player.currentWork.crimeType}</>;
-    header = <>You are attempting to {Player.currentWork.crimeType}</>;
+    header = <>You are attempting {Player.currentWork.getCrime().workName}</>;
     innerText = <>{perc.toFixed(2)}%</>;
   }
   if (isClassWork(Player.currentWork)) {

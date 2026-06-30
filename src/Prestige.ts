@@ -58,14 +58,11 @@ export function prestigeAugmentation(): void {
 
   initBitNodeMultipliers();
 
-  // Maintain invites to factions with the 'keepOnInstall' flag, and rumors about others
+  // Maintain invites to factions with the 'keepOnInstall' flag
   const maintainInvites = new Set<FactionName>();
-  const maintainRumors = new Set<FactionName>();
   for (const facName of [...Player.factions, ...Player.factionInvitations]) {
     if (Factions[facName].getInfo().keep) {
       maintainInvites.add(facName);
-    } else {
-      maintainRumors.add(facName);
     }
   }
 
@@ -112,10 +109,7 @@ export function prestigeAugmentation(): void {
   for (const faction of Object.values(Factions)) faction.prestigeAugmentation();
 
   // Stop a Terminal action if there is one.
-  if (Terminal.action !== null) {
-    Terminal.finishAction(true);
-  }
-  Terminal.clear();
+  Terminal.prestige();
   LogBoxClearEvents.emit();
 
   // Close coding contract modal
@@ -196,9 +190,8 @@ export function prestigeAugmentation(): void {
     }
   }
 
-  // Hear rumors after all invites/bans
-  for (const factionName of maintainRumors) Player.receiveRumor(factionName);
-
+  // clear recent scripts
+  recentScripts.splice(0);
   resetPidCounter();
   ProgramsSeen.clear();
   InvitationsSeen.clear();
@@ -221,10 +214,7 @@ export function prestigeSourceFile(isFlume: boolean): void {
   homeComp.maxRam = 2 ** 21;
 
   // Stop a Terminal action if there is one.
-  if (Terminal.action !== null) {
-    Terminal.finishAction(true);
-  }
-  Terminal.clear();
+  Terminal.prestige();
   LogBoxClearEvents.emit();
 
   // Close coding contract modal
@@ -248,14 +238,22 @@ export function prestigeSourceFile(isFlume: boolean): void {
   // Re-create foreign servers
   initForeignServers(Player.getHomeComputer());
 
+  if (canAccessBitNodeFeature(15)) {
+    getDarkscapeNavigator();
+  }
+
+  if (Player.activeSourceFileLvl(9) >= 2) {
+    homeComp.setMaxRam(512);
+  } else if (Player.activeSourceFileLvl(1) > 0) {
+    homeComp.setMaxRam(32);
+  } else {
+    homeComp.setMaxRam(8);
+  }
+  homeComp.cpuCores = 1;
+
   // Reset favor for Companies and Factions
   for (const company of Object.values(Companies)) company.prestigeSourceFile();
   for (const faction of Object.values(Factions)) faction.prestigeSourceFile();
-
-  // Stop a Terminal action if there is one
-  if (Terminal.action !== null) {
-    Terminal.finishAction(true);
-  }
 
   // Give levels of NeuroFluxGovernor for Source-File 12. Must be done here before Augmentations are recalculated
   if (Player.activeSourceFileLvl(12) > 0) {
@@ -312,7 +310,7 @@ export function prestigeSourceFile(isFlume: boolean): void {
   }
 
   // BitNode 12: The Recursion
-  if (Player.bitNodeN === 12 && Player.activeSourceFileLvl(12) > 100) {
+  if (Player.bitNodeN === 12 && Player.sourceFileLvl(12) > 100) {
     delayedDialog("Saynt_Garmo is watching you");
   }
 

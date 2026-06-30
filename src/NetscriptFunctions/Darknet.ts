@@ -13,7 +13,6 @@ import {
 import { Player } from "@player";
 import { formatNumber } from "../ui/formatNumber";
 import { GetServer } from "../Server/AllServers";
-import { capturePackets } from "../DarkNet/models/packetSniffing";
 import { addSessionToServer, DarknetState, getServerState } from "../DarkNet/models/DarknetState";
 import { getStockFromSymbol } from "./StockMarket";
 import { CompletedProgramName } from "@enums";
@@ -22,6 +21,7 @@ import { getPasswordType } from "../DarkNet/controllers/ServerGenerator";
 import { checkPassword, getAuthResult, isAuthenticated } from "../DarkNet/effects/authentication";
 import {
   getLabMaze,
+  getPositionInLab,
   getLabyrinthDetails,
   getLabyrinthLocationReport,
   getSurroundingsVisualized,
@@ -38,7 +38,7 @@ import {
   logger,
 } from "../DarkNet/effects/offlineServerHandling";
 import { DarknetServer } from "../Server/DarknetServer";
-import { GenericResponseMessage, ResponseCodeEnum } from "../DarkNet/Enums";
+import { exampleDarknetServerDetails, GenericResponseMessage, ResponseCodeEnum } from "../DarkNet/Enums";
 import { getRewardFromCache } from "../DarkNet/effects/cacheFiles";
 import { CONSTANTS } from "../Constants";
 import { getStasisLinkServers } from "../DarkNet/utils/darknetNetworkUtils";
@@ -46,8 +46,10 @@ import { resolveCacheFilePath } from "../Paths/CacheFilePath";
 import type { CacheResult } from "@nsdefs";
 import { MAX_PASSWORD_LENGTH } from "../DarkNet/Constants";
 import { isIPAddress } from "../Types/strings";
-import { getDarknetServerOrThrow } from "../DarkNet/utils/darknetServerUtils";
+import { type DarknetServerData, getDarknetServerOrThrow } from "../DarkNet/utils/darknetServerUtils";
 import { shuffle } from "lodash";
+import { getSharedChars } from "../DarkNet/utils/darknetAuthUtils";
+import { freezeServer } from "../DarkNet/controllers/NetworkMovement";
 
 type CompleteHeartbleedOptions = {
   peek: boolean;
@@ -121,7 +123,8 @@ export function NetscriptDarknet(): InternalAPI<DarknetAPI> {
         const server = serverCheck.server;
 
         const threads = ctx.workerScript.scriptRef.threads;
-        const networkDelay = calculateAuthenticationTime(server, Player, threads, password) + additionalMsec;
+        const sharedChars = getSharedChars(server.password, password);
+        const networkDelay = calculateAuthenticationTime(server, Player, threads, sharedChars) + additionalMsec;
 
         logger(ctx)(
           `Connecting to ${server.hostname} with password '${password}'... (Est: ${formatNumber(
@@ -155,7 +158,7 @@ export function NetscriptDarknet(): InternalAPI<DarknetAPI> {
           const success = authResult.result.success;
           const xp = formatNumber(calculatePasswordAttemptChaGain(server, threads, success), 1);
           logger(ctx)(
-            `Authentication on ${server.hostname} ${success ? "succeeded" : `failed. (Gained ${xp} cha xp)`}`,
+            `Authentication on ${server.hostname} ${success ? "succeeded" : "failed"}. (Gained ${xp} cha xp)`,
           );
 
           if (isLabyrinthServer(server.hostname)) {
@@ -218,6 +221,27 @@ export function NetscriptDarknet(): InternalAPI<DarknetAPI> {
           message: GenericResponseMessage.Success,
         };
       },
+    freezeServer: (ctx: NetscriptContext) => (_host) => {
+      const targetHost = helpers.string(ctx, "host", _host);
+      const serverCheck = checkDarknetServer(ctx, targetHost, {
+        requireDirectConnection: true,
+      });
+      if (!serverCheck.success) {
+        return {
+          success: false,
+          code: serverCheck.code,
+          message: serverCheck.message,
+          logs: [],
+        };
+      }
+      freezeServer(serverCheck.server);
+      logger(ctx)(`Froze ${serverCheck.server.hostname}`);
+      return {
+        success: true,
+        code: ResponseCodeEnum.Success,
+        message: GenericResponseMessage.Success,
+      };
+    },
     heartbleed:
       (ctx: NetscriptContext) =>
       (_host, _opts): Promise<DarknetResult & { logs: string[] }> => {
@@ -245,7 +269,7 @@ export function NetscriptDarknet(): InternalAPI<DarknetAPI> {
 
         if (Player.skills.charisma < server.requiredCharismaSkill) {
           logger(ctx)(
-            `You need a higher charisma level to extract data from ${server.hostname}. (${server.requiredHackingSkill} required)`,
+            `You need a higher charisma level to extract data from ${server.hostname}. (${server.requiredCharismaSkill} required)`,
           );
           return helpers.netscriptDelay(ctx, 100).then(() => ({
             success: false,
@@ -313,6 +337,7 @@ export function NetscriptDarknet(): InternalAPI<DarknetAPI> {
       (ctx: NetscriptContext) =>
       (_returnByIp): string[] => {
         const returnByIP = helpers.boolean(ctx, "returnByIP", _returnByIp ?? false);
+        expectDarknetAccess(ctx);
         const server = ctx.workerScript.getServer();
         const out = [];
         for (const neighbor of server.serversOnNetwork) {
@@ -364,6 +389,7 @@ export function NetscriptDarknet(): InternalAPI<DarknetAPI> {
           .then(() => setStasisLink(ctx, server, shouldLink));
       },
     getStasisLinkLimit: (ctx: NetscriptContext) => (): number => {
+      expectDarknetAccess(ctx);
       const limit = getStasisLinkLimit();
       logger(ctx)(`Stasis link limit: ${limit}`);
       return limit;
@@ -372,27 +398,21 @@ export function NetscriptDarknet(): InternalAPI<DarknetAPI> {
       (ctx: NetscriptContext) =>
       (_returnByIP): string[] => {
         const returnByIp = helpers.boolean(ctx, "returnByIP", _returnByIP ?? false);
+        expectDarknetAccess(ctx);
         const servers = getStasisLinkServers();
         const serverNames = servers.map((s) => (returnByIp ? s.ip : s.hostname));
         logger(ctx)(`Stasis linked servers: ${serverNames}`);
         return serverNames;
       },
-    getServerAuthDetails: (ctx) => (_host) => {
+    getServerDetails: (ctx) => (_host) => {
       const targetHost = helpers.string(ctx, "host", _host ?? ctx.workerScript.hostname);
       const serverCheck = checkDarknetServer(ctx, targetHost);
       if (!serverCheck.success) {
         logger(ctx)(serverCheck.message);
         return {
+          ...exampleDarknetServerDetails,
           isOnline: false,
-          isConnectedToCurrentServer: false,
-          hasSession: false,
-          modelId: "",
-          passwordHint: "",
-          data: "",
-          logTrafficInterval: -1,
-          passwordLength: -1,
-          passwordFormat: "numeric",
-        } satisfies ReturnType<DarknetAPI["getServerAuthDetails"]>;
+        } satisfies ReturnType<DarknetAPI["getServerDetails"]>;
       }
       const targetServer = serverCheck.server;
       const localServer = ctx.workerScript.getServer();
@@ -408,35 +428,12 @@ export function NetscriptDarknet(): InternalAPI<DarknetAPI> {
         logTrafficInterval: targetServer.logTrafficInterval,
         passwordLength: targetServer.password.length,
         passwordFormat: getPasswordType(targetServer.password),
-      } satisfies ReturnType<DarknetAPI["getServerAuthDetails"]>;
-    },
-    packetCapture: (ctx) => (_host) => {
-      const targetHost = helpers.string(ctx, "host", _host ?? ctx.workerScript.hostname);
-      const serverCheck = checkDarknetServer(ctx, targetHost, {
-        requireDirectConnection: true,
-      });
-      if (!serverCheck.success) {
-        return helpers.netscriptDelay(ctx, 100).then(() => ({
-          success: false,
-          code: serverCheck.code,
-          message: serverCheck.message,
-          data: "",
-        }));
-      }
-
-      const server = serverCheck.server;
-      const networkDelay = calculateAuthenticationTime(server, Player, ctx.workerScript.scriptRef.threads) * 4;
-      const xp = formatNumber(calculatePasswordAttemptChaGain(server, ctx.workerScript.scriptRef.threads), 1);
-
-      logger(ctx)(`Captured some outgoing transmissions from ${server.hostname}. (Gained ${xp} cha xp)`);
-      return helpers.netscriptDelay(ctx, networkDelay).then(() => {
-        return {
-          success: true,
-          code: ResponseCodeEnum.Success,
-          message: GenericResponseMessage.Success,
-          data: capturePackets(server),
-        };
-      });
+        blockedRam: targetServer.blockedRam,
+        difficulty: targetServer.difficulty,
+        requiredCharismaSkill: targetServer.requiredCharismaSkill,
+        depth: targetServer.depth,
+        isStationary: targetServer.isStationary,
+      } satisfies ReturnType<DarknetAPI["getServerDetails"]>;
     },
     induceServerMigration:
       (ctx) =>
@@ -724,7 +721,7 @@ export function NetscriptDarknet(): InternalAPI<DarknetAPI> {
       const authenticationTime = calculateAuthenticationTime(lab, Player, ctx.workerScript.scriptRef.threads);
       await helpers.netscriptDelay(ctx, authenticationTime);
 
-      const [x, y] = DarknetState.labLocations[pid] ?? [1, 1];
+      const [x, y] = getPositionInLab(pid);
       return {
         success: true,
         message: getSurroundingsVisualized(getLabMaze(), x, y, 3, true, true),
@@ -732,3 +729,56 @@ export function NetscriptDarknet(): InternalAPI<DarknetAPI> {
     },
   };
 }
+
+export const getDarknetPropertiesForDeprecationSupport = (dnetServer: DarknetServerData) => ({
+  depth: {
+    identifier: "ns.getServer().depth",
+    message: "Use ns.dnet.getServerDetails().depth instead.",
+    value: dnetServer.depth,
+  },
+  modelId: {
+    identifier: "ns.getServer().modelId",
+    message: "Use ns.dnet.getServerDetails().modelId instead.",
+    value: dnetServer.modelId,
+  },
+  hasStasisLink: {
+    identifier: "ns.getServer().hasStasisLink",
+    message: "Use ns.dnet.getServerDetails().hasStasisLink instead.",
+    value: dnetServer.hasStasisLink,
+  },
+  blockedRam: {
+    identifier: "ns.getServer().blockedRam",
+    message: "Use ns.dnet.getServerDetails().blockedRam instead.",
+    value: dnetServer.blockedRam,
+  },
+  staticPasswordHint: {
+    identifier: "ns.getServer().staticPasswordHint",
+    message: "Use ns.dnet.getServerDetails().staticPasswordHint instead.",
+    value: dnetServer.staticPasswordHint,
+  },
+  passwordHintData: {
+    identifier: "ns.getServer().passwordHintData",
+    message: "Use ns.dnet.getServerDetails().passwordHintData instead.",
+    value: dnetServer.passwordHintData,
+  },
+  difficulty: {
+    identifier: "ns.getServer().difficulty",
+    message: "Use ns.dnet.getServerDetails().difficulty instead.",
+    value: dnetServer.difficulty,
+  },
+  requiredCharismaSkill: {
+    identifier: "ns.getServer().requiredCharismaSkill",
+    message: "Use ns.dnet.getServerDetails().requiredCharismaSkill instead.",
+    value: dnetServer.requiredCharismaSkill,
+  },
+  logTrafficInterval: {
+    identifier: "ns.getServer().logTrafficInterval",
+    message: "Use ns.dnet.getServerDetails().logTrafficInterval instead.",
+    value: dnetServer.logTrafficInterval,
+  },
+  isStationary: {
+    identifier: "ns.getServer().isStationary",
+    message: "Use ns.dnet.getServerDetails().isStationary instead.",
+    value: dnetServer.isStationary,
+  },
+});
