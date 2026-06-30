@@ -16,10 +16,14 @@ import { helpers } from "../Netscript/NetscriptHelpers";
 import { getEnumHelper } from "../utils/EnumHelper";
 import { Skills } from "../Bladeburner/data/Skills";
 import { assertStringWithNSContext } from "../Netscript/TypeAssertion";
-import { BlackOperations, blackOpsArray } from "../Bladeburner/data/BlackOperations";
+import { numberOfBlackOperations } from "../Bladeburner/data/BlackOperations";
 import { checkSleeveAPIAccess, checkSleeveNumber } from "../NetscriptFunctions/Sleeve";
 import { canAccessBitNodeFeature } from "../BitNode/BitNodeUtils";
-import { calculateActionRankGain, calculateActionReputationGain } from "../Bladeburner/Formulas";
+import {
+  calculateActionRankGain,
+  calculateActionRankLoss,
+  calculateActionReputationGain,
+} from "../Bladeburner/Formulas";
 import { CONSTANTS } from "../Constants";
 
 export function NetscriptBladeburner(): InternalAPI<INetscriptBladeburner> {
@@ -77,20 +81,21 @@ export function NetscriptBladeburner(): InternalAPI<INetscriptBladeburner> {
       return Object.values(BladeburnerOperationName);
     },
     getBlackOpNames: (ctx) => () => {
-      getBladeburner(ctx);
+      const bladeburner = getBladeburner(ctx);
       // Ensures they are sent in the correct order
-      return blackOpsArray.map((blackOp) => blackOp.name);
+      return bladeburner.blackOperationArray.map((blackOp) => blackOp.name);
     },
     getNextBlackOp: (ctx) => () => {
       const bladeburner = getBladeburner(ctx);
-      if (bladeburner.numBlackOpsComplete >= blackOpsArray.length) return null;
-      const blackOp = blackOpsArray[bladeburner.numBlackOpsComplete];
+      if (bladeburner.numBlackOpsComplete >= numberOfBlackOperations) return null;
+      const blackOp = bladeburner.blackOperationArray[bladeburner.numBlackOpsComplete];
       return { name: blackOp.name, rank: blackOp.reqdRank };
     },
     getBlackOpRank: (ctx) => (_blackOpName) => {
       checkBladeburnerAccess(ctx);
       const blackOpName = getEnumHelper("BladeburnerBlackOpName").nsGetMember(ctx, _blackOpName);
-      return BlackOperations[blackOpName].reqdRank;
+      const bladeburner = getBladeburner(ctx);
+      return bladeburner.blackOperations[blackOpName].reqdRank;
     },
     getGeneralActionNames: (ctx) => () => {
       getBladeburner(ctx);
@@ -155,6 +160,18 @@ export function NetscriptBladeburner(): InternalAPI<INetscriptBladeburner> {
       const level = isLevelableAction(action) ? helpers.number(ctx, "level", _level ?? action.level) : 1;
       const rankGain = calculateActionRankGain(action, level);
       return calculateActionReputationGain(Player, rankGain);
+    },
+    getActionRankGain: (ctx) => (type, name, _level) => {
+      checkBladeburnerAccess(ctx);
+      const action = getAction(ctx, type, name);
+      const level = isLevelableAction(action) ? helpers.number(ctx, "level", _level ?? action.level) : 1;
+      return calculateActionRankGain(action, level);
+    },
+    getActionRankLoss: (ctx) => (type, name, _level) => {
+      checkBladeburnerAccess(ctx);
+      const action = getAction(ctx, type, name);
+      const level = isLevelableAction(action) ? helpers.number(ctx, "level", _level ?? action.level) : 1;
+      return calculateActionRankLoss(action, level);
     },
     getActionCountRemaining: (ctx) => (type, name) => {
       const bladeburner = getBladeburner(ctx);

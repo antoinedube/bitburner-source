@@ -17,6 +17,8 @@ import { getRamBlock } from "../effects/ramblock";
 import { hasFullDarknetAccess } from "../effects/effects";
 import { getFriendlyType, TypeAssertionError } from "../../utils/TypeAssertion";
 import { isIPAddress } from "../../Types/strings";
+import { roundToTwo } from "../../utils/helpers/roundToTwo";
+import { safelyReverseString } from "../../utils/StringHelperFunctions";
 
 export type PasswordResponse = {
   code: DarknetResponseCode;
@@ -58,7 +60,7 @@ export type DarknetServerOptions = {
 };
 
 export const DnetServerBuilder = (options: DarknetServerOptions): DarknetServer => {
-  const maxRam = 16 * 2 ** Math.floor(options.difficulty / 4);
+  const maxRam = getMaxRam(options.difficulty);
   const ramBlock = options.preventBlockedRam ? 0 : getRamBlock(maxRam);
   const name = options.name ?? generateDarknetServerName();
 
@@ -151,17 +153,17 @@ const decorateName = (name: string): string => {
       // Just in case we hit a lot of the same name mutations, or if the player
       // messes with Math.random(), prevent an infinite loop
       updatedName += `/T${Date.now()}`;
-      break;
+      continue;
     }
 
     const connector = connectors[Math.floor(Math.random() * connectors.length)];
 
     if (Math.random() < 0.3) {
-      updatedName = l33tifyName(name);
+      updatedName = l33tifyName(updatedName);
     }
 
     if (Math.random() < 0.05) {
-      updatedName = updatedName.split("").reverse().join("");
+      updatedName = safelyReverseString(updatedName);
     }
 
     if (Math.random() < 0.1) {
@@ -179,7 +181,11 @@ const decorateName = (name: string): string => {
     }
   } while (GetServer(updatedName) !== null);
 
-  return updatedName;
+  // Defensive coding. All operations above preserve well-formed UTF-16, so this is currently redundant. It's a
+  // safeguard to ensure the function never returns ill-formed UTF-16 if future changes introduce code unit–level
+  // manipulation.
+  // This normalization is lossy (lone surrogates -> U+FFFD).
+  return updatedName.toWellFormed();
 };
 
 const l33tifyName = (name: string): string => {
@@ -190,5 +196,16 @@ const l33tifyName = (name: string): string => {
     const replacement: string = l33t[char] ?? "";
     updatedName = updatedName.replaceAll(char, replacement);
   }
-  return updatedName;
+  // Defensive coding. All operations above preserve well-formed UTF-16, so this is currently redundant. It's a
+  // safeguard to ensure the function never returns ill-formed UTF-16 if future changes introduce code unit–level
+  // manipulation.
+  // This normalization is lossy (lone surrogates -> U+FFFD).
+  return updatedName.toWellFormed();
+};
+
+const getMaxRam = (difficulty: number): number => {
+  const baseRam = 16 * 2 ** Math.floor(difficulty / 6);
+  const sizeMutations = [0.5, 1, 1, 1.15, 1.4];
+  const mutation = sizeMutations[Math.floor(Math.random() * sizeMutations.length)];
+  return roundToTwo(Math.max(baseRam * mutation, 16));
 };

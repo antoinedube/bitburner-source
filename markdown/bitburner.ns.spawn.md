@@ -9,7 +9,7 @@ Terminate current script and start another in a defined number of milliseconds.
 **Signature:**
 
 ```typescript
-spawn(script: string, threadOrOptions?: number | SpawnOptions, ...args: ScriptArg[]): void;
+spawn(script: string, threadOrOptions?: number | SpawnOptions, ...args: ScriptArg[]): never;
 ```
 
 ## Parameters
@@ -82,7 +82,7 @@ Additional arguments to pass into the new script that is being run.
 
 **Returns:**
 
-void
+never
 
 ## Remarks
 
@@ -95,8 +95,6 @@ The delay specified can be 0; in this case the new script will synchronously rep
 Because this function immediately terminates the script, it does not have a return value.
 
 Running this function with 0 or fewer threads will cause a runtime error.
-
-For password-protected servers (such as darknet servers), a session must be established with the destination server before using this function.
 
 ## Example
 

@@ -1,12 +1,13 @@
 import React from "react";
 import { SvgIcon, Tooltip, Typography } from "@mui/material";
-import { Code, Description, Inventory2, LockPerson, Terminal, Bolt, DoorBackSharp } from "@mui/icons-material";
+import { Bolt, Code, Description, DoorBackSharp, Inventory2, LockPerson, Terminal } from "@mui/icons-material";
 import { formatNumber } from "../../ui/formatNumber";
-import { CompletedProgramName } from "@enums";
+import { CompletedProgramName, ComplexPage } from "@enums";
 import { formatToMaxDigits } from "./uiUtilities";
 
 import type { DarknetServer } from "../../Server/DarknetServer";
 import { DarknetConstants } from "../Constants";
+import { Router } from "../../ui/GameRoot";
 
 export type ServerSummaryProps = {
   server: DarknetServer;
@@ -24,7 +25,7 @@ export function ServerSummary({
   showDetails = false,
 }: ServerSummaryProps): React.ReactElement {
   if (!server.hasAdminRights && enableAuth) {
-    return <Typography>[ auth required ]</Typography>;
+    return <Typography color="secondary">[ auth required ]</Typography>;
   }
   if (!server.hasAdminRights && !enableAuth) {
     return <Typography color="secondary">(no connection)</Typography>;
@@ -41,7 +42,19 @@ export function ServerSummary({
         }`
       : "No data files on server";
   const contractCount = server.contracts.length;
-  const runningScriptNames = Array.from(server.runningScriptMap.keys()).map((script) => script.replace("*[]", ""));
+  let runningScriptCount = 0;
+  const scripts = new Map<string, number>();
+  for (const map of server.runningScriptMap.values()) {
+    const rs = map.values().next().value;
+    if (!rs) continue;
+    runningScriptCount += map.size;
+    const count = (scripts.get(rs.filename) ?? 0) + map.size;
+    scripts.set(rs.filename, count);
+  }
+  const runningScriptNames = scripts
+    .entries()
+    .map(([name, count]) => name + (count === 1 ? "" : "x" + count))
+    .toArray();
   const runningScriptsTooltip =
     runningScriptNames.length > 0
       ? `Running scripts on server: ${runningScriptNames.slice(0, 3).join(", ")}${
@@ -56,16 +69,18 @@ export function ServerSummary({
   const ramBlockedDetails = formatToMaxDigits(server.blockedRam, 2) + "GB";
   const ramBlocked = showDetails ? ramBlockedDetails : formatNumber(server.blockedRam, 0);
 
-  const runningScriptsComponent = (
-    <Tooltip key="runningScript" title={<>{runningScriptsTooltip}</>}>
-      <Typography color={runningScriptNames.length > 0 ? "primary" : "secondary"}>
+  const components = [
+    <Tooltip key="runningScript" title={<>{runningScriptsTooltip}</>} style={{ cursor: "pointer" }}>
+      <Typography
+        color={runningScriptCount > 0 ? "primary" : "secondary"}
+        onClick={() => Router.toPage(ComplexPage.ActiveScripts, { serverName: server.hostname })}
+      >
         <SvgIcon component={Terminal} className={classes.serverStatusIcon} />
-        {runningScriptNames.length}
+        {runningScriptCount}
       </Typography>
-    </Tooltip>
-  );
+    </Tooltip>,
+  ];
 
-  const components = [];
   if (cacheCount) {
     components.push(
       <Tooltip key="cache" title={<>{dataCacheTooltip}</>}>
@@ -143,8 +158,8 @@ export function ServerSummary({
       </Tooltip>,
     );
   }
-  const maxIcons = showDetails ? components.length : 2;
-  const componentsToShow = [...components.slice(0, maxIcons), runningScriptsComponent];
+  const maxIcons = showDetails ? components.length : 3;
+  const componentsToShow = components.slice(0, maxIcons);
 
   return (
     <div style={{ display: "inline-flex", flexDirection: "row", width: "100%", justifyContent: "space-between" }}>

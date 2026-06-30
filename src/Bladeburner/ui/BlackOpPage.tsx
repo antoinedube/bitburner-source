@@ -7,15 +7,16 @@ import { BlackOpElem } from "./BlackOpElem";
 import { Router } from "../../ui/GameRoot";
 import { Page } from "../../ui/Router";
 import { CorruptibleText } from "../../ui/React/CorruptibleText";
-import { blackOpsArray } from "../data/BlackOperations";
+import { numberOfBlackOperations } from "../data/BlackOperations";
 import { finishBitNode } from "../../BitNode/BitNodeUtils";
+import { Player } from "@player";
 
 interface BlackOpPageProps {
   bladeburner: Bladeburner;
 }
 
 export function BlackOpPage({ bladeburner }: BlackOpPageProps): React.ReactElement {
-  const blackOperations = blackOpsArray.slice(0, bladeburner.numBlackOpsComplete + 1).reverse();
+  const blackOperations = bladeburner.blackOperationArray.slice(0, bladeburner.numBlackOpsComplete + 1).reverse();
 
   return (
     <>
@@ -34,23 +35,25 @@ export function BlackOpPage({ bladeburner }: BlackOpPageProps): React.ReactEleme
         losses. Black Ops success significantly affected by combat stats. Many Ops benefit from Hacking skill.
         Unaffected by Charisma.
       </Typography>
-      {bladeburner.numBlackOpsComplete >= blackOpsArray.length ? (
+
+      {bladeburner.numBlackOpsComplete >= numberOfBlackOperations && (
         <Button
           sx={{ my: 1, p: 1 }}
           onClick={() => {
+            if (!Player.bladeburner || Player.bladeburner.numBlackOpsComplete < numberOfBlackOperations) {
+              return;
+            }
             finishBitNode();
             Router.toPage(Page.BitVerse, { flume: false, quick: false });
           }}
         >
           <CorruptibleText content="Destroy w0r1d_d43m0n" spoiler={false}></CorruptibleText>
         </Button>
-      ) : (
-        <>
-          {blackOperations.map((blackOperation) => (
-            <BlackOpElem key={blackOperation.name} bladeburner={bladeburner} action={blackOperation} />
-          ))}
-        </>
       )}
+
+      {blackOperations.map((blackOperation) => (
+        <BlackOpElem key={blackOperation.name} bladeburner={bladeburner} action={blackOperation} />
+      ))}
     </>
   );
 }

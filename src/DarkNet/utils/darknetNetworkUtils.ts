@@ -4,11 +4,13 @@ import { AIR_GAP_DEPTH, MS_PER_MUTATION_PER_ROW, NET_WIDTH } from "../Enums";
 import { GetAllServers } from "../../Server/AllServers";
 import { getNetDepth } from "../effects/labyrinth";
 import { CONSTANTS } from "../../Constants";
+import { Player } from "@player";
 
 export const getDarknetCyclesPerMutation = () => {
   const depth = getNetDepth();
   const cycleRate = MS_PER_MUTATION_PER_ROW / CONSTANTS.MilliPerCycle;
-  return cycleRate / depth;
+  const rateMultiplier = Player.bitNodeN !== 15 ? 2 : 1;
+  return (rateMultiplier * cycleRate) / depth;
 };
 
 export const getAllOpenPositions = (minDepth: number, maxDepth: number): [number, number][] => {
@@ -41,7 +43,7 @@ export const getNeighborsOnRow = (x: number, y: number): DarknetServer[] => {
   if (rightNeighbor) {
     neighbors.push(rightNeighbor);
   }
-  return neighbors;
+  return neighbors.filter((n) => n.maxRam);
 };
 
 export const getServersOnRowBelow = (x: number, close = false): DarknetServer[] => {
@@ -49,7 +51,7 @@ export const getServersOnRowBelow = (x: number, close = false): DarknetServer[] 
   if (close) {
     return rowBelow.filter((server) => Math.abs(server.leftOffset ?? 0 - x) <= 1);
   }
-  return rowBelow;
+  return rowBelow.filter((n) => n.maxRam);
 };
 
 export const getServersOnRowAbove = (x: number, close = false): DarknetServer[] => {
@@ -57,7 +59,7 @@ export const getServersOnRowAbove = (x: number, close = false): DarknetServer[] 
   if (close) {
     return rowAbove.filter((server) => Math.abs(server.leftOffset ?? 0 - x) <= 1);
   }
-  return rowAbove;
+  return rowAbove.filter((n) => n.maxRam);
 };
 
 export const getAllDarknetServers = (): DarknetServer[] => {
@@ -84,7 +86,7 @@ export const getAllAdjacentNeighbors = (x: number, y: number): DarknetServer[] =
 
 export const getIslands = () => getAllMovableDarknetServers().filter((s) => !s.serversOnNetwork.length);
 
-export const getBackdooredDarkwebServers = (): DarknetServer[] =>
+export const getBackdooredDarknetServers = (): DarknetServer[] =>
   getAllMovableDarknetServers().filter((s) => !s.hasStasisLink && s.backdoorInstalled);
 
 export const getNearbyNonEmptyPasswordServer = (server: DarknetServer, disconnected = false) => {

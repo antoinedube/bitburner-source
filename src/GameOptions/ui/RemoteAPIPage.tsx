@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { Button, TextField, Tooltip, Typography } from "@mui/material";
 import { GameOptionsPage } from "./GameOptionsPage";
-import { isValidConnectionHostname, isValidConnectionPort, Settings } from "../../Settings/Settings";
-import { ConnectionBauble } from "./ConnectionBauble";
-import { isRemoteFileApiConnectionLive, newRemoteFileApiConnection } from "../../RemoteFileAPI/RemoteFileAPI";
+import { Settings } from "../../Settings/Settings";
+import { isValidConnectionHostname, isValidConnectionPort } from "../../Settings/SettingsUtils";
+import { RemoteFileApiConnectionStatus } from "./RemoteFileApiConnectionStatus";
+import { newRemoteFileApiConnection } from "../../RemoteFileAPI/RemoteFileAPI";
 import { OptionSwitch } from "../../ui/React/OptionSwitch";
 import { DocumentationLink } from "../../ui/React/DocumentationLink";
 
@@ -69,7 +70,7 @@ export const RemoteAPIPage = (): React.ReactElement => {
       <Typography>
         <DocumentationLink page="programming/remote_api.md">Documentation</DocumentationLink>
       </Typography>
-      <ConnectionBauble isConnected={isRemoteFileApiConnectionLive} />
+      <RemoteFileApiConnectionStatus showIcon={false} />
       <Tooltip
         title={
           <Typography>

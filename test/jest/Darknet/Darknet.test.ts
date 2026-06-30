@@ -61,7 +61,17 @@ import { DarknetServer } from "../../../src/Server/DarknetServer";
 import { isDirectoryPath } from "../../../src/Paths/Directory";
 import { isFilePath } from "../../../src/Paths/FilePath";
 import { LAB_CACHE_NAME } from "../../../src/DarkNet/effects/labyrinth";
-import { generateCacheFilename } from "../../../src/DarkNet/effects/cacheFiles";
+import { generateCacheFilename, getRewardFromCache, getStockReward } from "../../../src/DarkNet/effects/cacheFiles";
+import { getAllDarknetServers } from "../../../src/DarkNet/utils/darknetNetworkUtils";
+import { prestigeAugmentation } from "../../../src/Prestige";
+import { initStockMarket, StockMarket, SymbolToStockMap } from "../../../src/StockMarket/StockMarket";
+import { StockSymbol } from "@enums";
+import { disconnectServers, GetAllServers, GetServerOrThrow } from "../../../src/Server/AllServers";
+import { roundToTwo } from "../../../src/utils/helpers/roundToTwo";
+import { getRamBlock } from "../../../src/DarkNet/effects/ramblock";
+import { SpecialServers } from "../../../src/Server/data/SpecialServers";
+import { clearDarknet } from "../../../src/DarkNet/controllers/NetworkGenerator";
+import { getTorRouter } from "../../../src/Server/ServerHelpers";
 
 beforeAll(() => {
   initGameEnvironment();
@@ -691,6 +701,11 @@ describe("Password Tests", () => {
   });
 });
 
+const serverSnapshot = () =>
+  getAllDarknetServers()
+    .map((s) => ({ hostname: s.hostname, depth: s.depth, leftOffset: s.leftOffset }))
+    .sort((a, b) => (a.hostname < b.hostname ? -1 : a.hostname === b.hostname ? 0 : 1));
+
 describe("mutateDarknet and webstorm", () => {
   test("mutateDarknet", () => {
     const spiedExceptionAlert = jest.spyOn(exceptionAlertModule, "exceptionAlert");
@@ -711,11 +726,67 @@ describe("mutateDarknet and webstorm", () => {
     expect(spiedExceptionAlert).not.toHaveBeenCalled();
     expect(spiedConsoleError).not.toHaveBeenCalled();
   });
+  test("mutation during webstorm", async () => {
+    const realRandom = Math.random;
+    try {
+      jest.useFakeTimers();
+      const promise = launchWebstorm();
+      expect(DarknetState.mutationLock).toBeTruthy();
+
+      await jest.advanceTimersByTimeAsync(10000);
+      expect(DarknetState.mutationLock).toBeTruthy();
+
+      const initialServers = serverSnapshot();
+      // Low rolls cause stuff to happen, we want deterministic testing.
+      // Jest spies keep state, make our own mock so it doesn't eat memory in
+      // case something goes wrong.
+      let count = 0;
+      Math.random = () => count++ * (Number.EPSILON * 1024);
+      mutateDarknet();
+      expect(serverSnapshot()).toEqual(initialServers);
+
+      await jest.runAllTimersAsync();
+      await promise; // Should immediately finish
+      expect(DarknetState.mutationLock).toBeNull();
+
+      mutateDarknet();
+      expect(serverSnapshot()).not.toEqual(initialServers);
+    } finally {
+      jest.useRealTimers();
+      Math.random = realRandom;
+    }
+  });
+  test("prestige during webstorm", async () => {
+    try {
+      jest.useFakeTimers();
+      const promise = launchWebstorm();
+      await jest.advanceTimersByTimeAsync(0); // Finish any promises
+      expect(DarknetState.mutationLock).toBeTruthy();
+
+      const beforePrestige = serverSnapshot();
+      prestigeAugmentation();
+
+      expect(DarknetState.mutationLock).toBeNull();
+      const initialServers = serverSnapshot();
+      // Validate that prestige changed the network
+      expect(initialServers).not.toEqual(beforePrestige);
+
+      await jest.runAllTimersAsync();
+      await promise; // Should immediately finish
+
+      expect(DarknetState.mutationLock).toBeNull();
+      // Webstorm should not have changed anything
+      expect(serverSnapshot()).toEqual(initialServers);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
 });
 
 function validatePath(hostname: string): void {
   expectWithMessage(isDirectoryPath(`${hostname}/`), true, `Invalid hostname: ${hostname}`);
   expectWithMessage(isFilePath(`${hostname}/data.txt`), true, `Invalid hostname: ${hostname}`);
+  expectWithMessage(hostname.isWellFormed(), true, `Malformed hostname: ${hostname}`);
 }
 
 describe("Darknet server name generator", () => {
@@ -751,7 +822,7 @@ describe("Darknet server name generator", () => {
 describe("Cache filename generator", () => {
   test("Random prefix", () => {
     for (let i = 0; i < 10000; ++i) {
-      const cacheFilename = generateCacheFilename();
+      const cacheFilename = generateCacheFilename(false);
       if (!cacheFilename) {
         throw new Error("Invalid cache filename");
       }
@@ -759,7 +830,7 @@ describe("Cache filename generator", () => {
     }
   });
   test("Cache file in labyrinth server", () => {
-    const cacheFilename = generateCacheFilename(LAB_CACHE_NAME);
+    const cacheFilename = generateCacheFilename(false, LAB_CACHE_NAME);
     if (!cacheFilename) {
       throw new Error("Invalid cache filename");
     }
@@ -775,5 +846,177 @@ describe("Clue filename generator", () => {
         getClueFileName(notebookFileNames);
       }).not.toThrow();
     }
+  });
+});
+
+describe("CacheReward", () => {
+  test("stock reward does not exceed maxShares and falls back to money reward", () => {
+    initStockMarket();
+
+    const remaining = 3;
+    // Fill every stock to near capacity so no matter which one is randomly picked, it triggers clamping
+    for (const stockName of Object.keys(StockSymbol)) {
+      const stock = StockMarket[stockName];
+      stock.playerShares = stock.maxShares - remaining;
+      stock.playerShortShares = 0;
+    }
+
+    // Use high difficulty to ensure the unclamped share count would exceed remaining
+    const difficulty = 100;
+    const result = getStockReward(difficulty);
+
+    // Should have awarded at most `remaining` shares
+    expect(result.message).toContain(`${remaining} shares`);
+
+    // Verify the chosen stock was clamped to exactly maxShares
+    for (const stockName of Object.keys(StockSymbol)) {
+      const stock = StockMarket[stockName];
+      expect(stock.playerShares).toBeLessThanOrEqual(stock.maxShares);
+    }
+  });
+
+  test("stock reward falls back to money when stock is fully owned", () => {
+    initStockMarket();
+
+    // Fill every stock to max capacity
+    for (const stockName of Object.keys(StockSymbol)) {
+      const stock = StockMarket[stockName];
+      stock.playerShares = stock.maxShares;
+      stock.playerShortShares = 0;
+    }
+
+    const moneyBefore = Player.money;
+    const result = getStockReward(5);
+
+    // Should have fallen back to a money reward
+    expect(result.message).toContain("discovered a cache with");
+    expect(Player.money).toBeGreaterThan(moneyBefore);
+  });
+
+  test("CacheReward", () => {
+    for (let i = 0; i < 500; ++i) {
+      Player.queuedAugmentations.length = 0;
+      prestigeAugmentation();
+      initStockMarket();
+      Player.money = 0;
+      Player.getHomeComputer().programs.length = 0;
+      const dnetServers = [];
+      for (const server of GetAllServers(true)) {
+        server.messages.length = 0;
+        if (server instanceof DarknetServer) {
+          dnetServers.push(server);
+        }
+      }
+      const randomServer = dnetServers[Math.floor(Math.random() * dnetServers.length)];
+
+      const result = getRewardFromCache(randomServer, "test.d.cache");
+
+      const home = Player.getHomeComputer();
+      expect(typeof result.success).toBe("boolean");
+      expect(typeof result.message).toBe("string");
+      expect(Number.isFinite(result.karmaLoss)).toBe(true);
+
+      expect(result.wseAccount).toBe(Player.hasWseAccount);
+      expect(result.tixApiAccess).toBe(Player.hasTixApiAccess);
+      expect(result.fourSigmaData).toBe(Player.has4SData);
+
+      if (Player.money > 0) {
+        expect(result.money).toBe(Player.money);
+      } else {
+        expect(result.money).toBeUndefined();
+      }
+
+      if (home.programs.length > 0) {
+        expect(home.programs.length).toBe(1);
+        expect(result.programName).toBe(home.programs[0]);
+      } else {
+        expect(result.programName).toBeUndefined();
+      }
+
+      if (Object.values(SymbolToStockMap).some((stock) => stock.playerShares > 0)) {
+        expect(result.stockSymbol).toBeDefined();
+        expect(SymbolToStockMap[result.stockSymbol as string].playerShares).toBe(result.stockShares);
+      } else {
+        expect(result.stockSymbol).toBeUndefined();
+        expect(result.stockShares).toBeUndefined();
+      }
+
+      const dataFilePaths = [];
+      const contractFilePaths = [];
+      for (const server of GetAllServers(true)) {
+        dataFilePaths.push(...server.messages);
+        dataFilePaths.push(...server.textFiles.keys());
+        contractFilePaths.push(...server.contracts.map((c) => c.fn));
+      }
+      dataFilePaths.sort();
+      contractFilePaths.sort();
+      if (dataFilePaths.length > 0) {
+        expect(result.dataFilePaths?.sort()).toStrictEqual(dataFilePaths);
+      } else {
+        expect(result.dataFilePaths).toBeUndefined();
+      }
+      if (contractFilePaths.length > 0) {
+        expect(result.contractFilePaths?.sort()).toStrictEqual(contractFilePaths);
+      } else {
+        expect(result.contractFilePaths).toBeUndefined();
+      }
+
+      if (Player.queuedAugmentations.length > 0) {
+        expect(Player.queuedAugmentations).toBe(1);
+        expect(result.augmentationName).toStrictEqual(Player.queuedAugmentations[0]);
+      } else {
+        expect(result.augmentationName).toBeUndefined();
+      }
+    }
+  });
+});
+
+describe("ramblock", () => {
+  test.each([16, 16.01, 32.01, 64.01])("getRamBlock rounds %d correctly", (maxRam: number) => {
+    // This *must* be done within the function, Jest internally relies on
+    // Math.random so the mock must be restored immediately after.
+    const saved = Math.random;
+    let rng: number;
+    try {
+      Math.random = () => rng;
+      for (let i = 0; i < 1; i += 1.0 / 8.0) {
+        rng = i;
+        const result = getRamBlock(maxRam);
+        // We want *exact* equality
+        expect(result).toBe(roundToTwo(result));
+      }
+    } finally {
+      Math.random = saved;
+    }
+  });
+});
+
+describe("clearDarknet", () => {
+  it("leaves home<->darkweb disconnected on both sides when the player has no TOR router", () => {
+    const home = Player.getHomeComputer();
+    const darkweb = GetServerOrThrow(SpecialServers.DarkWeb);
+
+    disconnectServers(home, darkweb);
+    expect(Player.hasTorRouter()).toBe(false);
+
+    clearDarknet();
+
+    expect(darkweb.serversOnNetwork.includes(home.hostname)).toBe(home.serversOnNetwork.includes(darkweb.hostname));
+    expect(home.serversOnNetwork).not.toContain(darkweb.hostname);
+    expect(darkweb.serversOnNetwork).not.toContain(home.hostname);
+  });
+
+  it("leaves home<->darkweb connected on both sides when the player has a TOR router", () => {
+    const home = Player.getHomeComputer();
+    const darkweb = GetServerOrThrow(SpecialServers.DarkWeb);
+
+    getTorRouter();
+    expect(Player.hasTorRouter()).toBe(true);
+
+    clearDarknet();
+
+    expect(darkweb.serversOnNetwork.includes(home.hostname)).toBe(home.serversOnNetwork.includes(darkweb.hostname));
+    expect(home.serversOnNetwork).toContain(darkweb.hostname);
+    expect(darkweb.serversOnNetwork).toContain(home.hostname);
   });
 });
