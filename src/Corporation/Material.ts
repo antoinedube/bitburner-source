@@ -67,9 +67,6 @@ export class Material {
   marketTa2 = false;
   uiMarketPrice = 0;
 
-  // Determines the maximum amount of this material that can be sold in one market cycle
-  maxSellPerCycle = 0;
-
   constructor(params?: IConstructorParams) {
     this.name = params?.name ?? materialNames[0];
     this.demand = MaterialInfo[this.name].demandBase;
@@ -136,7 +133,7 @@ export class Material {
   // Initializes a Material object from a JSON save state.
   static fromJSON(value: IReviverValue): Material {
     const material = Generic_fromJSON(Material, value.data);
-    if (isNaN(material.quality)) {
+    if (!Number.isFinite(material.quality)) {
       material.quality = 1;
     }
     /**

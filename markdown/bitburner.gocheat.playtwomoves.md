@@ -6,7 +6,7 @@
 
 Attempts to place two routers at once on empty nodes. Note that this ignores other move restrictions, so you can suicide your own routers if they have no access to empty ports and do not capture any enemy routers.
 
-Success chance can be seen via ns.go.getCheatSuccessChance()
+Success chance can be seen via ns.go.cheat.getCheatSuccessChance()
 
 Warning: if you fail to play a cheat move, your turn will be skipped. After your first cheat attempt, if you fail, there is a small (\~10%) chance you will instantly be ejected from the subnet.
 
@@ -134,5 +134,7 @@ a promise that contains the opponent move's x and y coordinates (or pass) in res
 
 ## Remarks
 
-RAM cost: 8 GB Requires BitNode 14.2 to use
+RAM cost: 8 GB
+
+Requires Source-File 14.2 to use
 

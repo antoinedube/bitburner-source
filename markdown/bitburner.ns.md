@@ -12,9 +12,8 @@ Collection of all functions passed to scripts
 export interface NS 
 ```
 
-## Remarks
+## Example
 
-<b>Basic usage example:</b>
 
 ```js
 export async function main(ns) {
@@ -68,6 +67,8 @@ Description
 </td><td>
 
 Arguments passed into the script.
+
+These arguments can be accessed as a normal array by using the `[]` operator (`args[0]`<!-- -->, `args[1]`<!-- -->, etc...). Arguments can be string, number, or boolean. Use `args.length` to get the number of arguments that were passed into a script.
 
 
 </td></tr>
@@ -716,7 +717,9 @@ Get the metadata of a file.
 
 </td><td>
 
-Get the ram cost of a netscript function.
+Get the RAM cost of a netscript function.
+
+The base RAM cost per script thread can also be retrieved by using `"baseCost"` as argument to this function.
 
 
 </td></tr>
@@ -927,7 +930,7 @@ Get the ram cost of a script.
 
 Returns data of a server.
 
-If the server is a darknet server and has recently gone offline, it will return a dummy server object with `isOnline: false`<!-- -->.
+If the server is a darknet server, it will also contain the "isOnline" field. If the darknet server has recently gone offline, the returned object will be a dummy server object with `isOnline: false`<!-- -->.
 
 
 </td></tr>
@@ -1037,7 +1040,7 @@ Get server security level.
 
 </td><td>
 
-Get the used RAM on a server.
+Get the used RAM on a server. This includes ram used by running scripts as well as blocked ram on darknet servers.
 
 
 </td></tr>
@@ -1048,7 +1051,9 @@ Get the used RAM on a server.
 
 </td><td>
 
-Share power has a multiplicative effect on rep/second while doing work for a faction. Share power increases incrementally for every thread of share running on your server network, but at a sharply decreasing rate.
+Share power has a multiplicative effect on rep/second while doing hacking work for a faction. If you do non-hacking work, share power still increases the reputation gain rate, but the effect is non-linear.
+
+Share power increases incrementally for every thread of share running on your server network, but at a sharply decreasing rate.
 
 
 </td></tr>
@@ -1203,6 +1208,28 @@ Returns whether the player has access to the darkweb.
 </td><td>
 
 Runs HTTPWorm.exe on a server.
+
+
+</td></tr>
+<tr><td>
+
+[isEmptyPort(portNumber)](./bitburner.ns.isemptyport.md)
+
+
+</td><td>
+
+Check if a port is empty.
+
+
+</td></tr>
+<tr><td>
+
+[isFullPort(portNumber)](./bitburner.ns.isfullport.md)
+
+
+</td><td>
+
+Check if a port is full.
 
 
 </td></tr>

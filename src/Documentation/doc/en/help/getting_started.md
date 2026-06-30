@@ -22,7 +22,7 @@ I'm going to assume you followed the introductory tutorial when you first began 
 In this introductory tutorial, you created a [Script](../basic/scripts.md) called `n00dles.js` and ran it on the `n00dles` server.
 Now, we'll kill this [Script](../basic/scripts.md). There are two ways to do this:
 
-- You can go to the Terminal and enter: `$ kill n00dles.js`
+- You can go to the Terminal and enter: `kill n00dles.js`
 - You can go to the `Active Scripts` page (Alt + s) and press the `Kill Script` button for `n00dles.js`.
 
 If you skipped the introductory tutorial, then ignore the part above.
@@ -367,30 +367,29 @@ Paste the following code into the [Script](../basic/scripts.md) editor:
 
     /** @param {NS} ns */
     export async function main(ns) {
-        // How much RAM each cloud server will have. In this case, it'll
-        // be 8GB.
+        // How much RAM each cloud server will have. In this case, it'll be 8GB.
         const ram = 8;
 
         // Iterator we'll use for our loop
-        let i = 0;
+        let i = ns.cloud.getServerNames().length;
 
         // Continuously try to purchase cloud servers until we've reached the maximum
         // amount of servers
         while (i < ns.cloud.getServerLimit()) {
             // Check if we have enough money to purchase access to a server
-            if (ns.getServerMoneyAvailable("home") > ns.cloud.getRamLimit(ram)) {
+            if (ns.getServerMoneyAvailable("home") > ns.cloud.getServerCost(ram)) {
                 // If we have enough money, then:
                 //  1. Purchase the server
-                //  2. Copy our hacking script onto the newly-purchased cloud server
-                //  3. Run our hacking script on the newly-purchased cloud server with 3 threads
+                //  2. Copy our hacking script onto the newly purchased cloud server
+                //  3. Run our hacking script on the newly purchased cloud server with 3 threads
                 //  4. Increment our iterator to indicate that we've bought a new server
-                let hostname = ns.cloud.purchaseServer("cloud-server-" + i, ram);
+                const hostname = ns.cloud.purchaseServer("cloud-server-" + i, ram);
                 ns.scp("early-hack-template.js", hostname);
                 ns.exec("early-hack-template.js", hostname, 3);
                 ++i;
             }
-            //Make the script wait for a second before looping again.
-            //Removing this line will cause an infinite loop and crash the game.
+            // Make the script wait for a second before looping again.
+            // Removing this line will cause an infinite loop and crash the game.
             await ns.sleep(1000);
         }
     }

@@ -17,7 +17,7 @@ import {
   getAllDarknetServers,
   getAllMovableDarknetServers,
   getAllOpenPositions,
-  getBackdooredDarkwebServers,
+  getBackdooredDarknetServers,
   getDarknetCyclesPerMutation,
   getIslands,
 } from "../utils/darknetNetworkUtils";
@@ -43,7 +43,7 @@ export const processDarknet = (cycles: number): void => {
 };
 
 export const mutateDarknet = (): void => {
-  if (!DarknetState.allowMutating) {
+  if (DarknetState.mutationLock) {
     return;
   }
   const servers = getAllMovableDarknetServers();
@@ -89,7 +89,7 @@ export const mutateDarknet = (): void => {
   }
 
   if (Math.random() < 0.1) {
-    const backdooredServers = getBackdooredDarkwebServers();
+    const backdooredServers = getBackdooredDarknetServers();
     const server = backdooredServers[Math.floor(Math.random() * backdooredServers.length)];
     if (server) {
       restartServer(server);
@@ -98,7 +98,7 @@ export const mutateDarknet = (): void => {
   }
 
   if (Math.random() < 0.05) {
-    const backdooredServers = getBackdooredDarkwebServers();
+    const backdooredServers = getBackdooredDarknetServers();
     const server = backdooredServers[Math.floor(Math.random() * backdooredServers.length)];
     if (server) {
       deleteDarknetServer(server);
@@ -111,7 +111,7 @@ export const mutateDarknet = (): void => {
     restartRandomServer();
   }
 
-  if (Math.random() < 0.5) {
+  if (Math.random() < 0.3) {
     moveRandomDarknetServers(3);
   }
 
@@ -225,7 +225,7 @@ export const balanceDarknetServers = (): void => {
 };
 
 const isImmutable = (server: DarknetServer): boolean =>
-  server === DarknetState.openServer || server.isConnectedTo || server.hasStasisLink;
+  server === DarknetState.openServer || server.isConnectedTo || server.hasStasisLink || !server.maxRam;
 
 export const moveDarknetServer = (
   server: DarknetServer,
@@ -238,7 +238,7 @@ export const moveDarknetServer = (
     return false;
   }
   if (isImmutable(server)) {
-    // Do not try to move the server that is open in the UI or the terminal
+    // Do not try to move the server that is frozen, stasis locked, or open in the UI or the terminal
     return false;
   }
 
@@ -283,7 +283,8 @@ export const disconnectServer = (server: DarknetServer, disconnectFromDarkweb = 
   }
   for (const neighbor of server.serversOnNetwork) {
     const connectedServer = GetServer(neighbor);
-    const isOkToDisconnect = disconnectFromDarkweb || connectedServer?.hostname !== SpecialServers.DarkWeb;
+    const isOkToDisconnect =
+      (disconnectFromDarkweb || connectedServer?.hostname !== SpecialServers.DarkWeb) && !isLabyrinthServer(neighbor);
     if (connectedServer && isOkToDisconnect) {
       disconnectServers(server, connectedServer);
     }
@@ -395,4 +396,9 @@ export const validateDarknetNetwork = (): void => {
       }
     }
   }
+};
+
+export const freezeServer = (server: DarknetServer): void => {
+  server.maxRam = 0;
+  server.isStationary = true;
 };

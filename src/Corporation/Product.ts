@@ -94,9 +94,6 @@ export class Product {
   marketTa2 = false;
   uiMarketPrice = createEnumKeyedRecord(CityName, () => 0);
 
-  /** Effective number that "MAX" represents in a sell amount */
-  maxSellAmount = 0;
-
   constructor(params: IConstructorParams | null = null) {
     if (!params) return;
     this.name = params.name;
@@ -230,7 +227,14 @@ export class Product {
 
   // Initializes a Product object from a JSON save state.
   static fromJSON(value: IReviverValue): Product {
-    return Generic_fromJSON(Product, value.data);
+    const product = Generic_fromJSON(Product, value.data);
+    for (const productDataPerCity of Object.values(product.cityData)) {
+      if (!Number.isFinite(productDataPerCity.effectiveRating)) {
+        // Reset to a small value instead of 0 to avoid issues such as division by 0.
+        productDataPerCity.effectiveRating = 0.001;
+      }
+    }
+    return product;
   }
 }
 

@@ -20,6 +20,7 @@ import { subarrayWithMaximumSum } from "./contracts/SubarrayWithMaximumSum";
 import { totalPrimesInRange } from "./contracts/TotalPrimesInRange";
 import { totalWaysToSum } from "./contracts/TotalWaysToSum";
 import { uniquePathsInAGrid } from "./contracts/UniquePathsInAGrid";
+import { largestRectangle } from "./contracts/LargestRectangle";
 
 // This is the base interface, but should not be used for
 // typechecking individual entries. Use the two types below for that.
@@ -67,7 +68,27 @@ type CodingContractDefinitions<Signatures extends Record<string, [unknown, unkno
     ? CodingContractComplexType<Signatures[T][0], Signatures[T][1], Signatures[T][2]>
     : CodingContractSimpleType<Signatures[T][0], Signatures[T][1]>;
 };
-export type CodingContractTypes = CodingContractDefinitions<CodingContractSignatures>;
+
+/**
+ * Internally, a contract requires three types: input, answer, and internal state. The internal state type is usually
+ * the same as the input type, but for some contracts it differs (e.g., the "Square Root" contract).
+ *
+ * The public CodingContractSignatures type defines the input and answer types, but not the internal state type.
+ * CodingContractCustomStates maps contracts whose internal state type differs from their input type. We then use this
+ * type to construct InternalCodingContractSignatures and CodingContractTypes.
+ *
+ * With this design, CodingContractTypes can define all three required types by reusing the public
+ * CodingContractSignatures type, while only defining the internal state type when necessary.
+ */
+type CodingContractCustomStates = {
+  "Square Root": [string, string];
+};
+type InternalCodingContractSignatures = {
+  [K in keyof CodingContractSignatures]: K extends keyof CodingContractCustomStates
+    ? [...CodingContractSignatures[K], CodingContractCustomStates[K]]
+    : CodingContractSignatures[K];
+};
+export type CodingContractTypes = CodingContractDefinitions<InternalCodingContractSignatures>;
 
 /* Helper functions for Coding Contract implementations */
 export function removeBracketsFromArrayString(str: string): string {
@@ -80,6 +101,41 @@ export function removeBracketsFromArrayString(str: string): string {
   }
 
   return strCpy;
+}
+
+/**
+ * This function only performs very simple checks to add the outermost optional brackets. Callers must perform other
+ * preprocessing steps and postprocessing validations. For example:
+ * - "[ [0, 1]]" will be incorrectly wrapped and converted to "[[[0,1]]]". Callers need to remove redundant whitespace.
+ * - "[[1,2],3]" is not an array of arrays, but this function will return it as is. Callers need to call validateAnswer.
+ *
+ * Note:
+ * - "" will always be converted to an empty array ([]).
+ * - When parsing an array of arrays (isArrayOfArray = true), "[]" will be converted to an empty array ([]), not an
+ * array containing an empty array ([[]]).
+ */
+export function parseArrayString(answer: string, isArrayOfArray = false): unknown {
+  let modifiedAnswer = answer.trim();
+
+  if (isArrayOfArray && modifiedAnswer === "[]") {
+    return [];
+  }
+
+  // If it doesn't start with any bracket, it's definitely "naked".
+  if (!modifiedAnswer.startsWith("[")) {
+    modifiedAnswer = `[${modifiedAnswer}]`;
+  } else if (isArrayOfArray && !modifiedAnswer.startsWith("[[")) {
+    // If it's supposed to be an array of arrays but only has one "[".
+    modifiedAnswer = `[${modifiedAnswer}]`;
+  }
+
+  try {
+    return JSON.parse(modifiedAnswer);
+  } catch (error) {
+    console.error(`Invalid answer: ${answer}`);
+    console.error(error);
+    return null;
+  }
 }
 
 export function removeQuotesFromString(str: string): string {
@@ -114,6 +170,7 @@ export const CodingContractDefinitions: CodingContractTypes = {
   ...findLargestPrimeFactor,
   ...generateIPAddresses,
   ...hammingCode,
+  ...largestRectangle,
   ...mergeOverlappingIntervals,
   ...minimumPathSumInATriangle,
   ...proper2ColoringOfAGraph,
