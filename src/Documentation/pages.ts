@@ -671,6 +671,8 @@ import nsDoc_bitburner_gangmemberinstall_str_md from "../../markdown/bitburner.g
 import nsDoc_bitburner_gangotherinfoobject_md from "../../markdown/bitburner.gangotherinfoobject.md?raw";
 import nsDoc_bitburner_gangotherinfoobject_power_md from "../../markdown/bitburner.gangotherinfoobject.power.md?raw";
 import nsDoc_bitburner_gangotherinfoobject_territory_md from "../../markdown/bitburner.gangotherinfoobject.territory.md?raw";
+import nsDoc_bitburner_gangtaskname_md from "../../markdown/bitburner.gangtaskname.md?raw";
+import nsDoc_bitburner_gangtasknameenumtype_md from "../../markdown/bitburner.gangtasknameenumtype.md?raw";
 import nsDoc_bitburner_gangtaskstats_agiweight_md from "../../markdown/bitburner.gangtaskstats.agiweight.md?raw";
 import nsDoc_bitburner_gangtaskstats_basemoney_md from "../../markdown/bitburner.gangtaskstats.basemoney.md?raw";
 import nsDoc_bitburner_gangtaskstats_baserespect_md from "../../markdown/bitburner.gangtaskstats.baserespect.md?raw";
@@ -1326,6 +1328,7 @@ import nsDoc_bitburner_singularity_getupgradehomecorescost_md from "../../markdo
 import nsDoc_bitburner_singularity_getupgradehomeramcost_md from "../../markdown/bitburner.singularity.getupgradehomeramcost.md?raw";
 import nsDoc_bitburner_singularity_gotolocation_md from "../../markdown/bitburner.singularity.gotolocation.md?raw";
 import nsDoc_bitburner_singularity_gymworkout_md from "../../markdown/bitburner.singularity.gymworkout.md?raw";
+import nsDoc_bitburner_singularity_hasexportgamebonus_md from "../../markdown/bitburner.singularity.hasexportgamebonus.md?raw";
 import nsDoc_bitburner_singularity_hospitalize_md from "../../markdown/bitburner.singularity.hospitalize.md?raw";
 import nsDoc_bitburner_singularity_installaugmentations_md from "../../markdown/bitburner.singularity.installaugmentations.md?raw";
 import nsDoc_bitburner_singularity_installbackdoor_md from "../../markdown/bitburner.singularity.installbackdoor.md?raw";
@@ -1515,6 +1518,7 @@ import nsDoc_bitburner_universitylocationnameenumtype_md from "../../markdown/bi
 import nsDoc_bitburner_userinterface_alias_md from "../../markdown/bitburner.userinterface.alias.md?raw";
 import nsDoc_bitburner_userinterface_clearterminal_md from "../../markdown/bitburner.userinterface.clearterminal.md?raw";
 import nsDoc_bitburner_userinterface_closetail_md from "../../markdown/bitburner.userinterface.closetail.md?raw";
+import nsDoc_bitburner_userinterface_createconnectlink_md from "../../markdown/bitburner.userinterface.createconnectlink.md?raw";
 import nsDoc_bitburner_userinterface_getallaliases_md from "../../markdown/bitburner.userinterface.getallaliases.md?raw";
 import nsDoc_bitburner_userinterface_getgameinfo_md from "../../markdown/bitburner.userinterface.getgameinfo.md?raw";
 import nsDoc_bitburner_userinterface_getstyles_md from "../../markdown/bitburner.userinterface.getstyles.md?raw";
@@ -2298,6 +2302,8 @@ AllPages["nsDoc/bitburner.gangmemberinstall.str.md"] = nsDoc_bitburner_gangmembe
 AllPages["nsDoc/bitburner.gangotherinfoobject.md"] = nsDoc_bitburner_gangotherinfoobject_md;
 AllPages["nsDoc/bitburner.gangotherinfoobject.power.md"] = nsDoc_bitburner_gangotherinfoobject_power_md;
 AllPages["nsDoc/bitburner.gangotherinfoobject.territory.md"] = nsDoc_bitburner_gangotherinfoobject_territory_md;
+AllPages["nsDoc/bitburner.gangtaskname.md"] = nsDoc_bitburner_gangtaskname_md;
+AllPages["nsDoc/bitburner.gangtasknameenumtype.md"] = nsDoc_bitburner_gangtasknameenumtype_md;
 AllPages["nsDoc/bitburner.gangtaskstats.agiweight.md"] = nsDoc_bitburner_gangtaskstats_agiweight_md;
 AllPages["nsDoc/bitburner.gangtaskstats.basemoney.md"] = nsDoc_bitburner_gangtaskstats_basemoney_md;
 AllPages["nsDoc/bitburner.gangtaskstats.baserespect.md"] = nsDoc_bitburner_gangtaskstats_baserespect_md;
@@ -2953,6 +2959,7 @@ AllPages["nsDoc/bitburner.singularity.getupgradehomecorescost.md"] = nsDoc_bitbu
 AllPages["nsDoc/bitburner.singularity.getupgradehomeramcost.md"] = nsDoc_bitburner_singularity_getupgradehomeramcost_md;
 AllPages["nsDoc/bitburner.singularity.gotolocation.md"] = nsDoc_bitburner_singularity_gotolocation_md;
 AllPages["nsDoc/bitburner.singularity.gymworkout.md"] = nsDoc_bitburner_singularity_gymworkout_md;
+AllPages["nsDoc/bitburner.singularity.hasexportgamebonus.md"] = nsDoc_bitburner_singularity_hasexportgamebonus_md;
 AllPages["nsDoc/bitburner.singularity.hospitalize.md"] = nsDoc_bitburner_singularity_hospitalize_md;
 AllPages["nsDoc/bitburner.singularity.installaugmentations.md"] = nsDoc_bitburner_singularity_installaugmentations_md;
 AllPages["nsDoc/bitburner.singularity.installbackdoor.md"] = nsDoc_bitburner_singularity_installbackdoor_md;
@@ -3142,6 +3149,7 @@ AllPages["nsDoc/bitburner.universitylocationnameenumtype.md"] = nsDoc_bitburner_
 AllPages["nsDoc/bitburner.userinterface.alias.md"] = nsDoc_bitburner_userinterface_alias_md;
 AllPages["nsDoc/bitburner.userinterface.clearterminal.md"] = nsDoc_bitburner_userinterface_clearterminal_md;
 AllPages["nsDoc/bitburner.userinterface.closetail.md"] = nsDoc_bitburner_userinterface_closetail_md;
+AllPages["nsDoc/bitburner.userinterface.createconnectlink.md"] = nsDoc_bitburner_userinterface_createconnectlink_md;
 AllPages["nsDoc/bitburner.userinterface.getallaliases.md"] = nsDoc_bitburner_userinterface_getallaliases_md;
 AllPages["nsDoc/bitburner.userinterface.getgameinfo.md"] = nsDoc_bitburner_userinterface_getgameinfo_md;
 AllPages["nsDoc/bitburner.userinterface.getstyles.md"] = nsDoc_bitburner_userinterface_getstyles_md;
