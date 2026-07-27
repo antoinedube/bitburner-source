@@ -314,7 +314,7 @@ interface RunningScript {
 interface RunOptions {
   /** Number of threads that the script will run with, defaults to 1 */
   threads?: number;
-  /** Whether this script is excluded from saves, defaults to false */
+  /** Whether this script is excluded from saves and the "Recently Killed" tab in Active Scripts, defaults to false */
   temporary?: boolean;
   /**
    * The RAM allocation to launch each thread of the script with.
@@ -404,15 +404,19 @@ interface CrimeStats {
  * @public
  */
 interface BasicHGWOptions {
-  /** Number of threads to use for this function.
+  /**
+   * Number of threads to use for this function.
    * Must be less than or equal to the number of threads the script is running with.
    * Accepts positive non integer values.
+   * Defaults to the number of threads the script is running with.
    */
   threads?: number;
-  /** Set to true this action will affect the stock market. */
+  /** Whether to make this action affect the stock market. Defaults to false. */
   stock?: boolean;
-  /** Number of additional milliseconds that will be spent waiting between the start of the function and when it
-   * completes. */
+  /**
+   * Number of additional milliseconds that will be spent waiting between the start of the function and when it
+   * completes. Defaults to 0.
+   */
   additionalMsec?: number;
 }
 
@@ -849,6 +853,40 @@ interface BladeburnerCurAction {
   name: string;
 }
 
+/** @public */
+export type GangTaskNameEnumType = {
+  Unassigned: "Unassigned";
+
+  Ransomware: "Ransomware";
+  Phishing: "Phishing";
+  IdentityTheft: "Identity Theft";
+  DDoSAttacks: "DDoS Attacks";
+  PlantVirus: "Plant Virus";
+  FraudAndCounterfeiting: "Fraud & Counterfeiting";
+  MoneyLaundering: "Money Laundering";
+  Cyberterrorism: "Cyberterrorism";
+  EthicalHacking: "Ethical Hacking";
+
+  MugPeople: "Mug People";
+  DealDrugs: "Deal Drugs";
+  StrongarmCivilians: "Strongarm Civilians";
+  RunACon: "Run a Con";
+  ArmedRobbery: "Armed Robbery";
+  TraffickIllegalArms: "Traffick Illegal Arms";
+  ThreatenAndBlackmail: "Threaten & Blackmail";
+  HumanTrafficking: "Human Trafficking";
+  Terrorism: "Terrorism";
+  VigilanteJustice: "Vigilante Justice";
+
+  TrainCombat: "Train Combat";
+  TrainHacking: "Train Hacking";
+  TrainCharisma: "Train Charisma";
+  TerritoryWarfare: "Territory Warfare";
+};
+
+/** @public */
+type GangTaskName = _ValueOf<GangTaskNameEnumType>;
+
 /**
  * Gang general info.
  * @public
@@ -1173,8 +1211,13 @@ export type SleeveTask =
   | SleeveSupportTask
   | SleeveSynchroTask;
 
-/** Object representing a port. A port is a serialized queue.
- * @public */
+/**
+ * Object representing a port. A port is a serialized queue.
+ *
+ * All methods in this interface can be used while the ns instance is "busy" (they avoid the concurrency check), or even
+ * when it is dead.
+ * @public
+ */
 export interface NetscriptPort {
   /** Write data to a port.
    * @remarks
@@ -1932,15 +1975,25 @@ export interface Singularity {
   exportGame(): Promise<void>;
 
   /**
-   * Returns Backup save bonus availability.
+   * Returns whether the Export Game bonus is available.
+   *
+   * This function is deprecated and will be removed in a later version.
+   *
+   * @deprecated
+   * Use {@link Singularity.hasExportGameBonus | hasExportGameBonus} instead.
+   *
    * @remarks
    * RAM cost: 0.5 GB * 16/4/1
-   *
-   *
-   * This function will check if there is a bonus for backing up your save.
-   *
    */
   exportGameBonus(): boolean;
+
+  /**
+   * Returns whether the Export Game bonus is available.
+   *
+   * @remarks
+   * RAM cost: 0.5 GB * 16/4/1
+   */
+  hasExportGameBonus(): boolean;
 
   /**
    * Take university class.
@@ -2730,9 +2783,9 @@ export interface Singularity {
    * RAM cost: 5 GB * 16/4/1
    *
    *
-   * This function will perform a reset even if you don’t have any augmentation installed.
+   * Performs the same reset as when you install Augmentations. This can be used even when no Augmentations are queued. Installs any queued Augmentations.
    *
-   * @param cbScript - This is a script that will automatically be run after Augmentations are installed (after the reset). This script will be run with no arguments and 1 thread. It must be located on your home computer.
+   * @param cbScript - This is a script that will automatically be run after the reset. This script will be run with no arguments and 1 thread. It must be located on your home computer.
    */
   softReset(cbScript?: string): void;
 
@@ -4577,7 +4630,7 @@ export interface Darknet {
    * @remarks
    * RAM cost: 2 GB
    *
-   * @param host the server to freeze
+   * @param host - Hostname/IP of the target server.
    */
   freezeServer(host: string): DarknetResult;
 
@@ -4761,8 +4814,11 @@ export interface Darknet {
   getDepth(host?: string): number;
 
   /**
-   * Spends some time spreading propaganda about a stock to increase its volatility. This does not actually change the stock's forecasts, but
-   * a savvy investor can take advantage of the chaos. The effect scales with charisma and the number of threads used, but degrades over time if left alone.
+   * Spends some time spreading propaganda about a stock to increase its volatility. This does not actually change the
+   * stock's forecasts, but a savvy investor can take advantage of the chaos. The effect scales with charisma and the
+   * number of threads used, but degrades over time if left alone.
+   *
+   * This function requires TIX API access. You can use {@link Stock.purchaseTixApi | purchaseTixApi} to purchase it.
    *
    * @remarks
    * RAM cost: 2 GB
@@ -7123,6 +7179,32 @@ interface UserInterface {
    * @param node - The node to be rendered.
    */
   renderPage(node: ReactNode): void;
+
+  /**
+   * Allows programmatic use of AutoLink.exe.
+   *
+   * @remarks
+   * RAM cost: 5 GB
+   *
+   * This function uses AutoLink.exe to create a clickable link. Clicking on the link is
+   * equivalent to typing a sequence of "connect" commands into the terminal.
+   *
+   * @example
+   * ```js
+   * export async function main(ns) {
+   *   // Prints a link to the terminal. Clicking on it is equivalent
+   *   // to typing `connect joesguns; connect zer0; connect silver-helix`.
+   *   ns.tprintRaw(ns.ui.createConnectLink(['joesguns', 'zer0', 'silver-helix']));
+   * }
+   * ```
+   *
+   * @param connectPath - Hostnames or IP addresses of servers to connect to.
+   * @param linkText - The text to display on the link. Defaults to the last hostname or IP in connectPath. If
+   * connectPath is an empty array and linkText is nullish, linkText is set to `"do nothing"`.
+   * @returns A ReactElement that can be used with APIs such as {@link NS.tprintRaw | tprintRaw} and
+   * {@link NS.printRaw | printRaw}.
+   */
+  createConnectLink(connectPath: string[], linkText?: string): ReactElement;
 }
 
 /**
@@ -8190,11 +8272,11 @@ export interface NS {
    * Returns an array with the filenames of all files on the specified server
    * (as strings). The returned array is sorted in alphabetic order.
    *
-   * @param host - Hostname/IP of the target server.
+   * @param host - Hostname/IP of the target server. Defaults to current server if not provided.
    * @param substring - A substring to search for in the filename.
    * @returns Array with the filenames of all files on the specified server.
    */
-  ls(host: string, substring?: string): string[];
+  ls(host?: string, substring?: string): string[];
 
   /**
    * List running scripts on a server.
@@ -8614,12 +8696,14 @@ export interface NS {
    * RAM cost: 0 GB
    *
    * This function returns the metadata associated with the specified file.
+   * If the file does not exist or the server is offline, returns null. It will throw if the path or host is malformed.
    *
    * @param filename - Name of the file to read the metadata from. It must be a text file (.txt, .json, .css) or a script
    * (.js, .jsx, .ts, .tsx).
+   * @param host - Hostname/IP of the target server. Optional. Defaults to current server if not provided.
    * @Returns The metadata of the file.
    */
-  getFileMetadata(filename: string): FileMetadata;
+  getFileMetadata(filename: string, host?: string): FileMetadata | null;
 
   /**
    * Get a copy of the data from a port without popping it.
@@ -8698,6 +8782,10 @@ export interface NS {
    * RAM cost: 0 GB
    *
    * Get a handle to a Netscript Port.
+   *
+   * All methods of the port handle can be used while the ns instance is "busy" (they avoid the concurrency check), or
+   * even when it is dead.
+   *
    * Ports are shared across all hosts and contents are reset on game restart.
    *
    * @param portNumber - Port number. Must be a positive integer.
@@ -9791,6 +9879,7 @@ type NSEnums = {
   FragmentType: FragmentEnumType;
   DarknetResponseCode: DarknetResponseCodeType;
   ProgramName: ProgramNameEnumType;
+  GangTaskName: GangTaskNameEnumType;
 };
 
 /**
@@ -10258,11 +10347,27 @@ export interface WarehouseAPI {
    * @remarks
    * RAM cost: 20 GB
    *
-   * This limit applies only to output; it does not affect input consumption.
+   * This limit applies only to output. It does not reduce input consumption. The excess output is discarded after being
+   * produced.
    *
-   * For example, in Agriculture, assume the division's raw production is 1000. You need to consume 500 Water and 200
-   * Chemicals to produce 1000 Plants and 1000 Food. If you set the limits for Plants and Food to 200 and 100
-   * respectively, you will still consume 500 Water and 200 Chemicals, but only produce 200 Plants and 100 Food.
+   * For example: Assume the division's raw production is 1000 and the warehouse has enough input materials. In
+   * Agriculture, for each unit of raw production, you need 0.045 units of free space (check corporation documentation
+   * for further explanation). Therefore, with RawProduction = 1000, you need 45 units of free space to avoid being
+   * bottlenecked by insufficient free space.
+   *
+   * Case 1: Enough free space (Free space = 45). You need to consume 500 Water and 200 Chemicals to produce 1000
+   * Plants and 1000 Food.
+   *
+   * If you set the limits for Plants and Food to 200 and 100 respectively, you will still consume 500 Water and 200
+   * Chemicals, but only produce 200 Plants and 100 Food (the excess 800 Plants and 900 Food are discarded after being
+   * produced). The free space after production is 67 (800 Plants and 900 Food are discarded).
+   *
+   * Case 2: Insufficient free space (Free space = 22.5). The available free space is only 50% of the required free
+   * space. Therefore, RawProduction is scaled down to 500.
+   *
+   * You need to consume 250 Water and 100 Chemicals to produce 500 Plants and 500 Food. If you set the Food limit to 0,
+   * you will still consume 250 Water and 100 Chemicals, but only produce 500 Plants (the excess 500 Food are discarded
+   * after being produced). The free space after production is 15 (500 Food are discarded).
    *
    * With industries that produce both materials and products, the material production limits do not affect product
    * production.
