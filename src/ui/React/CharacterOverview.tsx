@@ -451,7 +451,8 @@ function CustomDisplayHacknetServers(): React.ReactElement {
     let totalProduction = 0;
     for (let i = 0; i < numberHacknetNodes; ++i) {
       const node = Player.hacknetNodes[i];
-      if (typeof node === "string") throw new Error("node was ip string"); // should never happen
+      // if (typeof node === "string") throw new Error("node was ip string"); // should never happen
+      if (typeof node === "string") continue; // should never happen
       totalProduction += node.moneyGainRatePerSecond;
     }
     hackingServersInnerText = (
