@@ -17,6 +17,7 @@ import {
   formatSkill
 } from "../formatNumber";
 import { Player } from "@player";
+import { hasHacknetServers } from "../../Hacknet/HacknetHelpers";
 import { Reputation } from "./Reputation";
 import { KillScriptsModal } from "./KillScriptsModal";
 import { convertTimeMsToTimeElapsedString } from "../../utils/StringHelperFunctions";
@@ -446,17 +447,27 @@ function CustomDisplayHacknetServers(): React.ReactElement {
     );
   } else {
     // Hacknet nodes
-    hacknetServersHeader = <>Hacknet nodes</>;
-    const numberHacknetNodes = Player.hacknetNodes.length;
+    hacknetServersHeader = <>Hacknet</>;
     let totalProduction = 0;
-    for (let i = 0; i < numberHacknetNodes; ++i) {
+    for (let i = 0; i < Player.hacknetNodes.length; ++i) {
       const node = Player.hacknetNodes[i];
-      if (typeof node === "string") throw new Error("node was ip string"); // should never happen
-      totalProduction += node.moneyGainRatePerSecond;
+      if (hasHacknetServers()) {
+        if (node instanceof HacknetNode) throw new Error("node was hacknet node"); // should never happen
+        const hserver = GetServer(node);
+        if (!(hserver instanceof HacknetServer)) throw new Error("node was not hacknet server"); // should never happen
+        if (hserver) {
+          totalProduction += hserver.hashRate;
+        } else {
+          console.warn(`Could not find Hacknet Server object in AllServers map (i=${i})`);
+        }
+      } else {
+        if (typeof node === "string") throw new Error("node was ip string"); // should never happen
+        totalProduction += node.moneyGainRatePerSecond;
+      }
     }
     hackingServersInnerText = (
       <>
-        number: {numberHacknetNodes} <br />
+        number: {Player.hacknetNodes.length} <br />
         production: {formatMoney(totalProduction)}/s
       </>
     );
