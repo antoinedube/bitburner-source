@@ -422,7 +422,7 @@ function CustomDisplayHacknetServers(): React.ReactElement {
   let hacknetServersHeader: ReactNode;
   let hackingServersInnerText: ReactNode;
 
-  if (Player.sourceFileLvl(9) >= 3 || Player.bitNodeN === 9) {
+  if (Player.sourceFileLvl(9) >= 1 || Player.bitNodeN === 9) {
     // Hacknet servers
     hacknetServersHeader = <>Hacknet servers</>;
     const numberHacknetServers = Player.hacknetNodes.length;
