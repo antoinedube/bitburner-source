@@ -6,6 +6,7 @@ import { resetIndustryResearchTrees } from "./Corporation/data/IndustryData";
 import { Factions } from "./Faction/Factions";
 import { joinFaction } from "./Faction/FactionHelpers";
 import { updateHashManagerCapacity } from "./Hacknet/HacknetHelpers";
+import { ServerConstants } from "./Server/data/Constants";
 import { prestigeWorkerScripts } from "./NetscriptWorker";
 import { Player } from "@player";
 import { recentScripts } from "./Netscript/RecentScripts";
@@ -70,8 +71,6 @@ export function prestigeAugmentation(): void {
   Go.prestigeAugmentation();
 
   const homeComp = Player.getHomeComputer();
-  homeComp.cpuCores = 8;
-  homeComp.maxRam = 2 ** 24;
 
   // Delete all servers except home computer
   prestigeAllServers();
@@ -199,6 +198,9 @@ export function prestigeAugmentation(): void {
   InvitationsSeen.clear();
 
   setInitialExpForPlayer();
+
+  homeComp.cpuCores = 256;
+  homeComp.maxRam = ServerConstants.HomeComputerMaxRam;
 }
 
 // Prestige by destroying Bit Node and gaining a Source File
@@ -240,17 +242,9 @@ export function prestigeSourceFile(isFlume: boolean): void {
   // Re-create foreign servers
   initForeignServers(Player.getHomeComputer());
 
-  if (Player.sourceFileLvl(9) >= 2) {
-    if (canAccessBitNodeFeature(15)) {
-      getDarkscapeNavigator();
-    }
-    homeComp.setMaxRam(512);
-  } else if (Player.sourceFileLvl(1) > 0) {
-    homeComp.setMaxRam(32);
-  } else {
-    homeComp.setMaxRam(8);
+  if (canAccessBitNodeFeature(15)) {
+    getDarkscapeNavigator();
   }
-  homeComp.cpuCores = 64;
 
   // Reset favor for Companies and Factions
   for (const company of Object.values(Companies)) company.prestigeSourceFile();
@@ -371,4 +365,7 @@ export function prestigeSourceFile(isFlume: boolean): void {
       false,
     );
   }
+
+  homeComp.cpuCores = 256;
+  homeComp.maxRam = ServerConstants.HomeComputerMaxRam;
 }
