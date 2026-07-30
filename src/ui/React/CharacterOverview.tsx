@@ -16,6 +16,7 @@ import {
   formatReputation,
   formatSkill
 } from "../formatNumber";
+import { hasHacknetServers } from "../../Hacknet/HacknetHelpers";
 import { Reputation } from "./Reputation";
 import { KillScriptsModal } from "./KillScriptsModal";
 import { convertTimeMsToTimeElapsedString } from "../../utils/StringHelperFunctions";
@@ -25,9 +26,11 @@ import { Router } from "../GameRoot";
 import { Page } from "../Router";
 import { getCloudServerLimit, getCloudServerMaxRam } from "../../Server/ServerPurchases";
 
+
 import { Player } from "@player";
 
 import { GetServer, GetAllServers } from "../../Server/AllServers";
+
 import { HacknetServerConstants } from "../../Hacknet/data/Constants";
 import { HacknetNode } from "../../Hacknet/HacknetNode";
 import { HacknetServer } from "../../Hacknet/HacknetServer";
@@ -38,7 +41,6 @@ import { StatsProgressBar } from "./StatsProgressBar";
 import { CONSTANTS } from "../../Constants";
 import { EventEmitter } from "../../utils/EventEmitter";
 import { ReputationRate } from "./ReputationRate";
-import { isClassWork } from "../../Work/ClassWork";
 import { isCompanyWork } from "../../Work/CompanyWork";
 import { isCreateProgramWork } from "../../Work/CreateProgramWork";
 import { isCrimeWork } from "../../Work/CrimeWork";
