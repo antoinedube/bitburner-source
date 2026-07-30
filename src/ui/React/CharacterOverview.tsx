@@ -16,8 +16,6 @@ import {
   formatReputation,
   formatSkill
 } from "../formatNumber";
-import { Player } from "@player";
-import { hasHacknetServers } from "../../Hacknet/HacknetHelpers";
 import { Reputation } from "./Reputation";
 import { KillScriptsModal } from "./KillScriptsModal";
 import { convertTimeMsToTimeElapsedString } from "../../utils/StringHelperFunctions";
@@ -26,6 +24,9 @@ import { Settings } from "../../Settings/Settings";
 import { Router } from "../GameRoot";
 import { Page } from "../Router";
 import { getCloudServerLimit, getCloudServerMaxRam } from "../../Server/ServerPurchases";
+
+import { Player } from "@player";
+
 import { GetServer, GetAllServers } from "../../Server/AllServers";
 import { HacknetServerConstants } from "../../Hacknet/data/Constants";
 import { HacknetNode } from "../../Hacknet/HacknetNode";
@@ -422,7 +423,7 @@ function CustomDisplayHacknetServers(): React.ReactElement {
   let hacknetServersHeader: ReactNode;
   let hackingServersInnerText: ReactNode;
 
-  if (Player.sourceFileLvl(9) >= 3 || Player.bitNodeN === 9) {
+  if (Player.sourceFileLvl(9) >= 1 || Player.bitNodeN === 9) {
     // Hacknet servers
     hacknetServersHeader = <>Hacknet servers</>;
     const numberHacknetServers = Player.hacknetNodes.length;
