@@ -6,6 +6,7 @@ import { resetIndustryResearchTrees } from "./Corporation/data/IndustryData";
 import { Factions } from "./Faction/Factions";
 import { joinFaction } from "./Faction/FactionHelpers";
 import { updateHashManagerCapacity } from "./Hacknet/HacknetHelpers";
+import { ServerConstants } from "./Server/data/Constants";
 import { prestigeWorkerScripts } from "./NetscriptWorker";
 import { Player } from "@player";
 import { recentScripts } from "./Netscript/RecentScripts";
@@ -70,6 +71,7 @@ export function prestigeAugmentation(): void {
   Go.prestigeAugmentation();
 
   const homeComp = Player.getHomeComputer();
+
   // Delete all servers except home computer
   prestigeAllServers();
 
@@ -196,6 +198,9 @@ export function prestigeAugmentation(): void {
   InvitationsSeen.clear();
 
   setInitialExpForPlayer();
+
+  homeComp.cpuCores = 256;
+  homeComp.maxRam = ServerConstants.HomeComputerMaxRam;
 }
 
 // Prestige by destroying Bit Node and gaining a Source File
@@ -239,15 +244,6 @@ export function prestigeSourceFile(isFlume: boolean): void {
     getDarkscapeNavigator();
   }
 
-  if (Player.activeSourceFileLvl(9) >= 2) {
-    homeComp.setMaxRam(128);
-  } else if (Player.activeSourceFileLvl(1) > 0) {
-    homeComp.setMaxRam(32);
-  } else {
-    homeComp.setMaxRam(8);
-  }
-  homeComp.cpuCores = 1;
-
   // Reset favor for Companies and Factions
   for (const company of Object.values(Companies)) company.prestigeSourceFile();
   for (const faction of Object.values(Factions)) faction.prestigeSourceFile();
@@ -275,8 +271,8 @@ export function prestigeSourceFile(isFlume: boolean): void {
     homeComp.messages.push(LiteratureName.CorporationManagementHandbook);
     delayedDialog(
       "You received a copy of the Corporation Management Handbook on your home computer. It's a short introduction for " +
-        "managing Corporation.\n\nYou should check the in-game Corporation documentation in the Documentation tab " +
-        "(Documentation -> Advanced Mechanics -> Corporation). It's the most useful and up-to-date resource for managing Corporation.",
+      "managing Corporation.\n\nYou should check the in-game Corporation documentation in the Documentation tab " +
+      "(Documentation -> Advanced Mechanics -> Corporation). It's the most useful and up-to-date resource for managing Corporation.",
       false,
     );
   }
@@ -367,4 +363,7 @@ export function prestigeSourceFile(isFlume: boolean): void {
       false,
     );
   }
+
+  homeComp.cpuCores = 256;
+  homeComp.maxRam = ServerConstants.HomeComputerMaxRam;
 }
