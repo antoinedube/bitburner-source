@@ -337,7 +337,7 @@ function CustomDisplayAvailableHackingPrograms(): React.ReactElement {
     return { 'name': program.name, 'isAvailable': Player.hasProgram(program.name) };
   });
 
-  const hackingProgramsHeader: ReactNode = <>Programs available</>;
+  const hackingProgramsHeader: ReactNode = <>Hacking programs available</>;
   const headerTableRow = <TableRow>
     <TableCell component="th" scope="row" colSpan={2} classes={{ root: classes.customDisplayCell }}>
       <Typography className={classes.customDisplayHeader}>{hackingProgramsHeader}</Typography>
@@ -350,7 +350,7 @@ function CustomDisplayAvailableHackingPrograms(): React.ReactElement {
     const programAvailability: string = program['isAvailable'].toString();
 
     const hackingProgramRow: ReactNode = (
-      <> hacked: {programName} / {programAvailability} </>
+      <> {programName}: {programAvailability} </>
     );
 
     hackingProgramRows.push(
@@ -362,28 +362,12 @@ function CustomDisplayAvailableHackingPrograms(): React.ReactElement {
     );
   }
 
-  // const hackingProgramsInnerText = hackingProgramRows.join('\n');
-
   return (
     <>
       {headerTableRow}
       {hackingProgramRows}
     </>
   );
-  // return (
-  //   <>
-  //     <TableRow>
-  //       <TableCell component="th" scope="row" colSpan={2} classes={{ root: classes.customDisplayCell }}>
-  //         <Typography className={classes.customDisplayHeader}>{hackingProgramsHeader}</Typography>
-  //       </TableCell>
-  //     </TableRow>
-  //     <TableRow>
-  //       <TableCell component="th" scope="row" colSpan={2} classes={{ root: classes.customDisplayCell }}>
-  //         <Typography className={classes.customDisplayText}>{hackingProgramsInnerText}</Typography>
-  //       </TableCell>
-  //     </TableRow>
-  //   </>
-  // );
 }
 
 function CustomDisplayHackedServers(): React.ReactElement {
