@@ -348,11 +348,12 @@ function CustomDisplayAvailableHackingPrograms(): React.ReactElement {
   for (let program of programList) {
     const programName: string = program['name'];
     const programAvailability: string = program['isAvailable'].toString();
+    const hackingProgramInnerText: string = `${programName}: ${programAvailability}`;
 
     hackingProgramRows.push(
       <TableRow>
         <TableCell component="th" scope="row" colSpan={2} classes={{ root: classes.customDisplayCell }}>
-          <Typography className={classes.customDisplayText}>{programName}: {programAvailability}</Typography>
+          <Typography className={classes.customDisplayText}>{hackingProgramInnerText}</Typography>
         </TableCell>
       </TableRow>
     );
