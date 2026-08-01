@@ -17,6 +17,7 @@ import {
   formatSkill
 } from "../formatNumber";
 import { Player } from "@player";
+import { Programs } from "../../Programs/Programs";
 import { hasHacknetServers } from "../../Hacknet/HacknetHelpers";
 import { Reputation } from "./Reputation";
 import { KillScriptsModal } from "./KillScriptsModal";
@@ -187,6 +188,7 @@ export function CharacterOverview({ parentOpen, save, killScripts }: OverviewPro
               </Typography>
             </TableCell>
           </TableRow>
+          <CustomDisplayAvailableHackingPrograms />
           <CustomDisplayHackedServers />
           <CustomDisplayHackingServers />
           <CustomDisplayHacknetServers />
@@ -298,6 +300,42 @@ function WorkInProgressOverview({ tooltip, children, header }: WorkInProgressOve
         ),
         [classes.cellNone],
       )}
+    </>
+  );
+}
+
+function CustomDisplayAvailableHackingPrograms(): React.ReactElement {
+  const rerender = useRerender();
+  useEffect(() => {
+    const clearSubscription = OverviewEventEmitter.subscribe(rerender);
+    return clearSubscription;
+  }, [rerender]);
+
+  const { classes } = useStyles();
+
+  const programList: string[] = [...Object.values(Programs)].map((program) => {
+    return program.name + '-' + Player.hasProgram(program.name);
+  });
+
+  const hackingProgramsHeader: ReactNode = <>Programs available</>;
+  const hackingProgramsInnerText: ReactNode = (
+    <>
+      programs: {programList.join('\n')}
+    </>
+  );
+
+  return (
+    <>
+      <TableRow>
+        <TableCell component="th" scope="row" colSpan={2} classes={{ root: classes.customDisplayCell }}>
+          <Typography className={classes.customDisplayHeader}>{hackingProgramsHeader}</Typography>
+        </TableCell>
+      </TableRow>
+      <TableRow>
+        <TableCell component="th" scope="row" colSpan={2} classes={{ root: classes.customDisplayCell }}>
+          <Typography className={classes.customDisplayText}>{hackingProgramsInnerText}</Typography>
+        </TableCell>
+      </TableRow>
     </>
   );
 }
