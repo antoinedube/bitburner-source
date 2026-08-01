@@ -37,7 +37,7 @@ import { CONSTANTS } from "../../Constants";
 import { EventEmitter } from "../../utils/EventEmitter";
 import { ReputationRate } from "./ReputationRate";
 import { StatsProgressBar } from "./StatsProgressBar";
-import { getCloudServerLimit, getCloudServerMaxRam } from "src/Server/ServerPurchases";
+import { getCloudServerLimit, getCloudServerMaxRam } from "../../Server/ServerPurchases";
 import { isClassWork } from "../../Work/ClassWork";
 import { isCompanyWork } from "../../Work/CompanyWork";
 import { isCreateProgramWork } from "../../Work/CreateProgramWork";
