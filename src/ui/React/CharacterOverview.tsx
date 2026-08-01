@@ -346,7 +346,7 @@ function CustomDisplayAvailableHackingPrograms(): React.ReactElement {
 
   let hackingProgramRows = [];
   for (let program of programList) {
-    const programName: string = program['name'];
+    const programName: string = program['name'].split('.')[0];
     const programAvailability: string = program['isAvailable'].toString();
 
     const hackingProgramRow: ReactNode = (
@@ -365,7 +365,7 @@ function CustomDisplayAvailableHackingPrograms(): React.ReactElement {
   return (
     <>
       {headerTableRow}
-      {hackingProgramRows}
+      {hackingProgramRows.join()}
     </>
   );
 }
