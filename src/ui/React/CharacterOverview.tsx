@@ -331,16 +331,11 @@ function CustomDisplayAvailableHackingPrograms(): React.ReactElement {
   // - DarkscapeNavigator.exe-true
   // - STORM_SEED.exe-false
 
-  // const programList: string[] = [...Object.values(Programs)].map((program) => {
-  //   return program.name + '-' + Player.hasProgram(program.name);
-  // });
-
-  // const hackingProgramsHeader: ReactNode = <>Programs available</>;
-  // const hackingProgramsInnerText: ReactNode = (
-  //   <>
-  //     programs: {programList.join('\n')}
-  //   </>
-  // );
+  const programList = [...Object.values(Programs)].filter((program) => {
+    return hackingPrograms.includes(program.name);
+  }).map((program) => {
+    return { 'name': program.name, 'isAvailable': Player.hasProgram(program.name) };
+  });
 
   const hackingProgramsHeader: ReactNode = <>Programs available</>;
   const headerTableRow = <TableRow>
@@ -350,12 +345,11 @@ function CustomDisplayAvailableHackingPrograms(): React.ReactElement {
   </TableRow>
 
   let hackingProgramRows = [];
-  for (let hackingProgram of hackingPrograms) {
-    const hackingProgramAvailability = Player.hasProgram(hackingProgram);
+  for (let program of programList) {
     hackingProgramRows.push(
       <TableRow>
         <TableCell component="th" scope="row" colSpan={2} classes={{ root: classes.customDisplayCell }}>
-          <Typography className={classes.customDisplayText}>{hackingProgram}: {hackingProgramAvailability}</Typography>
+          <Typography className={classes.customDisplayText}>{program['name']}: {program['isAvailable']}</Typography>
         </TableCell>
       </TableRow>
     );
