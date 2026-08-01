@@ -365,7 +365,7 @@ function CustomDisplayAvailableHackingPrograms(): React.ReactElement {
   return (
     <>
       {headerTableRow}
-      {hackingProgramRows.join()}
+      {hackingProgramRows}
     </>
   );
 }
