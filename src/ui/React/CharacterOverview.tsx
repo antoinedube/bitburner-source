@@ -348,23 +348,26 @@ function CustomDisplayAvailableHackingPrograms(): React.ReactElement {
   for (let program of programList) {
     const programName: string = program['name'];
     const programAvailability: string = program['isAvailable'].toString();
-    const hackingProgramInnerText: string = `${programName}: ${programAvailability}`;
+
+    const hackingProgramRow: ReactNode = (
+      <> hacked: {programName} / {programAvailability} </>
+    );
 
     hackingProgramRows.push(
       <TableRow>
         <TableCell component="th" scope="row" colSpan={2} classes={{ root: classes.customDisplayCell }}>
-          <Typography className={classes.customDisplayText}>{hackingProgramInnerText}</Typography>
+          <Typography className={classes.customDisplayText}>{hackingProgramRow}</Typography>
         </TableCell>
       </TableRow>
     );
   }
 
-  const hackingProgramsInnerText = hackingProgramRows.join('\n');
+  // const hackingProgramsInnerText = hackingProgramRows.join('\n');
 
   return (
     <>
       {headerTableRow}
-      {hackingProgramsInnerText}
+      {hackingProgramRows}
     </>
   );
   // return (
