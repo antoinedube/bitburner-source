@@ -313,31 +313,76 @@ function CustomDisplayAvailableHackingPrograms(): React.ReactElement {
 
   const { classes } = useStyles();
 
-  const programList: string[] = [...Object.values(Programs)].map((program) => {
-    return program.name + '-' + Player.hasProgram(program.name);
-  });
+  const hackingPrograms: string[] = ['BruteSSH.exe', 'FTPCrack.exe', 'relaySMTP.exe', 'HTTPWorm.exe', 'SQLInject.exe'];
+  // programs:
+  // - NUKE.exe-true
+  // - BruteSSH.exe-true
+  // - FTPCrack.exe-true
+  // - relaySMTP.exe-true
+  // - HTTPWorm.exe-true
+  // - SQLInject.exe-true
+  // - DeepscanV1.exe-true
+  // - DeepscanV2.exe-true
+  // - ServerProfiler.exe-true
+  // - AutoLink.exe-true
+  // - Formulas.exe-true
+  // - b1t_flum3.exe-true
+  // - fl1ght.exe-true
+  // - DarkscapeNavigator.exe-true
+  // - STORM_SEED.exe-false
+
+  // const programList: string[] = [...Object.values(Programs)].map((program) => {
+  //   return program.name + '-' + Player.hasProgram(program.name);
+  // });
+
+  // const hackingProgramsHeader: ReactNode = <>Programs available</>;
+  // const hackingProgramsInnerText: ReactNode = (
+  //   <>
+  //     programs: {programList.join('\n')}
+  //   </>
+  // );
 
   const hackingProgramsHeader: ReactNode = <>Programs available</>;
-  const hackingProgramsInnerText: ReactNode = (
-    <>
-      programs: {programList.join('\n')}
-    </>
-  );
+  const headerTableRow = <TableRow>
+    <TableCell component="th" scope="row" colSpan={2} classes={{ root: classes.customDisplayCell }}>
+      <Typography className={classes.customDisplayHeader}>{hackingProgramsHeader}</Typography>
+    </TableCell>
+  </TableRow>
+
+  let hackingProgramRows = [];
+  for (let hackingProgram of hackingPrograms) {
+    const hackingProgramAvailability = Player.hasProgram(hackingProgram);
+    hackingProgramRows.push(
+      <TableRow>
+        <TableCell component="th" scope="row" colSpan={2} classes={{ root: classes.customDisplayCell }}>
+          <Typography className={classes.customDisplayText}>{hackingProgram}: {hackingProgramAvailability}</Typography>
+        </TableCell>
+      </TableRow>
+    );
+  }
+
+  const hackingProgramsInnerText = hackingProgramRows.join();
 
   return (
     <>
-      <TableRow>
-        <TableCell component="th" scope="row" colSpan={2} classes={{ root: classes.customDisplayCell }}>
-          <Typography className={classes.customDisplayHeader}>{hackingProgramsHeader}</Typography>
-        </TableCell>
-      </TableRow>
-      <TableRow>
-        <TableCell component="th" scope="row" colSpan={2} classes={{ root: classes.customDisplayCell }}>
-          <Typography className={classes.customDisplayText}>{hackingProgramsInnerText}</Typography>
-        </TableCell>
-      </TableRow>
+      {headerTableRow}
+      {hackingProgramsInnerText}
     </>
   );
+  // return (
+  //   <>
+  //     <TableRow>
+  //       <TableCell component="th" scope="row" colSpan={2} classes={{ root: classes.customDisplayCell }}>
+  //         <Typography className={classes.customDisplayHeader}>{hackingProgramsHeader}</Typography>
+  //       </TableCell>
+  //     </TableRow>
+  //     <TableRow>
+  //       <TableCell component="th" scope="row" colSpan={2} classes={{ root: classes.customDisplayCell }}>
+  //         <Typography className={classes.customDisplayText}>{hackingProgramsInnerText}</Typography>
+  //       </TableCell>
+  //     </TableRow>
+  //   </>
+  // );
 }
 
 function CustomDisplayHackedServers(): React.ReactElement {
