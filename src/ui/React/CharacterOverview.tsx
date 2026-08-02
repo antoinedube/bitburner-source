@@ -353,8 +353,8 @@ function CustomDisplayHackedServers(): React.ReactElement {
   const hackedServersHeader: ReactNode = <>Hacked servers</>;
   const hackedServersInnerText: ReactNode = (
     <>
-      hacking programs: {numAvailableHackingPrograms} / {numHackingPrograms}
-      hacked: {numServersWithAdminRights} / {numServers}
+      hacking programs: {numAvailableHackingPrograms} / {numHackingPrograms} <br />
+      hacked: {numServersWithAdminRights} / {numServers} <br />
       backdoored: {numServersWithBackdoorInstalled} / {numServers}
     </>
   );
@@ -398,7 +398,7 @@ function CustomDisplayHackingServers(): React.ReactElement {
     if (currentPurchasedServer) {
       hackingServersInnerText = (
         <>
-          number: {numberPurchasedServers} / {purchasedServerLimit}
+          number: {numberPurchasedServers} / {purchasedServerLimit} <br />
           stats: {formatRam(currentPurchasedServer.maxRam)} / {formatRam(getCloudServerMaxRam())}
         </>
       );
