@@ -16,6 +16,8 @@ import {
   formatReputation,
   formatSkill
 } from "../formatNumber";
+import { Player } from "@player";
+import { Programs } from "../../Programs/Programs";
 import { hasHacknetServers } from "../../Hacknet/HacknetHelpers";
 import { Reputation } from "./Reputation";
 import { KillScriptsModal } from "./KillScriptsModal";
@@ -25,9 +27,6 @@ import { Settings } from "../../Settings/Settings";
 import { Router } from "../GameRoot";
 import { Page } from "../Router";
 import { getCloudServerLimit, getCloudServerMaxRam } from "../../Server/ServerPurchases";
-
-
-import { Player } from "@player";
 
 import { GetServer, GetAllServers } from "../../Server/AllServers";
 
@@ -313,6 +312,17 @@ function CustomDisplayHackedServers(): React.ReactElement {
     return clearSubscription;
   }, [rerender]);
 
+  // Hacking programs
+  const hackingPrograms: string[] = ['BruteSSH.exe', 'FTPCrack.exe', 'relaySMTP.exe', 'HTTPWorm.exe', 'SQLInject.exe'];
+
+  const availableHackingPrograms = [...Object.values(Programs)].filter((program) => {
+    return hackingPrograms.includes(program.name) && Player.hasProgram(program.name);
+  });
+
+  const numAvailableHackingPrograms = availableHackingPrograms.length;
+  const numHackingPrograms = hackingPrograms.length;
+
+  // Hacked&backdoored servers
   const serversToAvoid = [
     "home",
     "run4theh111z",
@@ -345,6 +355,7 @@ function CustomDisplayHackedServers(): React.ReactElement {
   const hackedServersHeader: ReactNode = <>Hacked servers</>;
   const hackedServersInnerText: ReactNode = (
     <>
+      hacking programs: {numAvailableHackingPrograms} / {numHackingPrograms} <br />
       hacked: {numServersWithAdminRights} / {numServers} <br />
       backdoored: {numServersWithBackdoorInstalled} / {numServers}
     </>
