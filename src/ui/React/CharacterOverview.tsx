@@ -188,7 +188,6 @@ export function CharacterOverview({ parentOpen, save, killScripts }: OverviewPro
               </Typography>
             </TableCell>
           </TableRow>
-          <CustomDisplayAvailableHackingPrograms />
           <CustomDisplayHackedServers />
           <CustomDisplayHackingServers />
           <CustomDisplayHacknetServers />
@@ -304,72 +303,6 @@ function WorkInProgressOverview({ tooltip, children, header }: WorkInProgressOve
   );
 }
 
-function CustomDisplayAvailableHackingPrograms(): React.ReactElement {
-  const rerender = useRerender();
-  useEffect(() => {
-    const clearSubscription = OverviewEventEmitter.subscribe(rerender);
-    return clearSubscription;
-  }, [rerender]);
-
-  const { classes } = useStyles();
-
-  const hackingPrograms: string[] = ['BruteSSH.exe', 'FTPCrack.exe', 'relaySMTP.exe', 'HTTPWorm.exe', 'SQLInject.exe'];
-  // programs:
-  // - NUKE.exe-true
-  // - BruteSSH.exe-true
-  // - FTPCrack.exe-true
-  // - relaySMTP.exe-true
-  // - HTTPWorm.exe-true
-  // - SQLInject.exe-true
-  // - DeepscanV1.exe-true
-  // - DeepscanV2.exe-true
-  // - ServerProfiler.exe-true
-  // - AutoLink.exe-true
-  // - Formulas.exe-true
-  // - b1t_flum3.exe-true
-  // - fl1ght.exe-true
-  // - DarkscapeNavigator.exe-true
-  // - STORM_SEED.exe-false
-
-  const programList = [...Object.values(Programs)].filter((program) => {
-    return hackingPrograms.includes(program.name);
-  }).map((program) => {
-    return { 'name': program.name, 'isAvailable': Player.hasProgram(program.name) };
-  });
-
-  const hackingProgramsHeader: ReactNode = <>Hacking programs available</>;
-  const headerTableRow = <TableRow>
-    <TableCell component="th" scope="row" colSpan={2} classes={{ root: classes.customDisplayCell }}>
-      <Typography className={classes.customDisplayHeader}>{hackingProgramsHeader}</Typography>
-    </TableCell>
-  </TableRow>
-
-  let hackingProgramRows = [];
-  for (let program of programList) {
-    const programName: string = program['name'].split('.')[0];
-    const programAvailability: string = program['isAvailable'].toString();
-
-    const hackingProgramRow: ReactNode = (
-      <> {programName}: {programAvailability} </>
-    );
-
-    hackingProgramRows.push(
-      <TableRow>
-        <TableCell component="th" scope="row" colSpan={2} classes={{ root: classes.customDisplayCell }}>
-          <Typography className={classes.customDisplayText}>{hackingProgramRow}</Typography>
-        </TableCell>
-      </TableRow>
-    );
-  }
-
-  return (
-    <>
-      {headerTableRow}
-      {hackingProgramRows}
-    </>
-  );
-}
-
 function CustomDisplayHackedServers(): React.ReactElement {
   const rerender = useRerender();
   useEffect(() => {
@@ -377,6 +310,17 @@ function CustomDisplayHackedServers(): React.ReactElement {
     return clearSubscription;
   }, [rerender]);
 
+  // Hacking programs
+  const hackingPrograms: string[] = ['BruteSSH.exe', 'FTPCrack.exe', 'relaySMTP.exe', 'HTTPWorm.exe', 'SQLInject.exe'];
+
+  const availableHackingPrograms = [...Object.values(Programs)].filter((program) => {
+    return hackingPrograms.includes(program.name) && Player.hasProgram(program.name);
+  });
+
+  const numAvailableHackingPrograms = availableHackingPrograms.length;
+  const numHackingPrograms = hackingPrograms.length;
+
+  // Hacked&backdoored servers
   const serversToAvoid = [
     "home",
     "run4theh111z",
@@ -409,7 +353,8 @@ function CustomDisplayHackedServers(): React.ReactElement {
   const hackedServersHeader: ReactNode = <>Hacked servers</>;
   const hackedServersInnerText: ReactNode = (
     <>
-      hacked: {numServersWithAdminRights} / {numServers} <br />
+      hacking programs: {numAvailableHackingPrograms} / {numHackingPrograms}
+      hacked: {numServersWithAdminRights} / {numServers}
       backdoored: {numServersWithBackdoorInstalled} / {numServers}
     </>
   );
@@ -453,7 +398,7 @@ function CustomDisplayHackingServers(): React.ReactElement {
     if (currentPurchasedServer) {
       hackingServersInnerText = (
         <>
-          number: {numberPurchasedServers} / {purchasedServerLimit} <br />
+          number: {numberPurchasedServers} / {purchasedServerLimit}
           stats: {formatRam(currentPurchasedServer.maxRam)} / {formatRam(getCloudServerMaxRam())}
         </>
       );
