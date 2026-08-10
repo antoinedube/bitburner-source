@@ -46,7 +46,7 @@ export const HacknetServerConstants = {
   MaxServers: 60,
 
   MaxLevel: 300,
-  MaxRam: 16384,
+  MaxRam: 8192,
   MaxCores: 128,
-  MaxCache: 5,
+  MaxCache: 15,
 } as const;
